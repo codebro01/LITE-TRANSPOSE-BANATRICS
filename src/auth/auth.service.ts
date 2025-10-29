@@ -6,7 +6,7 @@ import crypto from 'crypto';
 export class AuthService {
   constructor(private readonly authRepository: AuthRepository) {}
 
-  async loginUser(data: { email: string; password: string }) {
+  async loginUser(data: { businessEmail: string; password: string }) {
     return this.authRepository.loginUser(data);
   }
 

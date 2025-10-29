@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UserRepository } from '@src/users/repository/user.repository';
-import { UserType} from '@src/db/users';
+import { businessOwnerInsertType } from '@src/db/users';
 import { AuthRepository } from '@src/auth/repository/auth.repository';
-
 
 @Injectable()
 export class UserService {
@@ -11,7 +10,7 @@ export class UserService {
     private readonly authRepository: AuthRepository,
   ) {}
 
-  async createUser(data: UserType) {
+  async createUser(data: businessOwnerInsertType) {
     return await this.userRepository.createUser(data);
   }
 
@@ -19,8 +18,10 @@ export class UserService {
     return await this.userRepository.getAllUsers();
   }
 
-  async updateUser(user, data: Omit<UserType, 'password' | 'email'>) {
+  async updateUser(
+    user,
+    data: Omit<businessOwnerInsertType, 'password' | 'email'>,
+  ) {
     return await this.userRepository.updateUser(user, data);
   }
 }
-

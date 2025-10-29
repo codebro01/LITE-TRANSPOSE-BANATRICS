@@ -8,7 +8,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';
 import { jwtConstants } from '@src/auth/jwtContants';
-import { usersTable } from '@src/db';
+import { businessOwnerTable } from '@src/db';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq, sql } from 'drizzle-orm';
 
@@ -96,20 +96,20 @@ export class JwtAuthGuard implements CanActivate {
       const newTokenUser = await this.jwtService.verifyAsync(newAccessToken, {
         secret: jwtConstants.accessTokenSecret,
       });
-      await this.DbProvider.update(usersTable)
+      await this.DbProvider.update(businessOwnerTable)
         .set({ refreshToken: newRefreshToken })
-        .where(eq(usersTable.id, id));
+        .where(eq(businessOwnerTable.id, id));
       if (!newTokenUser) {
         response.clearCookie('access_token');
         response.clearCookie('refresh_token');
         throw new UnauthorizedException('Token issue failed!!!');
       }
       console.log(newTokenUser);
-      const tokenUser = newTokenUser || token
+      const tokenUser = newTokenUser || token;
       // After verifying JWT in NestJS
-    await this.DbProvider.execute(
-      sql`SET app.current_user_role = ${tokenUser.role}`,
-    );
+      await this.DbProvider.execute(
+        sql`SET app.current_user_role = ${tokenUser.role}`,
+      );
 
       // const payload = this.jwtService.verify(token); // verify with secret
       request['user'] = newTokenUser; // attach user to request

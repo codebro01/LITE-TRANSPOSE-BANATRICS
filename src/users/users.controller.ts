@@ -14,8 +14,8 @@ import { RolesGuard } from '@src/auth/guards/roles.guard';
 import { Roles } from '@src/auth/decorators/roles.decorators';
 import type { Response } from 'express';
 import {
-  UpdateUserDto,
-  CreateUserDto,
+  UpdatebusinessOwnerDto,
+  CreatebusinessOwnerDto,
 } from '@src/users/dto/index.dto';
 
 import omit from 'lodash.omit';
@@ -27,7 +27,7 @@ export class UserController {
   // ! create users
   @Post('signup')
   // @UseGuards(JwtAuthGuard)
-  async createUser(@Body() body: CreateUserDto, @Res() res: Response) {
+  async createUser(@Body() body: CreatebusinessOwnerDto, @Res() res: Response) {
     const { user, accessToken, refreshToken } =
       await this.userService.createUser(body);
 
@@ -62,8 +62,7 @@ export class UserController {
   // ! update user basic information
   @UseGuards(JwtAuthGuard)
   @Post('/update-user-basic-info')
-  updateUsers(@Req() req, @Body() body: UpdateUserDto) {
+  updateUsers(@Req() req, @Body() body: UpdatebusinessOwnerDto) {
     return this.userService.updateUser(req.user, body);
   }
-
 }

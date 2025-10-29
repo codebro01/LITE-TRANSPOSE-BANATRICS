@@ -2,28 +2,29 @@
 import {
   IsEmail,
   IsNotEmpty,
-  IsOptional,
   IsString,
-  MinLength, 
-  Matches, 
+  MinLength,
+  Matches,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
+export class CreatebusinessOwnerDto {
 
-export class CreateUserDto {
-  @IsOptional()
-  @IsString()
-  username: string;
-
-  @ApiProperty({ example: 'john@example.com' })
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
-
-  @ApiProperty({ example: 'John Doe' })
+  @ApiProperty({ example: 'Banatrics' })
   @IsString()
   @IsNotEmpty()
-  fullName: string;
+  businessName: string;
+
+
+  @ApiProperty({ example: 'sales@banatrics.com' })
+  @IsString()
+  @IsNotEmpty()
+  businessEmail: string;
+
+  @ApiProperty({ example: '+234000000000' })
+  @IsString()
+  @IsNotEmpty()
+  phone: string;
 
   @ApiProperty({ example: '@Example123', minLength: 8 })
   @IsNotEmpty()
@@ -33,5 +34,5 @@ export class CreateUserDto {
     message:
       'Password must contain at least 1 uppercase, 1 lowercase, 1 number and 1 special character',
   })
-  password: string; 
+  password: string;
 }

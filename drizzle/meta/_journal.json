@@ -8,6 +8,27 @@
       "when": 1761702523722,
       "tag": "0000_third_puck",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1761743985672,
+      "tag": "0001_huge_swordsman",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1761744443366,
+      "tag": "0002_young_sally_floyd",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1761744645111,
+      "tag": "0003_tricky_absorbing_man",
+      "breakpoints": true
     }
   ]
 }
