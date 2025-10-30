@@ -29,6 +29,20 @@
       "when": 1761744645111,
       "tag": "0003_tricky_absorbing_man",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1761790332298,
+      "tag": "0004_glossy_tigra",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1761791227320,
+      "tag": "0005_quick_joystick",
+      "breakpoints": true
     }
   ]
 }

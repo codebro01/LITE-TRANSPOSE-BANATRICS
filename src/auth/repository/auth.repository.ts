@@ -6,7 +6,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { businessOwnerTable, userTable } from '@src/db';
+import {  userTable } from '@src/db';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq, or } from 'drizzle-orm';
@@ -14,6 +14,7 @@ import bcrypt from 'bcrypt';
 import { jwtConstants } from '../jwtContants';
 import { JwtService } from '@nestjs/jwt';
 import { Response, Request } from 'express';
+
 
 interface customRequest extends Request {
   user: {
@@ -46,18 +47,19 @@ export class AuthRepository {
       whereClause = eq(userTable.phone, phone!);
     }
 
+
     const [user] = await this.DbProvider.select()
-      .from(userTable)
-      .where(whereClause);
+    .from(userTable)
+    .where(whereClause);
     if (!user)
       throw new UnauthorizedException(
-        'Bad credentials, Please check email and password',
-      );
-    const passwordIsCorrect = await bcrypt.compare(password, user.password);
-    if (!passwordIsCorrect)
-      throw new UnauthorizedException(
-        'Bad credentials, Please check email and password',
-      );
+    'Bad credentials, Please check email and password',
+  );
+  const passwordIsCorrect = await bcrypt.compare(password, user.password);
+  if (!passwordIsCorrect)
+    throw new UnauthorizedException(
+  'Bad credentials, Please check email and password',
+);
 
     const payload = { id: user.id, email: user.email, role: user.role };
 
@@ -70,11 +72,14 @@ export class AuthRepository {
       expiresIn: '30d',
     });
 
+
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
 
     const updateUserToken = await this.DbProvider.update(userTable)
       .set({ refreshToken: hashedRefreshToken })
-      .where(eq(businessOwnerTable.id, user.id));
+      .where(eq(userTable.id, user.id));
+
+
 
     if (!updateUserToken) throw new InternalServerErrorException();
     return { user, accessToken, refreshToken };

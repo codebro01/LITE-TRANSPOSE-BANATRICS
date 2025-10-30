@@ -13,6 +13,8 @@ import * as bcrypt from 'bcrypt';
 import { eq, or } from 'drizzle-orm';
 import { jwtConstants } from '@src/auth/jwtContants';
 import { createUserDto } from '@src/users/dto/create-user.dto';
+import omit from 'lodash.omit';
+
 // import PasswordValidator from 'password-validator';
 
 @Injectable()
@@ -29,9 +31,7 @@ export class UserRepository {
 
   // ! create user here
 
-  async createUser(
-    data: createUserDto
-  ): Promise<any> {
+  async createUser(data: createUserDto): Promise<any> {
     try {
       const { role } = data;
 
@@ -131,14 +131,14 @@ export class UserRepository {
         return { user, accessToken, refreshToken };
       }
 
-      // ! ---------------Create user for business owners----------------------
+      // ! ---------------Create user for drivers----------------------
 
       if (role && role === 'driver') {
         const { fullName, email, password, phone } = data;
 
         if (!email || !password || !fullName || !phone)
           throw new BadRequestException(
-            'Please email, password, phone and business name is required',
+            'Please email, password, phone and business Fullname is required',
           );
 
         //! check if email or phone provided has been used
@@ -229,14 +229,22 @@ export class UserRepository {
     } catch (dbError) {
       console.error('DB Insert Error:', dbError);
 
-      // rollback Supabase user if DB fails
 
       throw dbError;
     }
   }
 
-  async getAllUsers(): Promise<userSelectType[]> {
-    const users = await this.DbProvider.select().from(userTable);
+  async getAllUsers(): Promise<Omit<userSelectType, 'password' | 'refreshToken'>[]> {
+    const users = await this.DbProvider.select({
+      id: userTable.id,
+      email: userTable.email,
+      phone: userTable.phone,
+      role: userTable.role,
+      emailVerified: userTable.emailVerified,
+      createdAt: userTable.createdAt,
+      updatedAt: userTable.updatedAt,
+    }).from(userTable);
+
     return users;
   }
 

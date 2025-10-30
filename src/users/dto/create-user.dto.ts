@@ -4,22 +4,34 @@ import {
   IsString,
   MinLength,
   Matches,
+  IsOptional,
+  IsEnum
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
+
+export enum UserRole {
+  BUSINESS_OWNER = 'businessOwner',
+  DRIVER = 'driver',
+  ADMIN = 'admin',
+}
+
 export class createUserDto {
   @ApiProperty({ example: 'John Doe' })
+  @IsOptional()
   @IsString()
   fullName: string;
 
-
   @ApiProperty({ example: 'Banatrics' })
+  @IsOptional()
   @IsString()
   businessName: string;
 
   @ApiProperty({ example: 'businessOwner' })
-  @IsString()
   @IsNotEmpty()
+  @IsEnum(UserRole, {
+    message: 'Role must be one of: businessOwner, driver, admin',
+  })
   role: string;
 
   @ApiProperty({ example: 'sales@banatrics.com' })

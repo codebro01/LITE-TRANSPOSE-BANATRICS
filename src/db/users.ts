@@ -24,7 +24,6 @@ export const businessOwnerTable = pgTable('businessOwners', {
   id: uuid().defaultRandom().primaryKey().notNull(),
   userId: uuid('user_id')
     .references(() => userTable.id), 
-  role: varchar('role', { length: 50 }).default('driver').notNull(),
   businessName: varchar('businessName', { length: 255 }).notNull(),
   businessAddress: varchar('businessAddress', { length: 255 }),
   businessLogo: varchar('businessLogo', { length: 255 }),
@@ -35,13 +34,13 @@ export const businessOwnerTable = pgTable('businessOwners', {
   //   .default('local')
   //   .notNull(),
 });
-export const driverTable = pgTable('users', {
+export const driverTable = pgTable('drivers', {
   id: uuid().defaultRandom().primaryKey().notNull(),
-  userId: uuid('user_id')
-    .references(() => userTable.id), // Add this line
+  userId: uuid('user_id').references(() => userTable.id), // Add this line
   role: varchar('role', { length: 10 }).default('user').notNull(),
   fullName: varchar('fullName', { length: 255 }).notNull(),
   refreshToken: varchar('refreshToken', { length: 255 }),
+  dp: varchar('dp', { length: 255 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   // authProvider: varchar('authProvider', { length: 20 })
