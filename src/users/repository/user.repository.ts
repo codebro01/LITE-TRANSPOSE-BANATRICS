@@ -7,26 +7,21 @@ import {
 } from '@nestjs/common';
 import { businessOwnerTable, businessOwnerInsertType, userInsertType, driverInsertType, userTable, userSelectType, driverTable } from '@src/db/users';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { SupabaseClient } from '@supabase/supabase-js';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { eq, or } from 'drizzle-orm';
 import { jwtConstants } from '@src/auth/jwtContants';
 import { createUserDto } from '@src/users/dto/create-user.dto';
-import omit from 'lodash.omit';
 
-// import PasswordValidator from 'password-validator';
 
 @Injectable()
 export class UserRepository {
   constructor(
     @Inject('DB')
     private DbProvider: NodePgDatabase<typeof import('@src/db')>,
-    @Inject('NEON_CLIENT') private supabase: SupabaseClient,
     private jwtService: JwtService,
   ) {
     this.DbProvider = DbProvider;
-    this.supabase = supabase;
   }
 
   // ! create user here

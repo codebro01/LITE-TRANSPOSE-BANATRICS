@@ -7,7 +7,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import {  userTable } from '@src/db';
-import { SupabaseClient } from '@supabase/supabase-js';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq, or } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
@@ -29,7 +28,6 @@ export class AuthRepository {
   constructor(
     @Inject('DB')
     private readonly DbProvider: NodePgDatabase<typeof import('@src/db/users')>,
-    @Inject('NEON_CLIENT') private readonly supabase: SupabaseClient,
     private readonly jwtService: JwtService,
   ) {}
   async loginUser(data: { email?: string; password: string; phone?: string }) {

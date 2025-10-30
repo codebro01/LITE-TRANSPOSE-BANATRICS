@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsEnum
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 
@@ -20,11 +21,13 @@ export class createUserDto {
   @ApiProperty({ example: 'John Doe' })
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => value?.trim())
   fullName: string;
 
   @ApiProperty({ example: 'Banatrics' })
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => value?.trim())
   businessName: string;
 
   @ApiProperty({ example: 'businessOwner' })
@@ -37,6 +40,7 @@ export class createUserDto {
   @ApiProperty({ example: 'sales@banatrics.com' })
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }) => value?.trim().toLowerCase())
   email: string;
 
   @ApiProperty({ example: '+234000000000' })
