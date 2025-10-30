@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { UserRepository } from '@src/users/repository/user.repository';
 import { businessOwnerInsertType } from '@src/db/users';
 import { AuthRepository } from '@src/auth/repository/auth.repository';
+import { createUserDto } from '@src/users/dto/create-user.dto';
 
 @Injectable()
 export class UserService {
@@ -10,7 +11,7 @@ export class UserService {
     private readonly authRepository: AuthRepository,
   ) {}
 
-  async createUser(data: businessOwnerInsertType) {
+  async createUser(data: createUserDto) {
     return await this.userRepository.createUser(data);
   }
 

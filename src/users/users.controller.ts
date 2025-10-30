@@ -15,7 +15,7 @@ import { Roles } from '@src/auth/decorators/roles.decorators';
 import type { Response } from 'express';
 import {
   UpdatebusinessOwnerDto,
-  CreatebusinessOwnerDto,
+  createUserDto,
 } from '@src/users/dto/index.dto';
 
 import omit from 'lodash.omit';
@@ -27,7 +27,7 @@ export class UserController {
   // ! create users
   @Post('signup')
   // @UseGuards(JwtAuthGuard)
-  async createUser(@Body() body: CreatebusinessOwnerDto, @Res() res: Response) {
+  async createUser(@Body() body: createUserDto, @Res() res: Response) {
     const { user, accessToken, refreshToken } =
       await this.userService.createUser(body);
 

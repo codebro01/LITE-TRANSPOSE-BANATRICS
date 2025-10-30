@@ -31,14 +31,24 @@ export class AuthRepository {
     @Inject('NEON_CLIENT') private readonly supabase: SupabaseClient,
     private readonly jwtService: JwtService,
   ) {}
-  async loginUser(data: { email: string; password: string; phone: string }) {
+  async loginUser(data: { email?: string; password: string; phone?: string }) {
     const { email, password, phone } = data;
 
     if ((!phone && !email) || !password)
       throw new BadRequestException('Please provide email and password');
+
+    let whereClause;
+    if (email && phone) {
+      whereClause = or(eq(userTable.email, email), eq(userTable.phone, phone));
+    } else if (email) {
+      whereClause = eq(userTable.email, email);
+    } else {
+      whereClause = eq(userTable.phone, phone!);
+    }
+
     const [user] = await this.DbProvider.select()
       .from(userTable)
-      .where(or(eq(userTable.email, email), eq(userTable.phone, phone)));
+      .where(whereClause);
     if (!user)
       throw new UnauthorizedException(
         'Bad credentials, Please check email and password',

@@ -24,7 +24,7 @@ export class UpdatebusinessOwnerDto {
   })
   @IsString()
   @IsOptional()
-  businessEmail: string;
+  email: string;
 
   @ApiPropertyOptional({ example: '+234000000000' })
   @IsString()

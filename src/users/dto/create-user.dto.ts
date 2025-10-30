@@ -1,6 +1,5 @@
 // src/users/dto/create-user.dto.ts
 import {
-  IsEmail,
   IsNotEmpty,
   IsString,
   MinLength,
@@ -8,18 +7,25 @@ import {
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreatebusinessOwnerDto {
+export class createUserDto {
+  @ApiProperty({ example: 'John Doe' })
+  @IsString()
+  fullName: string;
+
 
   @ApiProperty({ example: 'Banatrics' })
   @IsString()
-  @IsNotEmpty()
   businessName: string;
 
+  @ApiProperty({ example: 'businessOwner' })
+  @IsString()
+  @IsNotEmpty()
+  role: string;
 
   @ApiProperty({ example: 'sales@banatrics.com' })
   @IsString()
   @IsNotEmpty()
-  businessEmail: string;
+  email: string;
 
   @ApiProperty({ example: '+234000000000' })
   @IsString()
