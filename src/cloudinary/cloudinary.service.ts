@@ -1,8 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import {
-  UploadApiResponse,
-  UploadApiErrorResponse,
-} from 'cloudinary';
+import { UploadApiResponse, UploadApiErrorResponse } from 'cloudinary';
 import { cloudinary } from '@src/cloudinary/config';
 
 @Injectable()
@@ -22,7 +19,7 @@ export class CloudinaryService {
       const stream = cloudinary.uploader.upload_stream(
         {
           folder,
-          transformation:  [{ width: 500, height: 500, crop: 'scale' }],
+          transformation: [{ width: 500, height: 500, crop: 'scale' }],
         },
         (error?: UploadApiErrorResponse, result?: UploadApiResponse) => {
           if (error || !result) {

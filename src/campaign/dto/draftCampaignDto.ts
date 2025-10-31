@@ -116,10 +116,11 @@ export class DraftCampaignDto {
     example: '#FF5733, #C70039, #900C3F',
     description: 'Color palette for the campaign',
   })
-  @IsString()
+  @IsArray()
+  @IsString({ each: true })
   @IsOptional()
   @Transform(({ value }) => value?.trim())
-  colorPallete: string;
+  colorPallete: string[];
 
   @ApiProperty({
     example: 'Shop Now and Save 50%',

@@ -46,6 +46,7 @@ export class UploadController {
       storage: multer.memoryStorage() as StorageEngine,
     }),
   )
+  
   async uploadImages(@UploadedFiles() files: multer.File[]) {
     if (!files || files.length === 0) {
       throw new BadRequestException('Please upload at least one image');

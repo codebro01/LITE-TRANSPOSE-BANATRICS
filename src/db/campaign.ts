@@ -39,7 +39,7 @@ export const campaignTable = pgTable('campaigns', {
   startDate: timestamp('start_date'),
   endDate: timestamp('end_date'),
   companyLogo: varchar('company_logo'), // URL to uploaded logo
-  colorPallete: varchar('color_pallete'),
+  colorPallete: varchar('color_pallete').array(),
   callToAction: varchar('call_to_action'),
   mainMessage: text('main_message'),
   responseOnSeeingBanner: text('response_on_seeing_banner'),
@@ -49,7 +49,7 @@ export const campaignTable = pgTable('campaigns', {
   slogan: varchar('slogan', { length: 500 }),
 
   // Foreign key (if campaigns belong to users)
-  userId: varchar('user_id')
+  userId: uuid('userId')
     .notNull()
     .references(() => userTable.id),
 

@@ -9,9 +9,10 @@ import {
   IsOptional,
   Min,
   MaxLength,
-  IsArray
+  IsArray,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { Optional } from '@nestjs/common';
 
 export enum PackageType {
   STARTER = 'starter',
@@ -20,7 +21,7 @@ export enum PackageType {
   CUSTOM = 'custom',
 }
 
-export class CreateCampaignDto {
+export class PublishCampaignDto {
   @ApiProperty({
     example: 'premium',
     enum: PackageType,
@@ -38,7 +39,7 @@ export class CreateCampaignDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => (value ? value?.trim() : value))
   duration: string;
 
   @ApiProperty({
@@ -47,7 +48,7 @@ export class CreateCampaignDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => (value ? value?.trim() : value))
   revisions: string;
 
   @ApiProperty({
@@ -75,7 +76,7 @@ export class CreateCampaignDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => (value ? value?.trim() : value))
   campaignName: string;
 
   @ApiProperty({
@@ -85,7 +86,7 @@ export class CreateCampaignDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => (value ? value?.trim() : value))
   campaignDescriptions: string;
 
   @ApiProperty({
@@ -110,17 +111,17 @@ export class CreateCampaignDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => (value ? value?.trim() : value))
   companyLogo: string;
 
   @ApiProperty({
     example: '#FF5733, #C70039, #900C3F',
     description: 'Color palette for the campaign',
   })
-  @IsString()
+  @IsArray()
+  @IsString({ each: true })
   @IsNotEmpty()
-  @Transform(({ value }) => value?.trim())
-  colorPallete: string;
+  colorPallete: string[];
 
   @ApiProperty({
     example: 'Shop Now and Save 50%',
@@ -128,7 +129,7 @@ export class CreateCampaignDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => (value ? value?.trim() : value))
   callToAction: string;
 
   @ApiProperty({
@@ -137,7 +138,7 @@ export class CreateCampaignDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => (value ? value?.trim() : value))
   mainMessage: string;
 
   @ApiProperty({
@@ -148,7 +149,7 @@ export class CreateCampaignDto {
   @IsOptional()
   @IsString()
   @MaxLength(500)
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => (value ? value?.trim() : value))
   slogan?: string;
 
   @ApiProperty({
@@ -157,7 +158,7 @@ export class CreateCampaignDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => (value ? value?.trim() : value))
   responseOnSeeingBanner: string;
 
   @ApiProperty({
@@ -169,8 +170,8 @@ export class CreateCampaignDto {
     type: [String],
     isArray: true,
   })
+  @Optional()
   @IsArray()
   @IsString({ each: true })
-  @IsOptional()
   uploadMediaFiles?: string[];
 }

@@ -1,42 +1,194 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { NodePgDatabase } from "drizzle-orm/node-postgres";
-import { DraftCampaignDto } from "@src/campaign/dto/draftCampaignDto";
-import { campaignTable } from "@src/db/campaign";
+import { Inject, Injectable } from '@nestjs/common';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { and, eq } from 'drizzle-orm';
+import { campaignTable } from '@src/db/campaign';
 
+export type CampaignStatus = 'draft' | 'pending' | 'active' | 'completed';
+export type packageType = 'starter' | 'basic' | 'premium' | 'custom';
+
+export interface CreateCampaignData {
+  packageType?: packageType;
+  duration?: string;
+  revisions?: string;
+  price?: number;
+  noOfDrivers?: number;
+  campaignName?: string;
+  campaignDescriptions?: string;
+  startDate?: Date | null;
+  endDate?: Date | null;
+  companyLogo?: string;
+  colorPallete?: string[];
+  callToAction?: string;
+  mainMessage?: string;
+  slogan?: string;
+  responseOnSeeingBanner?: string;
+  uploadMediaFiles?: string[];
+  statusType: CampaignStatus;
+  updatedAt?: Date
+}
+
+export interface UpdateCampaignData {
+  packageType?: packageType;
+  duration?: string;
+  revisions?: string;
+  price?: number;
+  noOfDrivers?: number;
+  campaignName?: string;
+  campaignDescriptions?: string;
+  startDate?: Date | null;
+  endDate?: Date | null;
+  companyLogo?: string;
+  colorPallete?: string[];
+  callToAction?: string;
+  mainMessage?: string;
+  slogan?: string;
+  responseOnSeeingBanner?: string;
+  uploadMediaFiles?: string[];
+  statusType?: CampaignStatus;
+  updatedAt?: Date;
+}
 
 @Injectable()
-
 export class CampaignRepository {
-    constructor(
-       @Inject('DB')
-       private DbProvider: NodePgDatabase<typeof import('@src/db')>
-    ) {
-        this.DbProvider = DbProvider
-    }
+  constructor(
+    @Inject('DB')
+    private DbProvider: NodePgDatabase<typeof import('@src/db')>,
+  ) {}
 
+  /**
+   * Create a new campaign
+   */
+  async create(data: CreateCampaignData, userId: string) {
+    const [campaign] = await this.DbProvider.insert(campaignTable)
+      .values({ userId, ...data })
+      .returning();
 
-    async draftCampaign(userId: string, data: DraftCampaignDto): Promise<any> {
-           try {
-            if(!userId || !data) throw new BadRequestException('Please provide userId and draft data')
-               const [draft] = await this.DbProvider.insert(campaignTable)
-                 .values({
-                   ...data,
-                   userId,
-                   statusType: 'draft',
-                   startDate: data.startDate ? new Date(data.startDate) : null,
-                   endDate: data.endDate ? new Date(data.endDate) : null,
-                 })
-                 .returning();
+    return campaign;
+  }
 
-               return { message: 'Draft saved successfully', draft };
-           }
-           catch(error) {
+  /**
+   * Find a campaign by ID and user ID
+   */
+  async findByIdAndUserId(id: string, userId: string) {
+    const [campaign] = await this.DbProvider.select()
+      .from(campaignTable)
+      .where(and(eq(campaignTable.id, id), eq(campaignTable.userId, userId)))
+      .limit(1);
 
-                  console.error('Insert Error:', error);
+    return campaign || null;
+  }
 
-            throw error
-           }
-    }
+  /**
+   * Find a draft campaign by ID and user ID
+   */
+  async findDraftByIdAndUserId(id: string, userId: string) {
+    const [campaign] = await this.DbProvider.select()
+      .from(campaignTable)
+      .where(
+        and(
+          eq(campaignTable.id, id),
+          eq(campaignTable.userId, userId),
+          eq(campaignTable.statusType, 'draft'),
+        ),
+      )
+      .limit(1);
 
+    return campaign || null;
+  }
 
+  /**
+   * Update a campaign by ID
+   */
+  async updateById(id: string, data: UpdateCampaignData, userId: string) {
+    const [updated] = await this.DbProvider.update(campaignTable)
+      .set(data)
+      .where(and(eq(campaignTable.id, id), eq(campaignTable.userId, userId)))
+      .returning();
+
+    return updated;
+  }
+
+  /**
+   * Find all campaigns for a user
+   */
+  async findAllByUserId(userId: string) {
+    const campaigns = await this.DbProvider.select()
+      .from(campaignTable)
+      .where(eq(campaignTable.userId, userId));
+
+    return campaigns;
+  }
+
+  /**
+   * Find all draft campaigns for a user
+   */
+  async findDraftsByUserId(userId: string) {
+    const drafts = await this.DbProvider.select()
+      .from(campaignTable)
+      .where(
+        and(
+          eq(campaignTable.userId, userId),
+          eq(campaignTable.statusType, 'draft'),
+        ),
+      );
+
+    return drafts;
+  }
+
+  /*
+  ! Find all published (pending) campaigns for a user
+   */
+  async findPublishedByUserId(userId: string) {
+    const campaigns = await this.DbProvider.select()
+      .from(campaignTable)
+      .where(
+        and(
+          eq(campaignTable.userId, userId),
+          eq(campaignTable.statusType, 'pending'),
+        ),
+      );
+
+    return campaigns;
+  }
+
+  /**
+   * Find campaigns by status for a user
+   */
+  async findByStatusAndUserId(userId: string, status: CampaignStatus) {
+    const campaigns = await this.DbProvider.select()
+      .from(campaignTable)
+      .where(
+        and(
+          eq(campaignTable.userId, userId),
+          eq(campaignTable.statusType, status),
+        ),
+      );
+
+    return campaigns;
+  }
+
+  /**
+   * Count campaigns for a user
+   */
+  async countByUserId(userId: string): Promise<number> {
+    const campaigns = await this.findAllByUserId(userId);
+    return campaigns.length;
+  }
+
+  /**
+   * Delete a campaign by ID and user ID
+   */
+  async deleteByIdAndUserId(id: string, userId: string) {
+    const [deleted] = await this.DbProvider.delete(campaignTable)
+      .where(
+        and(
+          eq(campaignTable.id, id),
+          eq(campaignTable.userId, userId),
+          eq(campaignTable.statusType, 'draft'),
+        ),
+      )
+      .returning();
+
+    return deleted || null;
+  }
 }
