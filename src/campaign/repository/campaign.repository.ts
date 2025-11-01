@@ -6,6 +6,11 @@ import { campaignTable } from '@src/db/campaign';
 export type CampaignStatus = 'draft' | 'pending' | 'active' | 'completed';
 export type packageType = 'starter' | 'basic' | 'premium' | 'custom';
 
+export type uploadType =  {
+  secure_url: string, 
+  public_id: string
+}
+
 export interface CreateCampaignData {
   packageType?: packageType;
   duration?: string;
@@ -16,15 +21,15 @@ export interface CreateCampaignData {
   campaignDescriptions?: string;
   startDate?: Date | null;
   endDate?: Date | null;
-  companyLogo?: string;
+  companyLogo?: uploadType;
   colorPallete?: string[];
   callToAction?: string;
   mainMessage?: string;
   slogan?: string;
   responseOnSeeingBanner?: string;
-  uploadMediaFiles?: string[];
+  uploadMediaFiles?: uploadType[];
   statusType: CampaignStatus;
-  updatedAt?: Date
+  updatedAt?: Date;
 }
 
 export interface UpdateCampaignData {
@@ -37,13 +42,13 @@ export interface UpdateCampaignData {
   campaignDescriptions?: string;
   startDate?: Date | null;
   endDate?: Date | null;
-  companyLogo?: string;
+  companyLogo?: uploadType;
   colorPallete?: string[];
   callToAction?: string;
   mainMessage?: string;
   slogan?: string;
   responseOnSeeingBanner?: string;
-  uploadMediaFiles?: string[];
+  uploadMediaFiles?: uploadType[];
   statusType?: CampaignStatus;
   updatedAt?: Date;
 }

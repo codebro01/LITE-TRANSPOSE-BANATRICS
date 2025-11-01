@@ -8,7 +8,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';
 import { jwtConstants } from '@src/auth/jwtContants';
-import { businessOwnerTable } from '@src/db';
+import { userTable } from '@src/db';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq, sql } from 'drizzle-orm';
 
@@ -25,11 +25,9 @@ export class JwtAuthGuard implements CanActivate {
     const response = context.switchToHttp().getResponse<Response>();
 
     const access_token =
-      request.cookies?.access_token ||
-      request.headers['authorization']?.split(' ')[1]; // for browser cookies // for mobile apps
+      request.cookies?.access_token // for browser cookies // for mobile apps
     const refresh_token =
-      request.cookies?.refresh_token ||
-      request.headers['authorization']?.split(' ')[1]; // for browser cookies // for mobile apps
+      request.cookies?.refresh_token // for browser cookies // for mobile apps
 
     if (!access_token && !refresh_token) {
       throw new UnauthorizedException('No token provided');
@@ -55,10 +53,12 @@ export class JwtAuthGuard implements CanActivate {
           'Access token expired and no refresh token provided',
         );
       }
+      console.log('got to is not refresh token', refresh_token);
       const token = await this.jwtService.verifyAsync(refresh_token, {
-        secret: jwtConstants.accessTokenSecret,
+        secret: jwtConstants.refreshTokenSecret,
       });
 
+      console.log('got to after is not refresh token');
       console.log(refresh_token, access_token);
 
       if (!token) {
@@ -93,12 +93,15 @@ export class JwtAuthGuard implements CanActivate {
         maxAge: 1000 * 60 * 60 * 24 * 30, // 30d
       });
 
+      console.log('id', id)
+
       const newTokenUser = await this.jwtService.verifyAsync(newAccessToken, {
         secret: jwtConstants.accessTokenSecret,
       });
-      await this.DbProvider.update(businessOwnerTable)
+      console.log('got to newTokenUser');
+      await this.DbProvider.update(userTable)
         .set({ refreshToken: newRefreshToken })
-        .where(eq(businessOwnerTable.id, id));
+        .where(eq(userTable.id, id));
       if (!newTokenUser) {
         response.clearCookie('access_token');
         response.clearCookie('refresh_token');
@@ -108,7 +111,7 @@ export class JwtAuthGuard implements CanActivate {
       const tokenUser = newTokenUser || token;
       // After verifying JWT in NestJS
       await this.DbProvider.execute(
-        sql`SET app.current_user_role = ${tokenUser.role}`,
+        sql`SET app.role = ${tokenUser.role}`,
       );
 
       // const payload = this.jwtService.verify(token); // verify with secret

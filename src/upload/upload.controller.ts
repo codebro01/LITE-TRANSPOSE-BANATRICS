@@ -52,8 +52,8 @@ export class UploadController {
       throw new BadRequestException('Please upload at least one image');
     }
 
-    const results = await this.cloudinaryService.uploadImage(
-      files.map((f) => f.buffer),
+    const results = await this.cloudinaryService.uploadMultipleImages(
+      files,
       'my-folder',
     );
 

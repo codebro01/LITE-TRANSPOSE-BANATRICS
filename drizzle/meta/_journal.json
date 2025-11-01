@@ -64,6 +64,13 @@
       "when": 1761882482355,
       "tag": "0008_sleepy_tarantula",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1761961163241,
+      "tag": "0009_brave_logan",
+      "breakpoints": true
     }
   ]
 }

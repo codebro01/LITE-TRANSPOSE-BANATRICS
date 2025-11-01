@@ -11,9 +11,12 @@ import {
   Post,
   Delete,
   HttpStatus,
-  BadRequestException
+  BadRequestException,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import {
+  FilesInterceptor,
+  FileFieldsInterceptor,
+} from '@nestjs/platform-express';
 import multer, { StorageEngine } from 'multer';
 import { PublishCampaignDto } from './dto/publishCampaignDto';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
@@ -21,19 +24,28 @@ import { RolesGuard } from '@src/auth/guards/roles.guard';
 import { Roles } from '@src/auth/decorators/roles.decorators';
 import { CampaignService } from '@src/campaign/campaign.service';
 import { CloudinaryService } from '@src/cloudinary/cloudinary.service';
+import { DraftCampaignDto } from './dto/draftCampaignDto';
 
 @Controller('campaign')
 export class CampaignController {
-  constructor(private readonly campaignService: CampaignService,     private readonly cloudinaryService: CloudinaryService
+  constructor(
+    private readonly campaignService: CampaignService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Post('create/publish')
   @UseInterceptors(
-     FilesInterceptor('files', 5, {
+    FileFieldsInterceptor(
+      [
+        { name: 'files', maxCount: 5 },
+        { name: 'companyLogo', maxCount: 1 },
+      ],
+      {
         storage: multer.memoryStorage() as StorageEngine,
-      }),
+      },
+    ),
   )
   async createAndPublishCampaign(
     @Req() req,
@@ -42,30 +54,58 @@ export class CampaignController {
     @UploadedFiles() files: multer.file,
   ) {
     const userId = req.user.id;
-    let data = body;
-      if (!files || files.length === 0) {
-          throw new BadRequestException('Please upload at least one image');
-        }
+    if (!files.files || files.files.length === 0) {
+      throw new BadRequestException('Please upload at least one image');
+    }
+    if (!files.companyLogo || files.companyLogo.length === 0) {
+      throw new BadRequestException('Please upload company logo');
+    }
 
-          const results = await this.cloudinaryService.uploadImage(
-            files.map((f) => f.buffer),
-            'campaign-folder',
-          );
-
-          console.log(results)
-
-          
-          // data = { uploadMediaFiles: results, ...data };
     const campaign = await this.campaignService.createAndPublishCampaign(
       userId,
-      data,
+      body,
+      files.files,
+      files.companyLogo[0],
     );
-    res
-      .status(HttpStatus.CREATED)
-      .json({
-        message:
-          'Campaign published successfully, Please kindly wait for it to be approved',
-        data: campaign,
-      });
+    res.status(HttpStatus.CREATED).json({
+      message:
+        'Campaign published successfully, Please kindly wait for it to be approved',
+      data: campaign,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('businessOwner')
+  @Post('create/draft')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'files', maxCount: 5 },
+        { name: 'companyLogo', maxCount: 1 },
+      ],
+      {
+        storage: multer.memoryStorage() as StorageEngine,
+      },
+    ),
+  )
+  async draftCampaign(
+    @Req() req,
+    @Res() res,
+    @Body() body: DraftCampaignDto,
+    @UploadedFiles() files: multer.file,
+  ) {
+    const userId = req.user.id;
+
+    const campaign = await this.campaignService.draftCampaign(
+      userId,
+      body,
+      files.files ? files.files : null,
+      files.companyLogo ? files.companyLogo[0] : null
+    );
+    res.status(HttpStatus.CREATED).json({
+      message:
+        'Campaign published successfully, Please kindly wait for it to be approved',
+      data: campaign,
+    });
   }
 }

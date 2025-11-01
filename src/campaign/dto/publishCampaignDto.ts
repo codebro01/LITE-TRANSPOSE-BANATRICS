@@ -11,8 +11,7 @@ import {
   MaxLength,
   IsArray,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
-import { Optional } from '@nestjs/common';
+import { Transform, Type } from 'class-transformer';
 
 export enum PackageType {
   STARTER = 'starter',
@@ -55,6 +54,7 @@ export class PublishCampaignDto {
     example: 150000,
     description: 'Campaign price in Naira',
   })
+  @Type(() => Number)
   @IsNumber()
   @IsNotEmpty()
   @Min(0, { message: 'Price must be a positive number' })
@@ -64,6 +64,7 @@ export class PublishCampaignDto {
     example: 50,
     description: 'Number of drivers for the campaign',
   })
+  @Type(() => Number)
   @IsNumber()
   @IsNotEmpty()
   @Min(1, { message: 'At least 1 driver is required' })
@@ -105,14 +106,14 @@ export class PublishCampaignDto {
   @IsNotEmpty()
   endDate: string;
 
-  @ApiProperty({
-    example: 'https://example.com/uploads/logo.png',
-    description: 'URL of uploaded company logo',
-  })
-  @IsString()
-  @IsNotEmpty()
-  @Transform(({ value }) => (value ? value?.trim() : value))
-  companyLogo: string;
+  // @ApiProperty({
+  //   example: 'https://example.com/uploads/logo.png',
+  //   description: 'URL of uploaded company logo',
+  // })
+  // @IsString()
+  // @IsNotEmpty()
+  // @Transform(({ value }) => (value ? value?.trim() : value))
+  // companyLogo: string;
 
   @ApiProperty({
     example: '#FF5733, #C70039, #900C3F',
@@ -161,17 +162,17 @@ export class PublishCampaignDto {
   @Transform(({ value }) => (value ? value?.trim() : value))
   responseOnSeeingBanner: string;
 
-  @ApiProperty({
-    example: [
-      'https://example.com/media/image1.jpg',
-      'https://example.com/media/video1.mp4',
-    ],
-    description: 'Array of uploaded media file URLs',
-    type: [String],
-    isArray: true,
-  })
-  @Optional()
-  @IsArray()
-  @IsString({ each: true })
-  uploadMediaFiles?: string[];
+  // @ApiProperty({
+  //   example: [
+  //     'https://example.com/media/image1.jpg',
+  //     'https://example.com/media/video1.mp4',
+  //   ],
+  //   description: 'Array of uploaded media file URLs',
+  //   type: [String],
+  //   isArray: true,
+  // })
+  // @Optional()
+  // @IsArray()
+  // @IsString({ each: true })
+  // uploadMediaFiles?: string[];
 }

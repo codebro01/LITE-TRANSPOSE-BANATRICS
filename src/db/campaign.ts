@@ -7,6 +7,7 @@ import {
   text,
   pgEnum,
   uuid,
+  jsonb
 } from 'drizzle-orm/pg-core';
 import { userTable } from '@src/db/users';
 
@@ -38,12 +39,17 @@ export const campaignTable = pgTable('campaigns', {
   campaignDescriptions: text('campaign_descriptions'),
   startDate: timestamp('start_date'),
   endDate: timestamp('end_date'),
-  companyLogo: varchar('company_logo'), // URL to uploaded logo
+  companyLogo: jsonb('company_logo').$type<{
+    secure_url: string;
+    public_id: string;
+  }>(), // URL to uploaded logo
   colorPallete: varchar('color_pallete').array(),
   callToAction: varchar('call_to_action'),
   mainMessage: text('main_message'),
   responseOnSeeingBanner: text('response_on_seeing_banner'),
-  uploadMediaFiles: text('upload_media_files').array(), // Array of strings
+  uploadMediaFiles: jsonb('upload_media_files')
+    .$type<{ secure_url: string; public_id: string }[]>()
+    .default([]), // Array of strings
 
   // Optional field
   slogan: varchar('slogan', { length: 500 }),
