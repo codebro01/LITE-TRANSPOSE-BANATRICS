@@ -48,7 +48,7 @@ export class UserController {
 
     res
       .status(HttpStatus.ACCEPTED)
-      .json({ user: safeUser, accessToken, refreshToken });
+      .json({ user: safeUser, accessToken });
   }
 
   //! get all users in db

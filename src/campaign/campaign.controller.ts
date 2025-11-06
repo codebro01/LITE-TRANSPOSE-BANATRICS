@@ -100,7 +100,44 @@ export class CampaignController {
       userId,
       body,
       files.files ? files.files : null,
-      files.companyLogo ? files.companyLogo[0] : null
+      files.companyLogo ? files.companyLogo[0] : null,
+    );
+    res.status(HttpStatus.CREATED).json({
+      message:
+        'Draft saved successfully',
+      data: campaign,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('businessOwner')
+  @Post('create/draft')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'files', maxCount: 5 },
+        { name: 'companyLogo', maxCount: 1 },
+      ],
+      {
+        storage: multer.memoryStorage() as StorageEngine,
+      },
+    ),
+  )
+  async updateCampaign(
+    @Req() req,
+    @Res() res,
+    @Body() body: DraftCampaignDto,
+    @UploadedFiles() files: multer.file,
+  ) {
+    const userId = req.user.id;
+    const { id } = req.query;
+
+    const campaign = await this.campaignService.updateDraft(
+      id,
+      userId,
+      body,
+      files.files ? files.files : null,
+      files.companyLogo ? files.companyLogo[0] : null,
     );
     res.status(HttpStatus.CREATED).json({
       message:

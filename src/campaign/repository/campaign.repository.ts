@@ -42,13 +42,13 @@ export interface UpdateCampaignData {
   campaignDescriptions?: string;
   startDate?: Date | null;
   endDate?: Date | null;
-  companyLogo?: uploadType;
+  companyLogo?: uploadType | null;
   colorPallete?: string[];
   callToAction?: string;
   mainMessage?: string;
   slogan?: string;
   responseOnSeeingBanner?: string;
-  uploadMediaFiles?: uploadType[];
+  uploadMediaFiles?: uploadType[] | null;
   statusType?: CampaignStatus;
   updatedAt?: Date;
 }
@@ -64,6 +64,13 @@ export class CampaignRepository {
    * Create a new campaign
    */
   async create(data: CreateCampaignData, userId: string) {
+    const [campaign] = await this.DbProvider.insert(campaignTable)
+      .values({ userId, ...data })
+      .returning();
+
+    return campaign;
+  }
+  async draftCampaign(data: UpdateCampaignData, userId: string) {
     const [campaign] = await this.DbProvider.insert(campaignTable)
       .values({ userId, ...data })
       .returning();
