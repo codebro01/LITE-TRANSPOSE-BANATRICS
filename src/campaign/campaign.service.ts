@@ -503,4 +503,16 @@ export class CampaignService {
 
     return { campaign };
   }
+  //!---------------- find campaign by status and userId ------------------------------------------------------
+
+  async getCampaignsByStatusAndUserId(id: string, userId: string) {
+    const campaign = await this.campaignRepository.findByIdAndUserId(userId, status
+    );
+
+    if (!campaign) {
+      throw new NotFoundException('Campaign not found');
+    }
+
+    return { campaign };
+  }
 }
