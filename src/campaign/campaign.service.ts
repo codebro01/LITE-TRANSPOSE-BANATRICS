@@ -1,11 +1,8 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   NotFoundException,
-  UploadedFile,
 } from '@nestjs/common';
-import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DraftCampaignDto } from '@src/campaign/dto/draftCampaignDto';
 import { PublishCampaignDto } from '@src/campaign/dto/publishCampaignDto';
 import { CloudinaryService } from '@src/cloudinary/cloudinary.service';
@@ -314,6 +311,10 @@ export class CampaignService {
       uploadedLogo = uploadLogoPromise;
     }
 
+    if (data.existingMediaFiles && data.existingMediaFiles.length > 0) {
+      uploadedMediaFiles = [...data.existingMediaFiles];
+    }
+
     if (uploadMediaFiles) {
       for (const singleMediaFile of uploadMediaFiles) {
         if (singleMediaFile.size > maxFileSize)
@@ -329,7 +330,10 @@ export class CampaignService {
             'campaign-folder',
           );
 
-        uploadedMediaFiles = uploadFilePromise;
+        uploadedMediaFiles =
+          data.existingMediaFiles && data.existingMediaFiles.length > 0
+            ? [...data.existingMediaFiles, ...uploadFilePromise]
+            : uploadFilePromise;
       } catch (error: any) {
         throw new BadRequestException(error.message);
       }
@@ -351,7 +355,7 @@ export class CampaignService {
       {
         ...data,
         uploadMediaFiles: uploadedMediaFiles,
-        companyLogo: uploadedLogo,
+        companyLogo: uploadedLogo || data.existingLogo,
         startDate: data.startDate ? new Date(data.startDate) : null,
         endDate: data.endDate ? new Date(data.endDate) : null,
         updatedAt: new Date(),
@@ -361,8 +365,14 @@ export class CampaignService {
 
     return { message: 'Draft updated successfully', campaign: updated };
   }
-  //!---------------- publish camapaign draft------------------------------------------------------
-  async publishCampaign(id: string, data: PublishCampaignDto, userId: string) {
+  // //!---------------- publish camapaign draft------------------------------------------------------
+  async publishDraftCampaign(
+    id: string,
+    userId: string,
+    data: PublishCampaignDto,
+    uploadMediaFiles: multer.file[],
+    uploadLogo: multer.file,
+  ) {
     const existing = await this.campaignRepository.findDraftByIdAndUserId(
       id,
       userId,
@@ -379,19 +389,72 @@ export class CampaignService {
       throw new BadRequestException('End date must be after start date');
     }
 
-    const published = await this.campaignRepository.create(
+       if (!userId || !data)
+         throw new BadRequestException('Please provide userId and draft data');
+
+       const maxFileSize = 5 * 1024 * 1024;
+
+       // Handle Logo
+       let finalLogo;
+       if (uploadLogo) {
+         // New logo uploaded
+         if (uploadLogo.size > maxFileSize) {
+           throw new BadRequestException('Logo file size exceeds 5mb');
+         }
+         const uploaded = await this.cloudinaryService.uploadImage(
+           uploadLogo.buffer,
+           'logo-folder',
+         );
+         finalLogo = {
+           secure_url: uploaded.secure_url,
+           public_id: uploaded.public_id,
+         };
+       } else if (data.existingLogo) {
+         // Keep existing logo
+         finalLogo = data.existingLogo;
+       } else {
+         // No logo
+                  throw new BadRequestException(
+                    'Please upload a logo file',
+                  );
+
+       }
+
+       // Handle Media Files
+       let finalMediaFiles: uploadType[] = [];
+
+       // Keep existing media files
+       if (data.existingMediaFiles && data.existingMediaFiles.length > 0) {
+         finalMediaFiles = [...data.existingMediaFiles];
+       }
+
+       // Upload new media files
+       if (uploadMediaFiles && uploadMediaFiles.length > 0) {
+         for (const file of uploadMediaFiles) {
+           if (file.size > maxFileSize) {
+             throw new BadRequestException('Media file size exceeds 5mb');
+           }
+         }
+
+         const newUploads = await this.cloudinaryService.uploadMultipleImages(
+           uploadMediaFiles,
+           'campaign-folder',
+         );
+
+         const mappedUploads = newUploads.map((file) => ({
+           secure_url: file.secure_url,
+           public_id: file.public_id,
+         }));
+
+         finalMediaFiles = [...finalMediaFiles, ...mappedUploads];
+       }
+
+    const published = await this.campaignRepository.updateById(
+      id,
       {
         ...data,
-        uploadMediaFiles: [
-          {
-            secure_url: '',
-            public_id: '',
-          },
-        ],
-        companyLogo: {
-          secure_url: '',
-          public_id: '',
-        },
+        uploadMediaFiles: finalMediaFiles,
+        companyLogo: finalLogo,
         startDate: data.startDate ? new Date(data.startDate) : null,
         endDate: data.endDate ? new Date(data.endDate) : null,
         statusType: 'pending',

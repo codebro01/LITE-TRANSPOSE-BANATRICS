@@ -9,12 +9,11 @@ import {
   Patch,
   Get,
   Post,
-  Delete,
+  // Delete,
   HttpStatus,
   BadRequestException,
 } from '@nestjs/common';
 import {
-  FilesInterceptor,
   FileFieldsInterceptor,
 } from '@nestjs/platform-express';
 import multer, { StorageEngine } from 'multer';
@@ -103,15 +102,14 @@ export class CampaignController {
       files.companyLogo ? files.companyLogo[0] : null,
     );
     res.status(HttpStatus.CREATED).json({
-      message:
-        'Draft saved successfully',
+      message: 'Draft saved successfully',
       data: campaign,
     });
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
-  @Post('create/draft')
+  @Patch('update/draft')
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -140,8 +138,98 @@ export class CampaignController {
       files.companyLogo ? files.companyLogo[0] : null,
     );
     res.status(HttpStatus.CREATED).json({
-      message:
-        'Campaign published successfully, Please kindly wait for it to be approved',
+      message: 'Campaign updated successfully',
+      data: campaign,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('businessOwner')
+  @Patch('publish/draft')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'files', maxCount: 5 },
+        { name: 'companyLogo', maxCount: 1 },
+      ],
+      {
+        storage: multer.memoryStorage() as StorageEngine,
+      },
+    ),
+  )
+  async publishDraftCampaign(
+    @Req() req,
+    @Res() res,
+    @Body() body: DraftCampaignDto,
+    @UploadedFiles() files: multer.file,
+  ) {
+    const userId = req.user.id;
+    const { id } = req.query;
+
+    const campaign = await this.campaignService.publishDraftCampaign(
+      id,
+      userId,
+      body,
+      files.files ? files.files : null,
+      files.companyLogo ? files.companyLogo[0] : null,
+    );
+    res.status(HttpStatus.CREATED).json({
+      message: 'Campaign updated successfully',
+      data: campaign,
+    });
+  }
+
+  // !  get all campaign owned by business owners
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('businessOwner')
+  @Get('get-all')
+  async getAllCampaigns(@Req() req, @Res() res) {
+    const userId = req.user.id;
+
+    const campaign = await this.campaignService.getAllCampaigns(userId);
+    res.status(HttpStatus.CREATED).json({
+      message: 'Campaign updated successfully',
+      data: campaign,
+    });
+  }
+
+  // !  get all campaign draft owned by business owners
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('businessOwner')
+  @Get('get-all-drafts')
+  async getAllCampaignsDraft(@Req() req, @Res() res) {
+    const userId = req.user.id;
+
+    const campaign = await this.campaignService.getDrafts(userId);
+    res.status(HttpStatus.CREATED).json({
+      message: 'Campaign updated successfully',
+      data: campaign,
+    });
+  }
+  // !  get all campaign publised owned by business owners
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('businessOwner')
+  @Get('get-all-published')
+  async getAllCampaignsPublished(@Req() req, @Res() res) {
+    const userId = req.user.id;
+
+    const campaign = await this.campaignService.getPublished(userId);
+    res.status(HttpStatus.CREATED).json({
+      message: 'Campaign updated successfully',
+      data: campaign,
+    });
+  }
+
+  // !  get all campaign publised owned by business owners
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('businessOwner')
+  @Get('get-single')
+  async getSingleCampaign(@Req() req, @Res() res) {
+    const userId = req.user.id;
+    const { id } = req.query;
+    const campaign = await this.campaignService.getCampaignById(id, userId);
+    res.status(HttpStatus.CREATED).json({
+      message: 'Campaign updated successfully',
       data: campaign,
     });
   }

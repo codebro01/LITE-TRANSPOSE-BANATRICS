@@ -175,4 +175,41 @@ export class PublishCampaignDto {
   // @IsArray()
   // @IsString({ each: true })
   // uploadMediaFiles?: string[];
+
+  @ApiProperty({
+    example: {
+      secure_url: 'https://example.com/media/logo.jpg',
+      public_id: 'logo_abc123',
+    },
+    description:
+      'Existing logo info that was uploaded initially when saving the draft',
+  })
+  @IsOptional()
+  existingLogo?: {
+    secure_url: string;
+    public_id: string;
+  };
+
+  @ApiProperty({
+    example: [
+      {
+        secure_url: 'https://example.com/media/image1.jpg',
+        public_id: 'media_xyz789',
+      },
+      {
+        secure_url: 'https://example.com/media/image2.jpg',
+        public_id: 'media_def456',
+      },
+    ],
+    description:
+      'Existing media files that were uploaded initially when saving the draft',
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  existingMediaFiles?: Array<{
+    secure_url: string;
+    public_id: string;
+  }>;
+
 }

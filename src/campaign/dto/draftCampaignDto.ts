@@ -19,6 +19,12 @@ export enum PackageType {
   PREMIUM = 'premium',
   CUSTOM = 'custom',
 }
+export enum StatusType {
+  PENDING = 'pending',
+  DRAFT = 'draft',
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+}
 
 export class DraftCampaignDto {
   @ApiProperty({
@@ -31,6 +37,17 @@ export class DraftCampaignDto {
   })
   @IsOptional()
   packageType: PackageType;
+
+  @ApiProperty({
+    example: 'draft',
+    enum: StatusType,
+    description: 'Campaign status type',
+  })
+  @IsEnum(StatusType, {
+    message: 'Status type must be one of: pending, draft, active, completed',
+  })
+  @IsOptional()
+  statusType: StatusType;
 
   @ApiProperty({
     example: '30 days',
@@ -203,6 +220,8 @@ export class DraftCampaignDto {
     description:
       'Existing media files that were uploaded initially when saving the draft',
   })
+  @IsArray()
+  @IsString({ each: true })
   @IsOptional()
   existingMediaFiles?: Array<{
     secure_url: string;
