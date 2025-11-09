@@ -163,6 +163,37 @@ export class CampaignRepository {
     return campaigns;
   }
 
+    //! Find all completed  campaigns for a user
+
+
+  async findCompletedByUserId(userId: string) {
+    const campaigns = await this.DbProvider.select()
+      .from(campaignTable)
+      .where(
+        and(
+          eq(campaignTable.userId, userId),
+          eq(campaignTable.statusType, 'completed'),
+        ),
+      );
+
+    return campaigns;
+  }
+    //! Find all active  campaigns for a user
+
+
+  async findActiveByUserId(userId: string) {
+    const campaigns = await this.DbProvider.select()
+      .from(campaignTable)
+      .where(
+        and(
+          eq(campaignTable.userId, userId),
+          eq(campaignTable.statusType, 'active'),
+        ),
+      );
+
+    return campaigns;
+  }
+
   /**
    * Find campaigns by status for a user
    */

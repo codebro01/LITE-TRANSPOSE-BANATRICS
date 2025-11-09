@@ -13,6 +13,7 @@ import { MulterModule } from './multer/multer.module';
 import { UploadController } from './upload/upload.controller';
 import { UploadModule } from './upload/upload.module';
 import { CampaignModule } from './campaign/campaign.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { CampaignModule } from './campaign/campaign.module';
     MulterModule,
     UploadModule,
     CampaignModule,
+    PaymentModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService, NeonProvider, MulterService],

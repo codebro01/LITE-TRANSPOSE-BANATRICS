@@ -219,6 +219,32 @@ export class CampaignController {
       data: campaign,
     });
   }
+  // !  get all campaign publised owned by business owners
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('businessOwner')
+  @Get('get-all-completed')
+  async getAllCampaignsCompleted(@Req() req, @Res() res) {
+    const userId = req.user.id;
+
+    const campaign = await this.campaignService.getCompleted(userId);
+    res.status(HttpStatus.CREATED).json({
+      message: 'Campaign updated successfully',
+      data: campaign,
+    });
+  }
+  // !  get all campaign publised owned by business owners
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('businessOwner')
+  @Get('get-all-active')
+  async getAllCampaignActive(@Req() req, @Res() res) {
+    const userId = req.user.id;
+
+    const campaign = await this.campaignService.getActive(userId);
+    res.status(HttpStatus.CREATED).json({
+      message: 'Campaign updated successfully',
+      data: campaign,
+    });
+  }
 
   // !  get all campaign publised owned by business owners
   @UseGuards(JwtAuthGuard, RolesGuard)

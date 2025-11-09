@@ -489,6 +489,22 @@ export class CampaignService {
 
     return { campaigns };
   }
+  //!---------------- get all published campaign particular to each business owners------------------------------
+
+  async getCompleted(userId: string) {
+    const campaigns =
+      await this.campaignRepository.findCompletedByUserId(userId);
+
+    return { campaigns };
+  }
+  //!---------------- get all published campaign particular to each business owners------------------------------
+
+  async getActive(userId: string) {
+    const campaigns =
+      await this.campaignRepository.findActiveByUserId(userId);
+
+    return { campaigns };
+  }
   //!---------------- get single campaign by id------------------------------------------------------
 
   async getCampaignById(id: string, userId: string) {
