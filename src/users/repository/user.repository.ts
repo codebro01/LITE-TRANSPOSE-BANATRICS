@@ -268,4 +268,13 @@ export class UserRepository {
     console.log('updatedUser', updatedUser);
     return { updatedUser };
   }
+
+  async getUser(userId: string) {
+       const [user] = await this.DbProvider.select().from(userTable).where(eq(userTable.id, userId))
+
+       if(!user) throw new NotFoundException(`User with Id ${userId} could not be found`)
+        
+
+        return user;
+  }
 }

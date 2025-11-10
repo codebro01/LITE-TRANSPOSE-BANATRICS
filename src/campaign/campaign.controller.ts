@@ -219,7 +219,7 @@ export class CampaignController {
       data: campaign,
     });
   }
-  // !  get all campaign publised owned by business owners
+  // !  get all campaign completed by business owners
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('get-all-completed')
@@ -246,10 +246,10 @@ export class CampaignController {
     });
   }
 
-  // !  get all campaign publised owned by business owners
+  // !  get single campaign owned by business owners
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
-  @Get('get-single')
+  @Get('get-single/:id')
   async getSingleCampaign(@Req() req, @Res() res) {
     const userId = req.user.id;
     const { id } = req.query;
@@ -259,13 +259,12 @@ export class CampaignController {
       data: campaign,
     });
   }
-  // !  get all campaign publised owned by business owners and filter by status
+  // !  get all campaign owned by business owners and filter by status
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('get-campaigns-by-status')
   async getCampaignsByStatusAndUserId(@Req() req, @Res() res, @Body() body: StatusType) {
     const userId = req.user.id;
-    const { id } = req.query;
     const campaign = await this.campaignService.getCampaignsByStatusAndUserId(
       body,
       userId,

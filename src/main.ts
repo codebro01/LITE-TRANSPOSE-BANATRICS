@@ -35,7 +35,7 @@ app.enableCors({
     .setVersion('1.0') // Version
     .addBearerAuth()
     .addServer('http://localhost:3000', 'Local Dev')
-    .addServer('https://nest-js-real-estate-rema.onrender.com', 'Production')
+    .addServer('', 'Production')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -43,7 +43,7 @@ app.enableCors({
 
   // Root health check
   app.getHttpAdapter().get('/', (req, res) => {
-    res.send({ status: 'ok', message: 'NestJS Real Estate API running' });
+    res.send({ status: 'ok', message: 'Banatrics Project API' });
   });
   app.getHttpAdapter().get('/favicon.ico', (req, res) => res.status(204).end());
 

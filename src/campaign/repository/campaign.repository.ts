@@ -1,15 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { and, eq } from 'drizzle-orm';
-import { campaignTable } from '@src/db/campaign';
+import { campaignTable } from '@src/db/campaigns';
 
 export type CampaignStatus = 'draft' | 'pending' | 'active' | 'completed';
 export type packageType = 'starter' | 'basic' | 'premium' | 'custom';
 
-export type uploadType =  {
-  secure_url: string, 
-  public_id: string
-}
+export type uploadType = {
+  secure_url: string;
+  public_id: string;
+};
 
 export interface CreateCampaignData {
   packageType?: packageType;
@@ -163,8 +163,7 @@ export class CampaignRepository {
     return campaigns;
   }
 
-    //! Find all completed  campaigns for a user
-
+  //! Find all completed  campaigns for a user
 
   async findCompletedByUserId(userId: string) {
     const campaigns = await this.DbProvider.select()
@@ -178,8 +177,7 @@ export class CampaignRepository {
 
     return campaigns;
   }
-    //! Find all active  campaigns for a user
-
+  //! Find all active  campaigns for a user
 
   async findActiveByUserId(userId: string) {
     const campaigns = await this.DbProvider.select()
