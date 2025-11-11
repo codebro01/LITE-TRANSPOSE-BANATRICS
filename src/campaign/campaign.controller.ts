@@ -13,9 +13,7 @@ import {
   HttpStatus,
   BadRequestException,
 } from '@nestjs/common';
-import {
-  FileFieldsInterceptor,
-} from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import multer, { StorageEngine } from 'multer';
 import { PublishCampaignDto } from './dto/publishCampaignDto';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
@@ -23,7 +21,10 @@ import { RolesGuard } from '@src/auth/guards/roles.guard';
 import { Roles } from '@src/auth/decorators/roles.decorators';
 import { CampaignService } from '@src/campaign/campaign.service';
 import { CloudinaryService } from '@src/cloudinary/cloudinary.service';
-import { DraftCampaignDto, StatusType } from '@src/campaign/dto/draftCampaignDto';
+import {
+  DraftCampaignDto,
+  StatusType,
+} from '@src/campaign/dto/draftCampaignDto';
 
 @Controller('campaign')
 export class CampaignController {
@@ -263,7 +264,11 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('get-campaigns-by-status')
-  async getCampaignsByStatusAndUserId(@Req() req, @Res() res, @Body() body: StatusType) {
+  async getCampaignsByStatusAndUserId(
+    @Req() req,
+    @Res() res,
+    @Body() body: StatusType,
+  ) {
     const userId = req.user.id;
     const campaign = await this.campaignService.getCampaignsByStatusAndUserId(
       body,

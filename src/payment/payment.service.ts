@@ -15,15 +15,16 @@ import {
 } from '@src/payment/repository/payment.repository';
 import { UserRepository } from '@src/users/repository/user.repository';
 import crypto from 'crypto';
+import { InitializePaymentDto } from '@src/payment/dto/initializePaymentDto';
 
-interface InitializePaymentDto {
-  email: string;
-  amount: number; // in kobo (NGN) or smallest currency unit
-  reference?: string;
-  callback_url?: string;
-  metadata?: Record<string, any>;
-  invoiceNumber?: string;
-}
+// interface InitializePaymentDto {
+//   email: string;
+//   amount: number; // in kobo (NGN) or smallest currency unit
+//   reference?: string;
+//   callback_url?: string;
+//   metadata?: Record<string, any>;
+//   invoiceNumber?: string;
+// }
 
 interface VerifyPaymentResponse {
   status: boolean;
@@ -74,7 +75,11 @@ export class PaymentService {
             amount: data.amount,
             reference: generateSecureRef(),
             callback_url: data.callback_url,
-            metadata: data.metadata,
+            metadata: {
+              ...data.metadata,
+              invoidId: generateSecureInvoiceId(),
+              dateInitiated: new Date().toISOString(),
+            },
           },
           { headers: this.getHeaders() },
         ),

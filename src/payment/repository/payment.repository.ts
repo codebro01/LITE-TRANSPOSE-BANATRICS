@@ -7,7 +7,7 @@ import crypto from 'crypto';
 
  export const generateSecureInvoiceId = () => {
    const randomHex = crypto.randomUUID().substring(0, 8);
-   return `BNT-${randomHex}`;
+   return `INV-${randomHex}`;
  };
 export const generateSecureRef = () => {
   const randomAlphanumeric = crypto
