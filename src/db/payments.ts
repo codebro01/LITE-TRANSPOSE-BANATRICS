@@ -8,11 +8,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { userTable } from '@src/db/users';
 
-export const PaymentStatusType = pgEnum('payment_status_type', [
-  'pending',
-  'completed',
-]);
-export const PaymentMethodType = pgEnum('payment_method', ['card', 'transfer']);
+
 
 export const paymentTable = pgTable('payments', {
   id: uuid().defaultRandom().primaryKey().notNull(),
@@ -20,10 +16,12 @@ export const paymentTable = pgTable('payments', {
     .notNull()
     .references(() => userTable.id),
   invoiceId: text('invoice_id'),
+  reference: text('reference'),
   campaignName: text('campaign_name').notNull(),
+  dateInitiated: text('date_initiated'),
   amount: integer('amount').notNull(),
-  paymentMethod: PaymentMethodType('payment_method').notNull(),
-  paymentStatus: PaymentStatusType('payment_status').notNull(),
+  paymentMethod: text('payment_method').notNull(),
+  paymentStatus: text('payment_status').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

@@ -9,7 +9,8 @@ import {
   HttpCode,
   HttpStatus,
   Query,
-  UseGuards
+  UseGuards,
+  Res,
 } from '@nestjs/common';
 import { PaymentService } from '@src/payment/payment.service';
 import type { RawBodyRequest } from '@nestjs/common';
@@ -18,11 +19,14 @@ import { PaystackMetedataDto } from './dto/paystackMetadataDto';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@src/auth/guards/roles.guard';
 import { Roles } from '@src/auth/decorators/roles.decorators';
-
+import { PaymentRepository } from '@src/payment/repository/payment.repository';
 
 @Controller('payments')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) {}
+  constructor(
+    private readonly paymentService: PaymentService,
+    private readonly paymentRepository: PaymentRepository,
+  ) {}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
@@ -32,11 +36,18 @@ export class PaymentController {
     body: { amount: number; metadata: PaystackMetedataDto },
     @Req() req,
   ) {
-    const { email, userId } = req.user;
+    const { email, id: userId } = req.user;
+    console.log(userId);
+
     const result = await this.paymentService.initializePayment({
       email: email,
       amount: body.amount, // Amount should be in kobo (multiply by 100 for NGN)
-      metadata: { ...body.metadata, userId, amount: body.amount },
+      metadata: {
+        ...body.metadata,
+        userId,
+        amount: body.amount,
+        amountInNaira: body.amount / 100,
+      },
     });
 
     return {
@@ -58,11 +69,11 @@ export class PaymentController {
     };
   }
 
-
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
-  handleWebhook(
+  async handleWebhook(
     @Req() req: RawBodyRequest<Request>,
+    @Res() res,
     @Headers('x-paystack-signature') signature: string,
   ) {
     const payload = JSON.stringify(req.body);
@@ -77,22 +88,53 @@ export class PaymentController {
     }
 
     const event = req.body;
-
     console.log(event);
-
-return;
+    const {reference} = event.data
+    const { channel } = event.data.authorization;
+    const { campaignName, userId, amountInNaira, invoiceId, dateInitiated } =
+      event.data.metadata;
     // Handle different event types
     switch (event.event) {
       case 'charge.success':
         // Handle successful payment
+        {await this.paymentRepository.savePayment(
+          {
+            campaignName,
+            amount: amountInNaira,
+            invoiceId,
+            dateInitiated,
+            paymentStatus: 'success',
+            paymentMethod: channel,
+            reference,
+          },
+          userId,
+        );
         console.log('Payment successful:', event.data);
-        // Update your database, send confirmation email, etc.
-        break;
+
+        res.status(HttpStatus.ACCEPTED).json({ message: 'success' });
+
+        break;}
 
       case 'charge.failed':
-        // Handle failed payment
-        console.log('Payment failed:', event.data);
-        break;
+               {
+                 await this.paymentRepository.savePayment(
+                   {
+                     campaignName,
+                     amount: amountInNaira,
+                     invoiceId,
+                     dateInitiated,
+                     paymentStatus: 'failed',
+                     paymentMethod: channel,
+                     reference
+                   },
+                   userId,
+                 );
+                 console.log('Payment successful:', event.data);
+
+                 res.status(HttpStatus.ACCEPTED).json({ message: 'success' });
+
+                 break;
+               }
 
       default:
         console.log('Unhandled event:', event.event);
@@ -109,8 +151,8 @@ return;
     return result;
   }
 
-//   @UseGuards(JwtAuthGuard, RolesGuard)
-//   @Roles('businessOwner')
+  //   @UseGuards(JwtAuthGuard, RolesGuard)
+  //   @Roles('businessOwner')
   @Get('callback-test')
   async handleCallback(@Query() query: any) {
     console.log('Callback received:', query);

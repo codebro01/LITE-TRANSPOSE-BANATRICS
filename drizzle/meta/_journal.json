@@ -71,6 +71,13 @@
       "when": 1761961163241,
       "tag": "0009_brave_logan",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1762867922609,
+      "tag": "0010_sharp_cable",
+      "breakpoints": true
     }
   ]
 }

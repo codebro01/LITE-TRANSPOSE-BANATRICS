@@ -108,13 +108,7 @@ export class JwtAuthGuard implements CanActivate {
         throw new UnauthorizedException('Token issue failed!!!');
       }
       console.log(newTokenUser);
-      const tokenUser = newTokenUser || token;
-      // After verifying JWT in NestJS
-      await this.DbProvider.execute(
-        sql`SET app.role = ${tokenUser.role}`,
-      );
-
-      // const payload = this.jwtService.verify(token); // verify with secret
+  
       request['user'] = newTokenUser; // attach user to request
       return true;
     }

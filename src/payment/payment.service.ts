@@ -77,7 +77,7 @@ export class PaymentService {
             callback_url: data.callback_url,
             metadata: {
               ...data.metadata,
-              invoidId: generateSecureInvoiceId(),
+              invoiceId: generateSecureInvoiceId(),
               dateInitiated: new Date().toISOString(),
             },
           },
@@ -87,6 +87,7 @@ export class PaymentService {
 
       return response.data;
     } catch (error) {
+      console.log(error);
       throw new HttpException(
         error.response?.data?.message || 'Failed to initialize payment',
         error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,

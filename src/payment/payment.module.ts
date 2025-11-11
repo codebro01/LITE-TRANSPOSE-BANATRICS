@@ -4,11 +4,12 @@ import { PaymentService } from './payment.service';
 import { DbProvider } from '@src/db/provider';
 import {  HttpModule } from '@nestjs/axios';
 import { UserModule } from '@src/users/users.module';
+import { PaymentRepository } from '@src/payment/repository/payment.repository';
 
 @Module({
   imports: [HttpModule, UserModule],
   controllers: [PaymentController],
-  providers: [PaymentService, DbProvider],
+  providers: [PaymentService, DbProvider, PaymentRepository],
 })
 export class PaymentModule {}
 
