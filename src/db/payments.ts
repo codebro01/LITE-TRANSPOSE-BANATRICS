@@ -3,8 +3,7 @@ import {
   text,
   timestamp,
   uuid,
-  pgEnum,
-  integer,
+  doublePrecision
 } from 'drizzle-orm/pg-core';
 import { userTable } from '@src/db/users';
 
@@ -19,7 +18,7 @@ export const paymentTable = pgTable('payments', {
   reference: text('reference'),
   campaignName: text('campaign_name').notNull(),
   dateInitiated: text('date_initiated'),
-  amount: integer('amount').notNull(),
+  amount: doublePrecision('amount').notNull(),
   paymentMethod: text('payment_method').notNull(),
   paymentStatus: text('payment_status').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),

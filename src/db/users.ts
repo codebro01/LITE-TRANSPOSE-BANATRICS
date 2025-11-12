@@ -4,6 +4,8 @@ import {
   uuid,
   timestamp,
   boolean,
+  integer,
+  doublePrecision
 } from 'drizzle-orm/pg-core';
 import { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 
@@ -17,13 +19,13 @@ export const userTable = pgTable('users', {
   refreshToken: varchar('refreshToken', { length: 255 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-
 });
 
 export const businessOwnerTable = pgTable('businessOwners', {
   id: uuid('id').defaultRandom().primaryKey().notNull(),
-  userId: uuid('userId')
-    .references(() => userTable.id), 
+  userId: uuid('userId').references(() => userTable.id),
+  balance: doublePrecision('balance').default(0).notNull(),
+  pending: doublePrecision('pending').default(0).notNull(),
   businessName: varchar('businessName', { length: 255 }).notNull(),
   businessAddress: varchar('businessAddress', { length: 255 }),
   businessLogo: varchar('businessLogo', { length: 255 }),
@@ -40,6 +42,8 @@ export const driverTable = pgTable('drivers', {
   role: varchar('role', { length: 10 }).default('user').notNull(),
   fullName: varchar('fullName', { length: 255 }).notNull(),
   refreshToken: varchar('refreshToken', { length: 255 }),
+  balance: doublePrecision('balance').default(0).notNull(),
+  pending: doublePrecision('pending').default(0).notNull(),
   dp: varchar('dp', { length: 255 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

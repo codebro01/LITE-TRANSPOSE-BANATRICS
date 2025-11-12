@@ -11,6 +11,7 @@ import {
   Query,
   UseGuards,
   Res,
+  Patch
 } from '@nestjs/common';
 import { PaymentService } from '@src/payment/payment.service';
 import type { RawBodyRequest } from '@nestjs/common';
@@ -20,6 +21,7 @@ import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@src/auth/guards/roles.guard';
 import { Roles } from '@src/auth/decorators/roles.decorators';
 import { PaymentRepository } from '@src/payment/repository/payment.repository';
+import { UpdateBalanceDto } from './dto/updateBalanceDto';
 
 @Controller('payments')
 export class PaymentController {
@@ -77,6 +79,7 @@ export class PaymentController {
     @Headers('x-paystack-signature') signature: string,
   ) {
     const payload = JSON.stringify(req.body);
+
     // Verify webhook signature
     const isValid = this.paymentService.verifyWebhookSignature(
       payload,
@@ -84,63 +87,154 @@ export class PaymentController {
     );
 
     if (!isValid) {
-      return { status: 'invalid signature' };
+      return res
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ status: 'invalid signature' });
     }
 
     const event = req.body;
-    console.log(event);
-    const {reference} = event.data
-    const { channel } = event.data.authorization;
-    const { campaignName, userId, amountInNaira, invoiceId, dateInitiated } =
-      event.data.metadata;
-    // Handle different event types
-    switch (event.event) {
-      case 'charge.success':
-        // Handle successful payment
-        {await this.paymentRepository.savePayment(
-          {
-            campaignName,
-            amount: amountInNaira,
-            invoiceId,
-            dateInitiated,
-            paymentStatus: 'success',
-            paymentMethod: channel,
-            reference,
-          },
-          userId,
-        );
-        console.log('Payment successful:', event.data);
+    console.log('Webhook event received:', event);
 
-        res.status(HttpStatus.ACCEPTED).json({ message: 'success' });
+    try {
+      const { reference } = event.data;
+      const { channel } = event.data.authorization || {};
+      const { campaignName, userId, amountInNaira, invoiceId, dateInitiated } =
+        event.data.metadata || {};
 
-        break;}
+      switch (event.event) {
+        // case 'charge.success': {
+        //   await this.paymentRepository.savePayment(
+        //     {
+        //       campaignName,
+        //       amount: amountInNaira,
+        //       invoiceId,
+        //       dateInitiated,
+        //       paymentStatus: 'success',
+        //       paymentMethod: channel,
+        //       reference,
+        //     },
+        //     userId,
+        //   );
+        //   await this.paymentRepository.updateBalance(
+        //     { amount: amountInNaira, reference },
+        //     userId,
+        //   );
+        //   break;
+        // }
+        case 'charge.success': {
+          // Check if this payment was already processed
+          const existingPayment =
+            await this.paymentRepository.findByReference(reference);
 
-      case 'charge.failed':
-               {
-                 await this.paymentRepository.savePayment(
-                   {
-                     campaignName,
-                     amount: amountInNaira,
-                     invoiceId,
-                     dateInitiated,
-                     paymentStatus: 'failed',
-                     paymentMethod: channel,
-                     reference
-                   },
-                   userId,
-                 );
-                 console.log('Payment successful:', event.data);
+          if (existingPayment && existingPayment.paymentStatus === 'success') {
+            console.log('Payment already processed:', reference);
+            return res
+              .status(HttpStatus.OK)
+              .json({ status: 'already processed' });
+          }
 
-                 res.status(HttpStatus.ACCEPTED).json({ message: 'success' });
+          await this.paymentRepository.executeInTransaction(async (trx) => {
+            await this.paymentRepository.savePayment(
+              {
+                campaignName,
+                amount: amountInNaira,
+                invoiceId,
+                dateInitiated,
+                paymentStatus: 'success',
+                paymentMethod: channel,
+                reference,
+                transactionType: 'deposit', // Mark as deposit, not a transfer
+              },
+              userId,
+              trx,
+            );
 
-                 break;
-               }
+            await this.paymentRepository.updateBalance(
+              { amount: amountInNaira },
+              userId,
+              trx,
+            );
+          });
 
-      default:
-        console.log('Unhandled event:', event.event);
+          console.log('Payment and balance updated successfully:', reference);
+          break;
+        }
+        case 'charge.failed': {
+          await this.paymentRepository.executeInTransaction(async (trx) => {
+            await this.paymentRepository.savePayment(
+              {
+                campaignName,
+                amount: amountInNaira,
+                invoiceId,
+                dateInitiated,
+                paymentStatus: 'failed',
+                paymentMethod: channel,
+                reference,
+                transactionType: 'deposit',
+              },
+              userId,
+              trx,
+            );
+          });
+          break;
+        }
+
+        case 'charge.pending': {
+          await this.paymentRepository.executeInTransaction(async (trx) => {
+            await this.paymentRepository.savePayment(
+              {
+                campaignName,
+                amount: amountInNaira,
+                invoiceId,
+                dateInitiated,
+                paymentStatus: 'pending',
+                paymentMethod: channel,
+                reference,
+                transactionType: 'deposit',
+              },
+              userId,
+              trx,
+            );
+          });
+          break;
+        }
+
+        case 'refund.processed': {
+          await this.paymentRepository.executeInTransaction(async (trx) => {
+            await this.paymentRepository.updatePaymentStatus(
+              { reference, status: 'refunded' },
+              userId,
+              trx,
+            );
+
+            // Deduct the refunded amount from balance
+            await this.paymentRepository.updateBalance(
+              { amount: -amountInNaira }, // Negative amount
+              userId,
+              trx,
+            );
+          });
+
+          console.log('Refund processed:', reference);
+          break;
+        }
+
+        case 'transfer.success':
+        case 'transfer.failed':
+        case 'transfer.reversed': {
+          console.log('Transfer event:', event.event, reference);
+          break;
+        }
+
+        default:
+          console.log('Unhandled event type:', event.event);
+      }
+
+      return res.status(HttpStatus.OK).json({ status: 'success' });
+    } catch (error) {
+      console.error('Webhook processing error:', error);
+      return res.status(HttpStatus.OK).json({ status: 'error logged' });
     }
-
-    return { status: 'success' };
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -151,8 +245,26 @@ export class PaymentController {
     return result;
   }
 
-  //   @UseGuards(JwtAuthGuard, RolesGuard)
-  //   @Roles('businessOwner')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('businessOwner')
+  @Patch('make-payment-for-campaign')
+  async makePaymentForCampaign(
+    @Body()
+    body: UpdateBalanceDto,
+    @Req() req,
+    @Res() res, 
+  ) {
+    const {  id: userId } = req.user;
+    console.log(userId);
+
+    const result = await this.paymentService.makePaymentForCampaign(body.amount, userId);
+
+    res.status(HttpStatus.OK).json({
+      success: true,
+      data: result
+    }) ;
+  }
+
   @Get('callback-test')
   async handleCallback(@Query() query: any) {
     console.log('Callback received:', query);

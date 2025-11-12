@@ -10,7 +10,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    rawBody: true
+    logger: ['error'],
+    rawBody: true,
   });
 
 app.enableCors({
@@ -50,5 +51,6 @@ app.enableCors({
   app.getHttpAdapter().get('/favicon.ico', (req, res) => res.status(204).end());
 
   await app.listen(process.env.PORT ?? 3000);
+  console.log('------------Server is running at port 3000----------')
 }
 bootstrap();

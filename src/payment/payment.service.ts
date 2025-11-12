@@ -12,6 +12,7 @@ import { firstValueFrom } from 'rxjs';
 import {
   generateSecureInvoiceId,
   generateSecureRef,
+  PaymentRepository,
 } from '@src/payment/repository/payment.repository';
 import { UserRepository } from '@src/users/repository/user.repository';
 import crypto from 'crypto';
@@ -50,6 +51,7 @@ export class PaymentService {
     private configService: ConfigService,
     private httpService: HttpService,
     private userRepository: UserRepository,
+    private paymentRepository: PaymentRepository,
   ) {
     const key = this.configService.get<string>('PAYSTACK_SECRET_KEY');
     if (!key) {
@@ -115,6 +117,8 @@ export class PaymentService {
     }
   }
 
+  //! verify webhook signatures
+
   verifyWebhookSignature(payload: string, signature: string): boolean {
     const hash = crypto
       .createHmac('sha512', this.secretKey)
@@ -124,7 +128,7 @@ export class PaymentService {
     return hash === signature;
   }
 
-  //! get transaction details
+  //! admin get transaction details
 
   async getTransaction(id: number) {
     try {
@@ -143,7 +147,7 @@ export class PaymentService {
     }
   }
 
-  //! list transactions details
+  //! admin list all transactions details
 
   async listTransactions(params?: { perPage?: number; page?: number }) {
     try {
@@ -164,5 +168,18 @@ export class PaymentService {
         error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  async makePaymentForCampaign(amount:number, userId: string) {
+       try {
+         const result = await this.paymentRepository.moveMoneyFromBalanceToPending({amount}, userId);
+         
+         return result;
+       } catch (error) {
+        throw new HttpException(
+          error.response?.data?.message || 'Failed to list transactions',
+          error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+       }
   }
 }
