@@ -2,12 +2,23 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
+  BadRequestException,
+  HttpException,
 } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { CreatePaymentDto } from '@src/payment/dto/createPaymentDto';
-import { businessOwnerTable, paymentTable, userTable } from '@src/db';
+import {
+  businessOwnerTable,
+  campaignTable,
+  paymentTable,
+  userTable,
+} from '@src/db';
 import crypto from 'crypto';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, gte, lt } from 'drizzle-orm';
+import { CampaignRepository } from '@src/campaign/repository/campaign.repository';
+import { paymentStatus } from 'drizzle/schema';
+import { CatchErrorService } from '@src/catch-error/catch-error.service';
 
 export const generateSecureInvoiceId = () => {
   const randomHex = crypto.randomUUID().substring(0, 8);
@@ -26,6 +37,8 @@ export const generateSecureRef = () => {
 export class PaymentRepository {
   constructor(
     @Inject('DB') private DbProvider: NodePgDatabase<typeof import('@src/db')>,
+    private campaignRepository: CampaignRepository,
+    private catchErrorService: CatchErrorService,
   ) {}
 
   // ! Transaction wrapper
@@ -139,69 +152,214 @@ export class PaymentRepository {
 
   async moveMoneyFromBalanceToPending(
     data: {
-      amount: number;
+      campaignId;
     },
     userId: string,
   ) {
     try {
-      const { amount } = data;
-      await this.DbProvider.update(businessOwnerTable)
-        .set({
-          balance: sql`${businessOwnerTable.balance} - ${amount}`,
-          pending: sql`${businessOwnerTable.pending} + ${amount}`,
-        })
-        .where(eq(businessOwnerTable.userId, userId));
-      const [currentData] = await this.DbProvider.select({
-        balance: businessOwnerTable.balance,
-        pending: businessOwnerTable.pending,
-      })
-        .from(businessOwnerTable)
-        .where(eq(businessOwnerTable.userId, userId));
-      // console.log('currentData', currentData);
-      if (!currentData || !currentData.pending || !currentData.balance)
+      const { campaignId } = data;
+      // console.log(campaignId, amount);
+
+      // ! Perform money move transactions
+      const Trx = await this.executeInTransaction(async (trx) => {
+        // ! get campaign amount from db
+
+        const [getAmount] = await trx
+          .select({ amount: campaignTable.price })
+          .from(campaignTable)
+          .where(
+            and(
+              eq(campaignTable.userId, userId),
+              eq(campaignTable.id, campaignId),
+            ),
+          );
+
+        const amount = getAmount.amount;
+
+        // ! check balanace before performing performing money move trx to prevent negative value on balance
+
+        const [businessOwner] = await trx
+          .select({
+            balance: businessOwnerTable.balance,
+          })
+          .from(businessOwnerTable)
+          .where(eq(businessOwnerTable.userId, userId));
+
+        if (!businessOwner) {
+          throw new NotFoundException('Business owner not found');
+        }
+
+        if (Number(businessOwner.balance) < amount) {
+          throw new BadRequestException(
+            `Insufficient balance. Available: ${businessOwner.balance.toFixed(2)}, Required: ${amount}`,
+          );
+        }
+
+        await trx
+          .update(businessOwnerTable)
+          .set({
+            balance: sql`${businessOwnerTable.balance} - ${amount}`,
+            pending: sql`${businessOwnerTable.pending} + ${amount}`,
+          })
+          .where(eq(businessOwnerTable.userId, userId));
+
+        const updateCampaignResult = await trx
+          .update(campaignTable)
+          .set({ paymentStatus: 'pending' })
+          .where(
+            and(
+              eq(campaignTable.id, campaignId),
+              eq(campaignTable.userId, userId),
+              eq(campaignTable.statusType, 'pending'),
+            ),
+          )
+          .returning();
+
+        if (updateCampaignResult.length === 0) {
+          throw new Error(
+            'Campaign not found or not in pending status. Only campaigns with status "pending" can be paid for.',
+          );
+        }
+
+        const [currentData] = await trx
+          .select({
+            balance: businessOwnerTable.balance,
+            pending: businessOwnerTable.pending,
+          })
+          .from(businessOwnerTable)
+          .where(eq(businessOwnerTable.userId, userId));
+
+        return {
+          currentData: {
+            balance: currentData?.balance.toFixed(2),
+            pending: currentData?.pending.toFixed(2),
+          },
+          updateCampaignResult,
+        };
+      });
+      // console.log(
+      //   'updateCampaignResult',
+      //   Trx.updateCampaignResult,
+      //   Trx.currentData,
+      // );
+      if (
+        !Trx.currentData ||
+        !Trx.currentData.pending ||
+        !Trx.currentData.balance
+      )
         throw new InternalServerErrorException(
           'An error occured fetching current payment data, please try again',
         );
       return {
-        currentBalance: currentData.balance,
-        currentPending: currentData.pending,
+        currentBalance: Trx.currentData.balance,
+        currentPending: Trx.currentData.pending,
       };
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       throw new Error(error);
     }
   }
   async moveMoneyFromPendingToTotalAmountSpent(
     data: {
-      amount: number;
+      campaignId: string;
     },
     userId: string,
   ) {
     try {
-      const { amount } = data;
-      await this.DbProvider.update(businessOwnerTable)
-        .set({
-          balance: sql`${businessOwnerTable.balance} - ${amount}`,
-          pending: sql`${businessOwnerTable.pending} + ${amount}`,
-        })
-        .where(eq(businessOwnerTable.userId, userId));
-      const [currentData] = await this.DbProvider.select({
-        balance: businessOwnerTable.balance,
-        pending: businessOwnerTable.pending,
-      })
-        .from(businessOwnerTable)
-        .where(eq(businessOwnerTable.userId, userId));
-      // console.log('currentData', currentData);
-      if (!currentData || !currentData.pending || !currentData.balance)
+      const { campaignId } = data;
+
+      const Trx = await this.executeInTransaction(async (trx) => {
+    
+        const [getAmount] = await trx
+          .select({ amount: campaignTable.price })
+          .from(campaignTable)
+          .where(
+            and(
+              eq(campaignTable.userId, userId),
+              eq(campaignTable.id, campaignId),
+            ),
+          );
+
+        const amount = getAmount.amount;
+
+        const [businessOwner] = await trx
+          .select({
+            balance: businessOwnerTable.pending,
+          })
+          .from(businessOwnerTable)
+          .where(eq(businessOwnerTable.userId, userId));
+
+        if (!businessOwner) {
+          throw new NotFoundException('Business owner not found');
+        }
+
+        if (Number(businessOwner.pending) < amount) {
+          throw new BadRequestException(
+            `Insufficient pending balance. Available: ${businessOwner.pending.toFixed(2)}, Required: ${amount}`,
+          );
+        }
+
+        await trx
+          .update(businessOwnerTable)
+          .set({
+            pending: sql`${businessOwnerTable.pending} - ${amount}`,
+            // moneySpent: sql`${businessOwnerTable.moneySpent} + ${amount}`,
+          })
+          .where(eq(businessOwnerTable.userId, userId));
+
+        const updateCampaignResult = await trx
+          .update(campaignTable)
+          .set({
+            paymentStatus: 'spent',
+            statusType: 'completed',
+            spentAt: new Date(),
+          })
+          .where(
+            and(
+              eq(campaignTable.id, campaignId),
+              eq(campaignTable.userId, userId),
+              eq(campaignTable.statusType, 'pending'),
+              eq(campaignTable.paymentStatus, 'pending'),
+            ),
+          )
+          .returning();
+
+        // console.log('updateCampaignResult', updateCampaignResult);
+
+        if (updateCampaignResult.length === 0) {
+          throw new Error(
+            'Campaign not found or not in pending status. Only campaigns with status "pending" can be paid for.',
+          );
+        }
+
+        const [currentData] = await trx
+          .select({
+            pending: businessOwnerTable.pending,
+            balance: businessOwnerTable.balance,
+            
+          })
+          .from(businessOwnerTable)
+          .where(eq(businessOwnerTable.userId, userId));
+
+        return { currentData 
+
+        };
+      });
+      // console.log('currentData', Trx.currentData);
+      if (
+        !Trx.currentData ||
+        !Trx.currentData.pending ||
+        !Trx.currentData.balance
+      )
         throw new InternalServerErrorException(
           'An error occured fetching current payment data, please try again',
         );
       return {
-        currentBalance: currentData.balance,
-        currentPending: currentData.pending,
+        currentBalance: Trx.currentData.balance.toFixed(2),
+        currentPending: Trx.currentData.pending.toFixed(2),
       };
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       throw new Error(error);
     }
   }
@@ -215,5 +373,78 @@ export class PaymentRepository {
     return payment;
   }
 
-  async paymentDashboard(userId) {}
+  async listTransactions(userId: string) {
+    try {
+      const transactions = await this.DbProvider.select({
+        invoiceId: paymentTable.invoiceId,
+        campaign: paymentTable.campaignName,
+        amount: paymentTable.amount,
+        paymentMethod: paymentTable.paymentMethod,
+        status: paymentTable.paymentStatus,
+      })
+        .from(paymentTable)
+        .where(eq(paymentTable.userId, userId));
+      // if(!transactions) throw new NotFoundException('Transactions could not be fetched')
+      return transactions;
+    } catch (error) {
+      throw new HttpException(error.message, error.status);
+    }
+  }
+
+  async paymentDashboard(userId) {
+    try {
+      const allTimeDashboardData = await this.DbProvider.select({
+        balance: businessOwnerTable.balance,
+        pending: businessOwnerTable.pending,
+      })
+        .from(businessOwnerTable)
+        .where(eq(businessOwnerTable.userId, userId));
+
+      // ! get monthly spendings
+
+      const year = new Date().getFullYear();
+      const month = new Date().getMonth();
+
+      const startOfMonth = new Date(year, month, 1); // month is 0-indexed
+      const startOfNextMonth = new Date(year, month + 1, 1);
+
+      const getTotalSpent = await this.DbProvider.select({
+        totalSpent: sql<number>`SUM(${campaignTable.price})`,
+      })
+        .from(campaignTable)
+        .where(
+          and(
+            eq(campaignTable.userId, userId),
+            eq(campaignTable.paymentStatus, 'spent'),
+          ),
+        );
+
+
+              const totalSpent = getTotalSpent[0]?.totalSpent || 0;
+
+      const getTotalSpentThisMonth = await this.DbProvider.select({
+        totalSpent: sql<number>`SUM(${campaignTable.price})`,
+      })
+        .from(campaignTable)
+        .where(
+          and(
+            eq(campaignTable.userId, userId),
+            eq(campaignTable.paymentStatus, 'spent'),
+            gte(campaignTable.spentAt, startOfMonth),
+            lt(campaignTable.spentAt, startOfNextMonth),
+          ),
+        );
+
+      const totalSpentThisMonth = getTotalSpentThisMonth[0]?.totalSpent || 0;
+
+      return {
+        ...allTimeDashboardData[0],
+        totalSpentThisMonth,
+        totalSpent,
+      };
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
 }

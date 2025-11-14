@@ -92,6 +92,69 @@
       "when": 1762918600609,
       "tag": "0012_foamy_krista_starr",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1762953473200,
+      "tag": "0013_strong_reavers",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1762954074019,
+      "tag": "0014_tearful_brood",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1762954394073,
+      "tag": "0015_fixed_calypso",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1762955220508,
+      "tag": "0016_fantastic_war_machine",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1762955442794,
+      "tag": "0017_bent_mastermind",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1762956685565,
+      "tag": "0018_nebulous_logan",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1762958220911,
+      "tag": "0019_brief_captain_america",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1762987454670,
+      "tag": "0020_aberrant_chameleon",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1763083765169,
+      "tag": "0021_abnormal_green_goblin",
+      "breakpoints": true
     }
   ]
 }

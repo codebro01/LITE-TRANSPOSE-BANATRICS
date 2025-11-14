@@ -7,7 +7,8 @@ import {
   text,
   pgEnum,
   uuid,
-  jsonb
+  jsonb, 
+  doublePrecision
 } from 'drizzle-orm/pg-core';
 import { userTable } from '@src/db/users';
 
@@ -18,6 +19,10 @@ export const packageTypeEnum = pgEnum('package_type', [
   'premium',
   'custom',
 ]);
+export const paymentStatusEnum = pgEnum('payment_status', [
+  'spent',
+  'pending',
+]);
 export const statusTypeEnum = pgEnum('status_type', [
   'draft', //! this is the stutus when the business Owner decides to save the campaign as draft
   'active', //! this is the stutus when the campaign of business Owner is approved and still active
@@ -27,10 +32,9 @@ export const statusTypeEnum = pgEnum('status_type', [
 
 export const campaignTable = pgTable('campaigns', {
   id: uuid().defaultRandom().primaryKey().notNull(),
-
-  // Required fields
   packageType: packageTypeEnum('package_type'),
   statusType: statusTypeEnum('status_type'),
+  paymentStatus: paymentStatusEnum('payment_status'),
   duration: varchar('duration'),
   revisions: varchar('revisions'),
   price: integer('price'),
@@ -60,6 +64,7 @@ export const campaignTable = pgTable('campaigns', {
     .references(() => userTable.id),
 
   // Timestamps
+  spentAt: timestamp('spent_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

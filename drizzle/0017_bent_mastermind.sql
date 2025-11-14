@@ -1,0 +1,1 @@
+ALTER TABLE "campaigns" ALTER COLUMN "payment_status" SET DEFAULT 'Null';

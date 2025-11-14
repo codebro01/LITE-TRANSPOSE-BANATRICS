@@ -247,7 +247,7 @@ export class UserRepository {
     user,
     data: Omit<businessOwnerInsertType, 'email' | 'password'>,
   ) {
-    console.log('user', user);
+    // console.log('user', user);
     if (!data) throw new BadRequestException('Data not provided for update!');
     const [isUserExist] = await this.DbProvider.select({
       id: userTable.id,
@@ -256,7 +256,7 @@ export class UserRepository {
       .where(eq(userTable.id, user.id));
 
     if (!isUserExist) throw new NotFoundException('No user found');
-    console.log(isUserExist);
+    // console.log(isUserExist);
     const updatedUser = await this.DbProvider.update(userTable)
       .set(data)
       .where(eq(userTable.id, user.id))
@@ -265,7 +265,7 @@ export class UserRepository {
       throw new InternalServerErrorException(
         'An error occurred while updating the user, please try again',
       );
-    console.log('updatedUser', updatedUser);
+    // console.log('updatedUser', updatedUser);
     return { updatedUser };
   }
 

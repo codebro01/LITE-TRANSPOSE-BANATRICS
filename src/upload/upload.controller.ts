@@ -22,7 +22,7 @@ export class UploadController {
     }),
   )
   async uploadImage(@UploadedFile() file: multer.File) {
-    console.log(file);
+    // console.log(file);
     if (!file) throw new BadRequestException('Please select an image file');
 
     const maxSize = 1024 * 1024 * 10; // 10MB

@@ -53,13 +53,13 @@ export class JwtAuthGuard implements CanActivate {
           'Access token expired and no refresh token provided',
         );
       }
-      console.log('got to is not refresh token', refresh_token);
+      // console.log('got to is not refresh token', refresh_token);
       const token = await this.jwtService.verifyAsync(refresh_token, {
         secret: jwtConstants.refreshTokenSecret,
       });
 
-      console.log('got to after is not refresh token');
-      console.log(refresh_token, access_token);
+      // console.log('got to after is not refresh token');
+      // console.log(refresh_token, access_token);
 
       if (!token) {
         throw new UnauthorizedException('Invalid refresh token');
@@ -93,12 +93,12 @@ export class JwtAuthGuard implements CanActivate {
         maxAge: 1000 * 60 * 60 * 24 * 30, // 30d
       });
 
-      console.log('id', id)
+      // console.log('id', id)
 
       const newTokenUser = await this.jwtService.verifyAsync(newAccessToken, {
         secret: jwtConstants.accessTokenSecret,
       });
-      console.log('got to newTokenUser');
+      // console.log('got to newTokenUser');
       await this.DbProvider.update(userTable)
         .set({ refreshToken: newRefreshToken })
         .where(eq(userTable.id, id));
@@ -107,7 +107,7 @@ export class JwtAuthGuard implements CanActivate {
         response.clearCookie('refresh_token');
         throw new UnauthorizedException('Token issue failed!!!');
       }
-      console.log(newTokenUser);
+      // console.log(newTokenUser);
   
       request['user'] = newTokenUser; // attach user to request
       return true;

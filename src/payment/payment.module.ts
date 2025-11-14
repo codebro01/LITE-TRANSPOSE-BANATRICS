@@ -5,9 +5,11 @@ import { DbProvider } from '@src/db/provider';
 import {  HttpModule } from '@nestjs/axios';
 import { UserModule } from '@src/users/users.module';
 import { PaymentRepository } from '@src/payment/repository/payment.repository';
+import { CampaignModule } from '@src/campaign/campaign.module';
+import { CatchErrorModule } from '@src/catch-error/catch-error.module';
 
 @Module({
-  imports: [HttpModule, UserModule],
+  imports: [HttpModule, UserModule, CampaignModule, CatchErrorModule],
   controllers: [PaymentController],
   providers: [PaymentService, DbProvider, PaymentRepository],
 })

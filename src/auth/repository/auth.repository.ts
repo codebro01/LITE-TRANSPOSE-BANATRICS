@@ -87,7 +87,7 @@ export class AuthRepository {
     const user = req.user;
     if (!user)
       throw new NotFoundException('No user payload, no user is logged in');
-    console.log(user);
+    // console.log(user);
     await this.DbProvider.update(userTable)
       .set({ refreshToken: null })
       .where(eq(userTable.id, user.id));

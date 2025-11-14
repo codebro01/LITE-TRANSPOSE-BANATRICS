@@ -14,6 +14,9 @@ import { UploadController } from './upload/upload.controller';
 import { UploadModule } from './upload/upload.module';
 import { CampaignModule } from './campaign/campaign.module';
 import { PaymentModule } from './payment/payment.module';
+import { UtilsModule } from './utils/utils.module';
+import { CatchErrorModule } from './catch-error/catch-error.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -29,6 +32,9 @@ import { PaymentModule } from './payment/payment.module';
     UploadModule,
     CampaignModule,
     PaymentModule,
+    UtilsModule,
+    CatchErrorModule,
+    NotificationModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService, NeonProvider, MulterService],

@@ -1,0 +1,1 @@
+ALTER TABLE "campaigns" ALTER COLUMN "paymentAmount" SET DATA TYPE double precision;

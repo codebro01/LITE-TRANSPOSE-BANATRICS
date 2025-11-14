@@ -11,7 +11,7 @@ import {
   Query,
   UseGuards,
   Res,
-  Patch
+  Patch,
 } from '@nestjs/common';
 import { PaymentService } from '@src/payment/payment.service';
 import type { RawBodyRequest } from '@nestjs/common';
@@ -21,7 +21,7 @@ import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@src/auth/guards/roles.guard';
 import { Roles } from '@src/auth/decorators/roles.decorators';
 import { PaymentRepository } from '@src/payment/repository/payment.repository';
-import { UpdateBalanceDto } from './dto/updateBalanceDto';
+import { MakePaymentForCampaignDto } from '@src/payment/dto/makePaymentForCampaignDto';
 
 @Controller('payments')
 export class PaymentController {
@@ -39,7 +39,7 @@ export class PaymentController {
     @Req() req,
   ) {
     const { email, id: userId } = req.user;
-    console.log(userId);
+    // console.log(userId);
 
     const result = await this.paymentService.initializePayment({
       email: email,
@@ -93,7 +93,7 @@ export class PaymentController {
     }
 
     const event = req.body;
-    console.log('Webhook event received:', event);
+    // console.log('Webhook event received:', event);
 
     try {
       const { reference } = event.data;
@@ -102,32 +102,13 @@ export class PaymentController {
         event.data.metadata || {};
 
       switch (event.event) {
-        // case 'charge.success': {
-        //   await this.paymentRepository.savePayment(
-        //     {
-        //       campaignName,
-        //       amount: amountInNaira,
-        //       invoiceId,
-        //       dateInitiated,
-        //       paymentStatus: 'success',
-        //       paymentMethod: channel,
-        //       reference,
-        //     },
-        //     userId,
-        //   );
-        //   await this.paymentRepository.updateBalance(
-        //     { amount: amountInNaira, reference },
-        //     userId,
-        //   );
-        //   break;
-        // }
         case 'charge.success': {
           // Check if this payment was already processed
           const existingPayment =
             await this.paymentRepository.findByReference(reference);
 
           if (existingPayment && existingPayment.paymentStatus === 'success') {
-            console.log('Payment already processed:', reference);
+            // console.log('Payment already processed:', reference);
             return res
               .status(HttpStatus.OK)
               .json({ status: 'already processed' });
@@ -156,7 +137,7 @@ export class PaymentController {
             );
           });
 
-          console.log('Payment and balance updated successfully:', reference);
+          // console.log('Payment and balance updated successfully:', reference);
           break;
         }
         case 'charge.failed': {
@@ -215,19 +196,19 @@ export class PaymentController {
             );
           });
 
-          console.log('Refund processed:', reference);
+          // console.log('Refund processed:', reference);
           break;
         }
 
         case 'transfer.success':
         case 'transfer.failed':
         case 'transfer.reversed': {
-          console.log('Transfer event:', event.event, reference);
+          // console.log('Transfer event:', event.event, reference);
           break;
         }
 
         default:
-          console.log('Unhandled event type:', event.event);
+          // console.log('Unhandled event type:', event.event);
       }
 
       return res.status(HttpStatus.OK).json({ status: 'success' });
@@ -239,9 +220,9 @@ export class PaymentController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
-  @Get('transactions')
+  @Get('list-all-transactions')
   async listTransactions() {
-    const result = await this.paymentService.listTransactions();
+    const result = await this.paymentService.listAllTransactions();
     return result;
   }
 
@@ -250,24 +231,80 @@ export class PaymentController {
   @Patch('make-payment-for-campaign')
   async makePaymentForCampaign(
     @Body()
-    body: UpdateBalanceDto,
+    body: MakePaymentForCampaignDto,
     @Req() req,
-    @Res() res, 
+    @Res() res,
   ) {
-    const {  id: userId } = req.user;
-    console.log(userId);
+    const { id: userId } = req.user;
+    // console.log(userId);
 
-    const result = await this.paymentService.makePaymentForCampaign(body.amount, userId);
+    const result = await this.paymentService.makePaymentForCampaign(
+      { campaignId: body.campaignId },
+      userId,
+    );
 
     res.status(HttpStatus.OK).json({
       success: true,
-      data: result
-    }) ;
+      data: result,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('businessOwner')
+  @Patch('finalize-payment-for-campaign')
+  async finalizePaymentForCampaign(
+    @Body()
+    body: MakePaymentForCampaignDto,
+    @Req() req,
+    @Res() res,
+  ) {
+    const { id: userId } = req.user;
+    // console.log(userId);
+
+    const result = await this.paymentService.finalizePaymentForCampaign(
+      { campaignId: body.campaignId },
+      userId,
+    );
+
+    res.status(HttpStatus.OK).json({
+      success: true,
+      data: result,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('businessOwner')
+  @Get('list-transactions')
+  async getTransactionsFromDB(@Req() req, @Res() res) {
+    const { id: userId } = req.user;
+    // console.log(userId);
+
+    const result = await this.paymentService.listTransactions(userId);
+
+    res.status(HttpStatus.OK).json({
+      success: true,
+      data: result,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('businessOwner')
+  @Get('payment-dashboard-data')
+  async getPaymentDashboardData(@Req() req, @Res() res) {
+    const { id: userId } = req.user;
+    // console.log(userId);
+
+    const result = await this.paymentService.paymentDashboard(userId);
+
+    res.status(HttpStatus.OK).json({
+      success: true,
+      data: result,
+    });
   }
 
   @Get('callback-test')
   async handleCallback(@Query() query: any) {
-    console.log('Callback received:', query);
+    // console.log('Callback received:', query);
 
     // Verify the payment
     const verified = await this.paymentService.verifyPayment(query.reference);

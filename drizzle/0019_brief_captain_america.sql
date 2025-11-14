@@ -1,0 +1,1 @@
+ALTER TABLE "campaigns" RENAME COLUMN "paymentAmount" TO "payment_amount";

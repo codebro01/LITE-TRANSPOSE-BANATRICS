@@ -17,6 +17,9 @@ import {
 import { UserRepository } from '@src/users/repository/user.repository';
 import crypto from 'crypto';
 import { InitializePaymentDto } from '@src/payment/dto/initializePaymentDto';
+import { MakePaymentForCampaignDto } from '@src/payment/dto/makePaymentForCampaignDto';
+import { CampaignRepository } from '@src/campaign/repository/campaign.repository';
+import { CatchErrorService } from '@src/catch-error/catch-error.service';
 
 // interface InitializePaymentDto {
 //   email: string;
@@ -52,6 +55,8 @@ export class PaymentService {
     private httpService: HttpService,
     private userRepository: UserRepository,
     private paymentRepository: PaymentRepository,
+    private campaignRepository: CampaignRepository,
+    private catchErrorService: CatchErrorService,
   ) {
     const key = this.configService.get<string>('PAYSTACK_SECRET_KEY');
     if (!key) {
@@ -149,7 +154,7 @@ export class PaymentService {
 
   //! admin list all transactions details
 
-  async listTransactions(params?: { perPage?: number; page?: number }) {
+  async listAllTransactions(params?: { perPage?: number; page?: number }) {
     try {
       const response = await firstValueFrom(
         this.httpService.get(`${this.baseUrl}/transaction`, {
@@ -170,16 +175,74 @@ export class PaymentService {
     }
   }
 
-  async makePaymentForCampaign(amount:number, userId: string) {
-       try {
-         const result = await this.paymentRepository.moveMoneyFromBalanceToPending({amount}, userId);
-         
-         return result;
-       } catch (error) {
-        throw new HttpException(
-          error.response?.data?.message || 'Failed to list transactions',
-          error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+  async makePaymentForCampaign(
+    data: MakePaymentForCampaignDto,
+    userId: string,
+  ) {
+    const { campaignId } = data;
+    try {
+      const result = await this.paymentRepository.moveMoneyFromBalanceToPending(
+        {  campaignId },
+        userId,
+      );
+
+      return result;
+    } catch (error) {
+      console.error('error', error.message);
+      throw new HttpException(
+        error.response?.data?.message ||
+          error?.message ||
+          'Failed to list transactions',
+        error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+  async finalizePaymentForCampaign(
+    data: MakePaymentForCampaignDto,
+    userId: string,
+  ) {
+    const { campaignId } = data;
+    try {
+      const result =
+        await this.paymentRepository.moveMoneyFromPendingToTotalAmountSpent(
+          { campaignId },
+          userId,
         );
-       }
+
+      return result;
+    } catch (error) {
+      console.error('error', error.message);
+      throw new HttpException(
+        error.response?.data?.message ||
+          error?.message ||
+          'Failed to list transactions',
+        error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+  async listTransactions(userId: string) {
+    try {
+      const result = await this.paymentRepository.listTransactions(userId);
+
+      return result;
+    } catch (error) {
+      console.error('error', error.message);
+      this.catchErrorService.catch(
+        error,
+        'An error occured listing transactions',
+      );
+    }
+  }
+  async paymentDashboard(userId: string) {
+    try {
+      const result = await this.paymentRepository.paymentDashboard(userId);
+      return result;
+    } catch (error) {
+      console.error('error', error.message);
+      this.catchErrorService.catch(
+        error,
+        'An error occured could not load dasboard data',
+      );
+    }
   }
 }
