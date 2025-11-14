@@ -1,7 +1,7 @@
 import { pgTable, text, timestamp, uuid, pgEnum } from 'drizzle-orm/pg-core';
 import { userTable } from '@src/db/users';
 
-export const statusType = pgEnum('status_type', [
+export const statusType = pgEnum('notification_status_type', [
     'read', 
     'unread'
 ])
@@ -16,11 +16,13 @@ export const notificationTable = pgTable('notifications', {
     .notNull()
     .references(() => userTable.id),
   title: text('title').notNull(),
-  message: text('message'),
+  message: text('message').notNull(),
   status: statusType('status').default('unread').notNull(),
-  variant: variantType('status').default('info').notNull(),
+  variant: variantType('variant').default('info').notNull(),
   category: categoryType('category').notNull(),
   priority: text('priority').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+export type notificationTableSelectType = typeof notificationTable.$inferSelect;

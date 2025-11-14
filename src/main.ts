@@ -28,6 +28,7 @@ app.enableCors({
   app.use(cookieParser());
   app.setGlobalPrefix('api/v1');
   app.useGlobalFilters(new DrizzleExceptionFilter());
+  
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
   );

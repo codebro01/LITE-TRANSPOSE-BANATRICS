@@ -155,6 +155,27 @@
       "when": 1763083765169,
       "tag": "0021_abnormal_green_goblin",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1763128598088,
+      "tag": "0022_chilly_the_professor",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1763129571695,
+      "tag": "0023_lucky_obadiah_stane",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1763129688009,
+      "tag": "0024_absurd_beast",
+      "breakpoints": true
     }
   ]
 }

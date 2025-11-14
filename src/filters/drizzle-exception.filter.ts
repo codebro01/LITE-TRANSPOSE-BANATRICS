@@ -2,7 +2,7 @@ import {
   ExceptionFilter,
   Catch,
   ArgumentsHost,
-  HttpException,
+  // HttpException,
   HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
@@ -14,18 +14,18 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    // If it's a known Nest HttpException (like BadRequestException from ValidationPipe)
-    if (exception instanceof HttpException) {
-      const status = exception.getStatus();
-      const res = exception.getResponse();
+    // // If it's a known Nest HttpException (like BadRequestException from ValidationPipe)
+    // if (exception instanceof HttpException) {
+    //   const status = exception.getStatus();
+    //   const res = exception.getResponse();
 
-      return response.status(status).json({
-        statusCode: status,
-        ...(typeof res === 'string' ? { message: res } : res),
-        timestamp: new Date().toISOString(),
-        path: request.url,
-      });
-    }
+    //   return response.status(status).json({
+    //     statusCode: status,
+    //     ...(typeof res === 'string' ? { message: res } : res),
+    //     timestamp: new Date().toISOString(),
+    //     path: request.url,
+    //   });
+    // }
 
     //! Handle Postgres duplicate key (wrapped in cause)
     if (exception.cause?.code === '23505') {

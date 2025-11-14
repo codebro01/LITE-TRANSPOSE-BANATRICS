@@ -109,7 +109,7 @@ export class JwtAuthGuard implements CanActivate {
       }
       // console.log(newTokenUser);
   
-      request['user'] = newTokenUser; // attach user to request
+      request['user']  = newTokenUser; // attach user to request
       return true;
     }
   }

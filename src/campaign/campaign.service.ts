@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { DraftCampaignDto } from '@src/campaign/dto/draftCampaignDto';
@@ -11,12 +12,19 @@ import {
   uploadType,
 } from '@src/campaign/repository/campaign.repository';
 import multer from 'multer';
+import { NotificationService } from '@src/notification/notification.service';
+import {
+  StatusType,
+  CategoryType,
+  VariantType,
+} from '@src/notification/dto/createNotificationDto';
 
 @Injectable()
 export class CampaignService {
   constructor(
     private readonly campaignRepository: CampaignRepository,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   // ! create and publish camnpaign------------------------------------------------------
@@ -96,6 +104,24 @@ export class CampaignService {
         responseOnSeeingBanner: data.responseOnSeeingBanner,
         uploadMediaFiles: uploadedMediaFiles,
         statusType: 'pending', // Published directly
+      },
+      userId,
+    );
+    console.log(campaign);
+    if (!campaign)
+      throw new InternalServerErrorException(
+        'An error occcured, creating campaign, please try again',
+      );
+
+    await this.notificationService.createNotification(
+      {
+        title: 'Campaign created successfully',
+        message:
+          'The campaign has been created successfully, please you will have to have to wait till when things such as design is ready, and other factors to be in place afterwhich it will be published',
+        variant: VariantType.INFO,
+        category: CategoryType.CAMPAIGN,
+        priority: '',
+        status: StatusType.UNREAD,
       },
       userId,
     );
@@ -389,65 +415,62 @@ export class CampaignService {
       throw new BadRequestException('End date must be after start date');
     }
 
-       if (!userId || !data)
-         throw new BadRequestException('Please provide userId and draft data');
+    if (!userId || !data)
+      throw new BadRequestException('Please provide userId and draft data');
 
-       const maxFileSize = 5 * 1024 * 1024;
+    const maxFileSize = 5 * 1024 * 1024;
 
-       // Handle Logo
-       let finalLogo;
-       if (uploadLogo) {
-         // New logo uploaded
-         if (uploadLogo.size > maxFileSize) {
-           throw new BadRequestException('Logo file size exceeds 5mb');
-         }
-         const uploaded = await this.cloudinaryService.uploadImage(
-           uploadLogo.buffer,
-           'logo-folder',
-         );
-         finalLogo = {
-           secure_url: uploaded.secure_url,
-           public_id: uploaded.public_id,
-         };
-       } else if (data.existingLogo) {
-         // Keep existing logo
-         finalLogo = data.existingLogo;
-       } else {
-         // No logo
-                  throw new BadRequestException(
-                    'Please upload a logo file',
-                  );
+    // Handle Logo
+    let finalLogo;
+    if (uploadLogo) {
+      // New logo uploaded
+      if (uploadLogo.size > maxFileSize) {
+        throw new BadRequestException('Logo file size exceeds 5mb');
+      }
+      const uploaded = await this.cloudinaryService.uploadImage(
+        uploadLogo.buffer,
+        'logo-folder',
+      );
+      finalLogo = {
+        secure_url: uploaded.secure_url,
+        public_id: uploaded.public_id,
+      };
+    } else if (data.existingLogo) {
+      // Keep existing logo
+      finalLogo = data.existingLogo;
+    } else {
+      // No logo
+      throw new BadRequestException('Please upload a logo file');
+    }
 
-       }
+    // Handle Media Files
+    let finalMediaFiles: uploadType[] = [];
 
-       // Handle Media Files
-       let finalMediaFiles: uploadType[] = [];
+    // Keep existing media files
+    if (data.existingMediaFiles && data.existingMediaFiles.length > 0) {
+      finalMediaFiles = [...data.existingMediaFiles];
+    }
 
-       // Keep existing media files
-       if (data.existingMediaFiles && data.existingMediaFiles.length > 0) {
-         finalMediaFiles = [...data.existingMediaFiles];
-       }
+    // Upload new media files
+    if (uploadMediaFiles && uploadMediaFiles.length > 0) {
+      for (const file of uploadMediaFiles) {
+        if (file.size > maxFileSize) {
+          throw new BadRequestException('Media file size exceeds 5mb');
+        }
+      }
 
-       // Upload new media files
-       if (uploadMediaFiles && uploadMediaFiles.length > 0) {
-         for (const file of uploadMediaFiles) {
-           if (file.size > maxFileSize) {
-             throw new BadRequestException('Media file size exceeds 5mb');
-           }
-         }
+      const newUploads = await this.cloudinaryService.uploadMultipleImages(
+        uploadMediaFiles,
+        'campaign-folder',
+      );
 
-         const newUploads = await this.cloudinaryService.uploadMultipleImages(
-           uploadMediaFiles,
-           'campaign-folder',
-         );
+      const mappedUploads = newUploads.map((file) => ({
+        secure_url: file.secure_url,
+        public_id: file.public_id,
+      }));
 
-         const mappedUploads = newUploads.map((file) => ({
-           secure_url: file.secure_url,
-           public_id: file.public_id,
-         }));
-
-         finalMediaFiles = [...finalMediaFiles, ...mappedUploads];
-       }
+      finalMediaFiles = [...finalMediaFiles, ...mappedUploads];
+    }
 
     const published = await this.campaignRepository.updateById(
       id,
@@ -500,8 +523,7 @@ export class CampaignService {
   //!---------------- get all published campaign particular to each business owners------------------------------
 
   async getActive(userId: string) {
-    const campaigns =
-      await this.campaignRepository.findActiveByUserId(userId);
+    const campaigns = await this.campaignRepository.findActiveByUserId(userId);
 
     return { campaigns };
   }
@@ -522,7 +544,9 @@ export class CampaignService {
   //!---------------- find campaign by status and userId ------------------------------------------------------
 
   async getCampaignsByStatusAndUserId(id: string, userId: string) {
-    const campaign = await this.campaignRepository.findByIdAndUserId(userId, status
+    const campaign = await this.campaignRepository.findByIdAndUserId(
+      userId,
+      status,
     );
 
     if (!campaign) {

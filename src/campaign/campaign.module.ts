@@ -5,7 +5,11 @@ import { CampaignRepository } from './repository/campaign.repository';
 import { DbProvider } from '@src/db/provider';
 import { CloudinaryService } from '@src/cloudinary/cloudinary.service';
 
+import { NotificationService } from '@src/notification/notification.service';
+import { NotificationModule } from '@src/notification/notification.module';
+
 @Module({
+  imports: [NotificationModule],
   controllers: [CampaignController],
   providers: [CampaignService,CloudinaryService,  CampaignRepository, DbProvider],
   exports: [CampaignRepository, CampaignService],

@@ -25,6 +25,11 @@ import {
   DraftCampaignDto,
   StatusType,
 } from '@src/campaign/dto/draftCampaignDto';
+import type { Response} from 'express';
+import type { Request } from '@src/types';
+
+
+
 
 @Controller('campaign')
 export class CampaignController {
@@ -48,8 +53,8 @@ export class CampaignController {
     ),
   )
   async createAndPublishCampaign(
-    @Req() req,
-    @Res() res,
+    @Req() req: Request,
+    @Res() res: Response,
     @Body() body: PublishCampaignDto,
     @UploadedFiles() files: multer.file,
   ) {
@@ -89,8 +94,8 @@ export class CampaignController {
     ),
   )
   async draftCampaign(
-    @Req() req,
-    @Res() res,
+    @Req() req: Request,
+    @Res() res: Response,
     @Body() body: DraftCampaignDto,
     @UploadedFiles() files: multer.file,
   ) {
@@ -123,14 +128,13 @@ export class CampaignController {
     ),
   )
   async updateCampaign(
-    @Req() req,
-    @Res() res,
+    @Req() req: Request,
+    @Res() res: Response,
     @Body() body: DraftCampaignDto,
     @UploadedFiles() files: multer.file,
   ) {
     const userId = req.user.id;
-    const { id } = req.query;
-
+    const id = req.query.id as string || '';
     const campaign = await this.campaignService.updateDraft(
       id,
       userId,
@@ -159,13 +163,13 @@ export class CampaignController {
     ),
   )
   async publishDraftCampaign(
-    @Req() req,
-    @Res() res,
+    @Req() req: Request,
+    @Res() res: Response,
     @Body() body: DraftCampaignDto,
     @UploadedFiles() files: multer.file,
   ) {
     const userId = req.user.id;
-    const { id } = req.query;
+    const id = (req.query.id as string) || '';
 
     const campaign = await this.campaignService.publishDraftCampaign(
       id,
@@ -184,7 +188,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('get-all')
-  async getAllCampaigns(@Req() req, @Res() res) {
+  async getAllCampaigns(@Req() req: Request, @Res() res: Response) {
     const userId = req.user.id;
 
     const campaign = await this.campaignService.getAllCampaigns(userId);
@@ -198,7 +202,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('get-all-drafts')
-  async getAllCampaignsDraft(@Req() req, @Res() res) {
+  async getAllCampaignsDraft(@Req() req: Request, @Res() res: Response) {
     const userId = req.user.id;
 
     const campaign = await this.campaignService.getDrafts(userId);
@@ -211,7 +215,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('get-all-published')
-  async getAllCampaignsPublished(@Req() req, @Res() res) {
+  async getAllCampaignsPublished(@Req() req: Request, @Res() res: Response) {
     const userId = req.user.id;
 
     const campaign = await this.campaignService.getPublished(userId);
@@ -224,7 +228,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('get-all-completed')
-  async getAllCampaignsCompleted(@Req() req, @Res() res) {
+  async getAllCampaignsCompleted(@Req() req: Request, @Res() res: Response) {
     const userId = req.user.id;
 
     const campaign = await this.campaignService.getCompleted(userId);
@@ -237,7 +241,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('get-all-active')
-  async getAllCampaignActive(@Req() req, @Res() res) {
+  async getAllCampaignActive(@Req() req: Request, @Res() res: Response) {
     const userId = req.user.id;
 
     const campaign = await this.campaignService.getActive(userId);
@@ -251,9 +255,9 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('get-single/:id')
-  async getSingleCampaign(@Req() req, @Res() res) {
+  async getSingleCampaign(@Req() req: Request, @Res() res: Response) {
     const userId = req.user.id;
-    const { id } = req.query;
+    const id = (req.query.id as string) || '';
     const campaign = await this.campaignService.getCampaignById(id, userId);
     res.status(HttpStatus.CREATED).json({
       message: 'Campaign updated successfully',
@@ -265,8 +269,8 @@ export class CampaignController {
   @Roles('businessOwner')
   @Get('get-campaigns-by-status')
   async getCampaignsByStatusAndUserId(
-    @Req() req,
-    @Res() res,
+    @Req() req: Request,
+    @Res() res: Response,
     @Body() body: StatusType,
   ) {
     const userId = req.user.id;
