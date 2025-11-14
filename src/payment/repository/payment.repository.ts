@@ -17,7 +17,6 @@ import {
 import crypto from 'crypto';
 import { eq, and, sql, gte, lt } from 'drizzle-orm';
 import { CampaignRepository } from '@src/campaign/repository/campaign.repository';
-import { paymentStatus } from 'drizzle/schema';
 import { CatchErrorService } from '@src/catch-error/catch-error.service';
 
 export const generateSecureInvoiceId = () => {

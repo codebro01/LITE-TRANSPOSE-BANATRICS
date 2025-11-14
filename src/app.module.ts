@@ -17,6 +17,7 @@ import { PaymentModule } from './payment/payment.module';
 import { UtilsModule } from './utils/utils.module';
 import { CatchErrorModule } from './catch-error/catch-error.module';
 import { NotificationModule } from './notification/notification.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { NotificationModule } from './notification/notification.module';
     UtilsModule,
     CatchErrorModule,
     NotificationModule,
+    EmailModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService, NeonProvider, MulterService],

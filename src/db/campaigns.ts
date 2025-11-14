@@ -8,7 +8,6 @@ import {
   pgEnum,
   uuid,
   jsonb, 
-  doublePrecision
 } from 'drizzle-orm/pg-core';
 import { userTable } from '@src/db/users';
 

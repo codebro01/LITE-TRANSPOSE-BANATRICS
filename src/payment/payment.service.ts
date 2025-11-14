@@ -4,8 +4,6 @@ import {
   Injectable,
   HttpStatus,
   HttpException,
-  InternalServerErrorException,
-  NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
