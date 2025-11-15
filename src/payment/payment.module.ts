@@ -7,9 +7,10 @@ import { UserModule } from '@src/users/users.module';
 import { PaymentRepository } from '@src/payment/repository/payment.repository';
 import { CampaignModule } from '@src/campaign/campaign.module';
 import { CatchErrorModule } from '@src/catch-error/catch-error.module';
+import { NotificationModule } from '@src/notification/notification.module';
 
 @Module({
-  imports: [HttpModule, UserModule, CampaignModule, CatchErrorModule],
+  imports: [HttpModule, UserModule, CampaignModule, CatchErrorModule, NotificationModule],
   controllers: [PaymentController],
   providers: [PaymentService, DbProvider, PaymentRepository],
 })

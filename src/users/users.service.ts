@@ -3,6 +3,8 @@ import { UserRepository } from '@src/users/repository/user.repository';
 import { businessOwnerInsertType } from '@src/db/users';
 import { AuthRepository } from '@src/auth/repository/auth.repository';
 import { createUserDto } from '@src/users/dto/create-user.dto';
+import { UpdatebusinessOwnerDto } from '@src/users/dto/update-user.dto';
+import { UpdatePasswordDto } from '@src/users/dto/updatePasswordDto';
 
 @Injectable()
 export class UserService {
@@ -19,10 +21,10 @@ export class UserService {
     return await this.userRepository.getAllUsers();
   }
 
-  async updateUser(
-    user,
-    data: Omit<businessOwnerInsertType, 'password' | 'email'>,
-  ) {
-    return await this.userRepository.updateUser(user, data);
+  async updateUserInSettings(data: UpdatebusinessOwnerDto, userId: string) {
+    return await this.userRepository.updateUserInSettings(data, userId);
+  }
+  async updatePassword(data: UpdatePasswordDto, userId: string) {
+    return await this.userRepository.updatePassword(data, userId);
   }
 }

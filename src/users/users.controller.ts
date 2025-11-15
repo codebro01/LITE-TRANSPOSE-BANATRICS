@@ -12,13 +12,13 @@ import { UserService } from '@src/users/users.service';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@src/auth/guards/roles.guard';
 import { Roles } from '@src/auth/decorators/roles.decorators';
-import type { Response } from 'express';
-import {
-  UpdatebusinessOwnerDto,
-  createUserDto,
-} from '@src/users/dto/index.dto';
+import { createUserDto } from '@src/users/dto/create-user.dto';
+import { UpdatebusinessOwnerDto } from '@src/users/dto/update-user.dto';
 
 import omit from 'lodash.omit';
+import type { Request } from '@src/types';
+import type { Response } from 'express';
+import { UpdatePasswordDto } from './dto/updatePasswordDto';
 
 @Controller('users')
 export class UserController {
@@ -46,9 +46,7 @@ export class UserController {
 
     const safeUser = omit(user, ['password', 'refreshToken']);
 
-    res
-      .status(HttpStatus.ACCEPTED)
-      .json({ user: safeUser, accessToken });
+    res.status(HttpStatus.ACCEPTED).json({ user: safeUser, accessToken });
   }
 
   //! get all users in db
@@ -61,8 +59,35 @@ export class UserController {
 
   // ! update user basic information
   @UseGuards(JwtAuthGuard)
-  @Post('/update-user-basic-info')
-  updateUsers(@Req() req, @Body() body: UpdatebusinessOwnerDto) {
-    return this.userService.updateUser(req.user, body);
+  @Post('business/update')
+  async updateUsers(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() body: UpdatebusinessOwnerDto,
+  ) {
+    const { id: userId } = req.user;
+    const result = await this.userService.updateUserInSettings(body, userId);
+    res.status(HttpStatus.OK).json({
+      message: 'success',
+      data: result,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'driver', 'businessOwner')
+  @Post('update/password')
+  async updatePassword(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() body: UpdatePasswordDto,
+  ) {
+    const { id: userId } = req.user;
+
+    console.log('got in here');
+    const result = await this.userService.updatePassword(body, userId);
+    res.status(HttpStatus.OK).json({
+      message: 'success',
+      data: result,
+    });
   }
 }

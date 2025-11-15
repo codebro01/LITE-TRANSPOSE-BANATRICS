@@ -18,6 +18,7 @@ import { UtilsModule } from './utils/utils.module';
 import { CatchErrorModule } from './catch-error/catch-error.module';
 import { NotificationModule } from './notification/notification.module';
 import { EmailModule } from './email/email.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { EmailModule } from './email/email.module';
     CatchErrorModule,
     NotificationModule,
     EmailModule,
+    DashboardModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService, NeonProvider, MulterService],

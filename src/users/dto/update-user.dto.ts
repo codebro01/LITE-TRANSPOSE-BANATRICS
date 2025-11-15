@@ -1,50 +1,45 @@
-import { IsString, IsBoolean, IsOptional } from 'class-validator';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import {  ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsOptional,
+  IsString,
+  IsEmail,
+  MinLength,
+  MaxLength,
+  Matches,
+} from 'class-validator';
 
 export class UpdatebusinessOwnerDto {
   @ApiPropertyOptional({
-    example: true,
-    description: "Indicates whether the user's email has been verified",
+    description: 'Business name of the user',
+    example: 'Acme Corporation',
+    minLength: 2,
+    maxLength: 100,
   })
-  @IsBoolean()
   @IsOptional()
-  emailVerified?: boolean;
+  @IsString()
+  @MinLength(2, { message: 'Business name must be at least 2 characters long' })
+  @MaxLength(100, { message: 'Business name must not exceed 100 characters' })
+  businessName?: string;
 
   @ApiPropertyOptional({
-    example: 'Banatrics',
-    description: 'Business name',
+    description: 'Business email address',
+    example: 'contact@acmecorp.com',
+    format: 'email',
   })
-  @IsString()
   @IsOptional()
-  businessName: string;
+  @IsEmail({}, { message: 'Please provide a valid business email address' })
+  email?: string;
 
   @ApiPropertyOptional({
-    example: 'sales@banatrics.com',
-    description: 'email of the business',
+    description: 'Phone number (international format)',
+    example: '+2348012345678',
+    pattern: '^\\+?[1-9]\\d{1,14}$',
   })
-  @IsString()
   @IsOptional()
-  email: string;
-
-  @ApiPropertyOptional({ example: '+234000000000' })
   @IsString()
-  @IsOptional()
-  phone: string;
-
-  @ApiPropertyOptional({
-    example:
-      'https://res.cloudinary.com/demo/image/upload/v1691234567/avatar.jpg',
-    description: 'Profile picture (URL)',
+  @Matches(/^\+?[1-9]\d{1,14}$/, {
+    message:
+      'Phone number must be in valid international format (e.g., +2348012345678)',
   })
-  @IsString()
-  @IsOptional()
-  businessLogo?: string;
-
-  @ApiPropertyOptional({
-    example: '123 Main Street, Lagos',
-    description: 'Business address',
-  })
-  @IsString()
-  @IsOptional()
-  businessAddress?: string;
+  phone?: string;
 }

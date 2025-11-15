@@ -15,19 +15,27 @@ import {
 } from '@nestjs/common';
 import { PaymentService } from '@src/payment/payment.service';
 import type { RawBodyRequest } from '@nestjs/common';
-import { Request } from 'express';
 import { PaystackMetedataDto } from './dto/paystackMetadataDto';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@src/auth/guards/roles.guard';
 import { Roles } from '@src/auth/decorators/roles.decorators';
 import { PaymentRepository } from '@src/payment/repository/payment.repository';
 import { MakePaymentForCampaignDto } from '@src/payment/dto/makePaymentForCampaignDto';
+import type { Request } from '@src/types';
+import type { Response } from 'express';
+import { NotificationService } from '@src/notification/notification.service';
+import {
+  CategoryType,
+  StatusType,
+  VariantType,
+} from '@src/notification/dto/createNotificationDto';
 
 @Controller('payments')
 export class PaymentController {
   constructor(
     private readonly paymentService: PaymentService,
     private readonly paymentRepository: PaymentRepository,
+    private readonly notificationService: NotificationService,
   ) {}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -36,7 +44,8 @@ export class PaymentController {
   async initializePayment(
     @Body()
     body: { amount: number; metadata: PaystackMetedataDto },
-    @Req() req,
+    @Req() req: Request,
+    @Res() res: Response,
   ) {
     const { email, id: userId } = req.user;
     // console.log(userId);
@@ -52,10 +61,12 @@ export class PaymentController {
       },
     });
 
-    return {
+    // console.log(result);
+
+    res.status(HttpStatus.OK).json({
       success: true,
       data: result.data,
-    };
+    });
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -75,7 +86,7 @@ export class PaymentController {
   @HttpCode(HttpStatus.OK)
   async handleWebhook(
     @Req() req: RawBodyRequest<Request>,
-    @Res() res,
+    @Res() res: Response,
     @Headers('x-paystack-signature') signature: string,
   ) {
     const payload = JSON.stringify(req.body);
@@ -137,6 +148,18 @@ export class PaymentController {
             );
           });
 
+          await this.notificationService.createNotification(
+            {
+              title: `Your deposit of ${amountInNaira} is successfull`,
+              message: `You have successfully deposited ${amountInNaira} through ${channel} `,
+              variant: VariantType.SUCCESS,
+              category: CategoryType.PAYMENT,
+              priority: '',
+              status: StatusType.UNREAD,
+            },
+            userId,
+          );
+
           // console.log('Payment and balance updated successfully:', reference);
           break;
         }
@@ -157,6 +180,18 @@ export class PaymentController {
               trx,
             );
           });
+
+          await this.notificationService.createNotification(
+            {
+              title: `Your deposit of ${amountInNaira}  failed`,
+              message: `Your deposited of ${amountInNaira} through ${channel} may have failed due to some reasons, please try again `,
+              variant: VariantType.DANGER,
+              category: CategoryType.PAYMENT,
+              priority: '',
+              status: StatusType.UNREAD,
+            },
+            userId,
+          );
           break;
         }
 
@@ -177,6 +212,18 @@ export class PaymentController {
               trx,
             );
           });
+
+          await this.notificationService.createNotification(
+            {
+              title: `Your deposit of ${amountInNaira} is pending`,
+              message: `Your deposited of ${amountInNaira} through ${channel} is still pending, please kindly wait while the payment for the payment to be comfirmed `,
+              variant: VariantType.INFO,
+              category: CategoryType.PAYMENT,
+              priority: '',
+              status: StatusType.UNREAD,
+            },
+            userId,
+          );
           break;
         }
 
@@ -196,6 +243,18 @@ export class PaymentController {
             );
           });
 
+          await this.notificationService.createNotification(
+            {
+              title: `Refund of ${amountInNaira} is proccessing`,
+              message: `Your refund of ${amountInNaira} is processing, please wait while it completes `,
+              variant: VariantType.INFO,
+              category: CategoryType.PAYMENT,
+              priority: '',
+              status: StatusType.UNREAD,
+            },
+            userId,
+          );
+
           // console.log('Refund processed:', reference);
           break;
         }
@@ -208,7 +267,7 @@ export class PaymentController {
         }
 
         default:
-          // console.log('Unhandled event type:', event.event);
+        // console.log('Unhandled event type:', event.event);
       }
 
       return res.status(HttpStatus.OK).json({ status: 'success' });
@@ -232,8 +291,8 @@ export class PaymentController {
   async makePaymentForCampaign(
     @Body()
     body: MakePaymentForCampaignDto,
-    @Req() req,
-    @Res() res,
+    @Req() req: Request,
+    @Res() res: Response,
   ) {
     const { id: userId } = req.user;
     // console.log(userId);
@@ -255,8 +314,8 @@ export class PaymentController {
   async finalizePaymentForCampaign(
     @Body()
     body: MakePaymentForCampaignDto,
-    @Req() req,
-    @Res() res,
+    @Req() req: Request,
+    @Res() res: Response,
   ) {
     const { id: userId } = req.user;
     // console.log(userId);
@@ -275,7 +334,7 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('list-transactions')
-  async getTransactionsFromDB(@Req() req, @Res() res) {
+  async getTransactionsFromDB(@Req() req: Request, @Res() res: Response) {
     const { id: userId } = req.user;
     // console.log(userId);
 
@@ -289,8 +348,8 @@ export class PaymentController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
-  @Get('payment-dashboard-data')
-  async getPaymentDashboardData(@Req() req, @Res() res) {
+  @Get('dashboard-data')
+  async getPaymentDashboardData(@Req() req: Request, @Res() res: Response) {
     const { id: userId } = req.user;
     // console.log(userId);
 

@@ -180,9 +180,10 @@ export class PaymentService {
     const { campaignId } = data;
     try {
       const result = await this.paymentRepository.moveMoneyFromBalanceToPending(
-        {  campaignId },
+        { campaignId },
         userId,
       );
+
 
       return result;
     } catch (error) {

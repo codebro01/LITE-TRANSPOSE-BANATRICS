@@ -18,6 +18,9 @@ import crypto from 'crypto';
 import { eq, and, sql, gte, lt } from 'drizzle-orm';
 import { CampaignRepository } from '@src/campaign/repository/campaign.repository';
 import { CatchErrorService } from '@src/catch-error/catch-error.service';
+import { CategoryType, StatusType, VariantType } from '@src/notification/dto/createNotificationDto';
+import { NotificationRepository } from '@src/notification/repository/notification.repository';
+
 
 export const generateSecureInvoiceId = () => {
   const randomHex = crypto.randomUUID().substring(0, 8);
@@ -38,6 +41,7 @@ export class PaymentRepository {
     @Inject('DB') private DbProvider: NodePgDatabase<typeof import('@src/db')>,
     private campaignRepository: CampaignRepository,
     private catchErrorService: CatchErrorService,
+    private notificationRepository: NotificationRepository,
   ) {}
 
   // ! Transaction wrapper
@@ -57,7 +61,7 @@ export class PaymentRepository {
       transactionType: string;
     },
     userId: string,
-    trx,
+    trx?: typeof this.DbProvider,
   ) {
     const DbTrx = trx || this.DbProvider;
     const [payment] = await DbTrx.insert(paymentTable)
@@ -77,7 +81,7 @@ export class PaymentRepository {
       status: string;
     },
     userId: string,
-    trx,
+    trx?: typeof this.DbProvider,
   ) {
     const DbTrx = trx || this.DbProvider;
     const { reference, status } = data;
@@ -121,7 +125,7 @@ export class PaymentRepository {
     return { message: 'success', data: payment };
   }
 
-  async getPayments(userId) {
+  async getPayments(userId: string) {
     const payments = await this.DbProvider.select()
       .from(userTable)
       .where(eq(userTable.id, userId));
@@ -135,7 +139,7 @@ export class PaymentRepository {
     return { message: 'succcess', payments };
   }
 
-  async getBalance(userId) {
+  async getBalance(userId: string) {
     try {
       const [balance] = await this.DbProvider.select({
         balance: businessOwnerTable.balance,
@@ -151,7 +155,7 @@ export class PaymentRepository {
 
   async moveMoneyFromBalanceToPending(
     data: {
-      campaignId;
+      campaignId: string;
     },
     userId: string,
   ) {
@@ -323,6 +327,20 @@ export class PaymentRepository {
           )
           .returning();
 
+
+            await this.notificationRepository.createNotification(
+              {
+                title: `Campaign charge`,
+                message: `${amount} has been successfully dedecuted to settle the campaign charge`,
+                variant: VariantType.SUCCESS,
+                category: CategoryType.CAMPAIGN,
+                priority: '',
+                status: StatusType.UNREAD,
+              },
+              userId,
+              trx
+            );
+
         // console.log('updateCampaignResult', updateCampaignResult);
 
         if (updateCampaignResult.length === 0) {
@@ -353,6 +371,9 @@ export class PaymentRepository {
         throw new InternalServerErrorException(
           'An error occured fetching current payment data, please try again',
         );
+
+        
+    
       return {
         currentBalance: Trx.currentData.balance.toFixed(2),
         currentPending: Trx.currentData.pending.toFixed(2),
@@ -390,7 +411,7 @@ export class PaymentRepository {
     }
   }
 
-  async paymentDashboard(userId) {
+  async paymentDashboard(userId: string) {
     try {
       const allTimeDashboardData = await this.DbProvider.select({
         balance: businessOwnerTable.balance,

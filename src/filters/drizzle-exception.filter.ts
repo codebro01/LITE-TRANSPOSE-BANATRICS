@@ -14,19 +14,6 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    // // If it's a known Nest HttpException (like BadRequestException from ValidationPipe)
-    // if (exception instanceof HttpException) {
-    //   const status = exception.getStatus();
-    //   const res = exception.getResponse();
-
-    //   return response.status(status).json({
-    //     statusCode: status,
-    //     ...(typeof res === 'string' ? { message: res } : res),
-    //     timestamp: new Date().toISOString(),
-    //     path: request.url,
-    //   });
-    // }
-
     //! Handle Postgres duplicate key (wrapped in cause)
     if (exception.cause?.code === '23505') {
       return response.status(HttpStatus.BAD_REQUEST).json({
@@ -55,6 +42,17 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
         statusCode: HttpStatus.GATEWAY_TIMEOUT,
         message: 'Database connection timed out',
         error: 'TIMEOUT',
+        timestamp: new Date().toISOString(),
+        path: request.url,
+      });
+    }
+    // console.log(exception.response.statasCode === 400);
+    if (exception?.response?.statusCode === 400 || exception.status === 400) {
+      return response.status(HttpStatus.BAD_REQUEST).json({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message:
+          exception?.response?.message || 'Bad request was sent to the server',
+        error: 'Bad Request',
         timestamp: new Date().toISOString(),
         path: request.url,
       });
