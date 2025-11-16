@@ -17,7 +17,7 @@ async function bootstrap() {
     origin: [
       'http://localhost:3000', // frontend dev
       'http://localhost:5173', // Vite dev
-      'https://nest-js-real-estate-rema.onrender.com', // production frontend
+      'https://lite-transpose-banatrics.onrender.com',
     ],
     credentials: true, // allow cookies & auth headers
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
