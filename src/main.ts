@@ -19,7 +19,7 @@ async function bootstrap() {
       'http://localhost:5173', // Vite dev
       'https://lite-transpose-banatrics.onrender.com',
     ],
-    credentials: true, // allow cookies & auth headers
+    credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type, Authorization',
   });
@@ -38,7 +38,7 @@ async function bootstrap() {
     .setVersion('1.0') // Version
     .addBearerAuth()
     .addServer('http://localhost:3000', 'Local Dev')
-    .addServer('', 'Production')
+    .addServer('https://lite-transpose-banatrics.onrender.com', 'Production')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
