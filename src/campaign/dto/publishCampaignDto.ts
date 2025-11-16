@@ -20,6 +20,14 @@ export enum PackageType {
   CUSTOM = 'custom',
 }
 
+
+export enum StatusType {
+  PENDING = 'pending',
+  DRAFT = 'draft',
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+}
+
 export class PublishCampaignDto {
   @ApiProperty({
     example: 'premium',
@@ -33,13 +41,12 @@ export class PublishCampaignDto {
   packageType: PackageType;
 
   @ApiProperty({
-    example: '30 days',
-    description: 'Campaign duration',
+    example: 30,
+    description: 'Campaign duration is a number and its calculated in days so 30 means 30 days',
   })
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  @Transform(({ value }) => (value ? value?.trim() : value))
-  duration: string;
+  duration: number;
 
   @ApiProperty({
     example: '3 revisions',
@@ -98,13 +105,7 @@ export class PublishCampaignDto {
   @IsNotEmpty()
   startDate: string;
 
-  @ApiProperty({
-    example: '2025-11-30T23:59:59.999Z',
-    description: 'Campaign end date (ISO 8601 format)',
-  })
-  @IsDateString()
-  @IsNotEmpty()
-  endDate: string;
+ 
 
   // @ApiProperty({
   //   example: 'https://example.com/uploads/logo.png',
@@ -116,7 +117,7 @@ export class PublishCampaignDto {
   // companyLogo: string;
 
   @ApiProperty({
-    example: '#FF5733, #C70039, #900C3F',
+    example: ['#FF5733', '#C70039', '#900C3F'],
     description: 'Color palette for the campaign',
   })
   @IsArray()
@@ -162,20 +163,6 @@ export class PublishCampaignDto {
   @Transform(({ value }) => (value ? value?.trim() : value))
   responseOnSeeingBanner: string;
 
-  // @ApiProperty({
-  //   example: [
-  //     'https://example.com/media/image1.jpg',
-  //     'https://example.com/media/video1.mp4',
-  //   ],
-  //   description: 'Array of uploaded media file URLs',
-  //   type: [String],
-  //   isArray: true,
-  // })
-  // @Optional()
-  // @IsArray()
-  // @IsString({ each: true })
-  // uploadMediaFiles?: string[];
-
   @ApiProperty({
     example: {
       secure_url: 'https://example.com/media/logo.jpg',
@@ -184,8 +171,8 @@ export class PublishCampaignDto {
     description:
       'Existing logo info that was uploaded initially when saving the draft',
   })
-  @IsOptional()
-  existingLogo?: {
+  @IsNotEmpty()
+  companyLogo: {
     secure_url: string;
     public_id: string;
   };
@@ -205,11 +192,9 @@ export class PublishCampaignDto {
       'Existing media files that were uploaded initially when saving the draft',
   })
   @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  existingMediaFiles?: Array<{
+  @IsNotEmpty()
+  uploadedImages: Array<{
     secure_url: string;
     public_id: string;
   }>;
-
 }

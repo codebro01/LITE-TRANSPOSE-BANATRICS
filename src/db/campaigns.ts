@@ -7,7 +7,7 @@ import {
   text,
   pgEnum,
   uuid,
-  jsonb, 
+  jsonb,
 } from 'drizzle-orm/pg-core';
 import { userTable } from '@src/db/users';
 
@@ -18,10 +18,7 @@ export const packageTypeEnum = pgEnum('package_type', [
   'premium',
   'custom',
 ]);
-export const paymentStatusEnum = pgEnum('payment_status', [
-  'spent',
-  'pending',
-]);
+export const paymentStatusEnum = pgEnum('payment_status', ['spent', 'pending']);
 export const statusTypeEnum = pgEnum('status_type', [
   'draft', //! this is the stutus when the business Owner decides to save the campaign as draft
   'active', //! this is the stutus when the campaign of business Owner is approved and still active
@@ -34,7 +31,7 @@ export const campaignTable = pgTable('campaigns', {
   packageType: packageTypeEnum('package_type'),
   statusType: statusTypeEnum('status_type'),
   paymentStatus: paymentStatusEnum('payment_status'),
-  duration: varchar('duration'),
+  duration: integer('duration'),
   revisions: varchar('revisions'),
   price: integer('price'),
   noOfDrivers: integer('no_of_drivers'),
@@ -50,7 +47,7 @@ export const campaignTable = pgTable('campaigns', {
   callToAction: varchar('call_to_action'),
   mainMessage: text('main_message'),
   responseOnSeeingBanner: text('response_on_seeing_banner'),
-  uploadMediaFiles: jsonb('upload_media_files')
+  uploadedImages: jsonb('uploaded_images')
     .$type<{ secure_url: string; public_id: string }[]>()
     .default([]), // Array of strings
 

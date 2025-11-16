@@ -18,7 +18,7 @@ export class MulterService {
 
   private fileFilter = (
     req: Express.Request,
-    file: multer.File,
+    file: Express.Multer.File,
     cb: FileFilterCallback,
   ) => {
     if (file.mimetype.startsWith('image/')) {

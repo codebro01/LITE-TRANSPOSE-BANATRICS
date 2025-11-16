@@ -5,7 +5,7 @@ import { HttpStatus, HttpException } from '@nestjs/common';
 export class CatchErrorService {
     constructor() {}
 
-    catch(error, defaultMessage) {
+    catch(error: any, defaultMessage: string) {
         throw new HttpException(
                 error.response?.data?.message ||
                   error?.message ||

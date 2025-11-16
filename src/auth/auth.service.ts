@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { AuthRepository } from '@src/auth/repository/auth.repository';
 import crypto from 'crypto';
+import type { Request } from '@src/types';
+import type { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -10,7 +12,7 @@ export class AuthService {
     return this.authRepository.loginUser(data);
   }
 
-  async logoutUser(res, req) {
+  async logoutUser(res: Response, req: Request) {
     return await this.authRepository.logoutUser(res, req);
   }
 

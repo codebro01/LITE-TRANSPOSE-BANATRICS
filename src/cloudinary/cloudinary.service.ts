@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { UploadApiResponse, UploadApiErrorResponse } from 'cloudinary';
 import { cloudinary } from '@src/cloudinary/config';
-import multer from 'multer'
+import multer from 'multer';
 
 @Injectable()
 export class CloudinaryService {
@@ -24,7 +24,7 @@ export class CloudinaryService {
         },
         (error?: UploadApiErrorResponse, result?: UploadApiResponse) => {
           if (error || !result) {
-            console.log(error)
+            console.log(error);
             return reject(new BadRequestException('Failed to upload image'));
           }
           resolve(result);
@@ -34,7 +34,6 @@ export class CloudinaryService {
       stream.end(fileBuffer);
     });
   }
-  
 
   /**
    * Upload multiple images
@@ -42,7 +41,7 @@ export class CloudinaryService {
    * @param folder - Cloudinary folder name
    */
   async uploadMultipleImages(
-    files: multer.file[],
+    files: Express.Multer.File[],
     folder: string,
   ): Promise<UploadApiResponse[]> {
     const uploadPromises = files.map((file) =>

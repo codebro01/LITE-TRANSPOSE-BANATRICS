@@ -8,8 +8,7 @@ import {
   IsOptional,
   Min,
   MaxLength,
-  IsArray, 
-
+  IsArray,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
@@ -50,13 +49,13 @@ export class DraftCampaignDto {
   statusType: StatusType;
 
   @ApiProperty({
-    example: '30 days',
-    description: 'Campaign duration',
+    example: 30,
+    description:
+      'Campaign duration is a number and its calculated in days so 30 means 30 days',
   })
-  @IsString()
+  @IsNumber()
   @IsOptional()
-  @Transform(({ value }) => value?.trim())
-  duration: string;
+  duration: number;
 
   @ApiProperty({
     example: '3 revisions',
@@ -113,31 +112,14 @@ export class DraftCampaignDto {
   @IsOptional()
   startDate: string;
 
-  @ApiProperty({
-    example: '2025-11-30T23:59:59.999Z',
-    description: 'Campaign end date (ISO 8601 format)',
-  })
-  @IsDateString()
-  @IsOptional()
-  endDate: string;
 
   @ApiProperty({
-    example: 'https://example.com/uploads/logo.png',
-    description: 'URL of uploaded company logo',
-  })
-  @IsString()
-  @IsOptional()
-  @Transform(({ value }) => value?.trim())
-  companyLogo: string;
-
-  @ApiProperty({
-    example: '#FF5733, #C70039, #900C3F',
+    example: ['#FF5733', '#C70039', '#900C3F'],
     description: 'Color palette for the campaign',
   })
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
-  @Transform(({ value }) => value?.trim())
   colorPallete: string[];
 
   @ApiProperty({
@@ -180,17 +162,24 @@ export class DraftCampaignDto {
 
   @ApiProperty({
     example: [
-      'https://example.com/media/image1.jpg',
-      'https://example.com/media/video1.mp4',
+      {
+        secure_url: 'https://example.com/media/image1.jpg',
+        public_id: 'media_xyz789',
+      },
+      {
+        secure_url: 'https://example.com/media/image2.jpg',
+        public_id: 'media_def456',
+      },
     ],
-    description: 'Array of uploaded media file URLs',
-    type: [String],
-    isArray: true,
+    description:
+      'Existing media files that were uploaded initially when saving the draft',
   })
   @IsArray()
-  @IsString({ each: true })
   @IsOptional()
-  uploadMediaFiles?: string[];
+  uploadedImages: Array<{
+    secure_url: string;
+    public_id: string;
+  }>;
 
   @ApiProperty({
     example: {
@@ -227,4 +216,18 @@ export class DraftCampaignDto {
     secure_url: string;
     public_id: string;
   }>;
+
+  @ApiProperty({
+    example: {
+      secure_url: 'https://example.com/media/logo.jpg',
+      public_id: 'logo_abc123',
+    },
+    description:
+      'Existing logo info that was uploaded initially when saving the draft',
+  })
+  @IsOptional()
+  companyLogo: {
+    secure_url: string;
+    public_id: string;
+  };
 }

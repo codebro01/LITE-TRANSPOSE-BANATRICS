@@ -2,6 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { and, eq } from 'drizzle-orm';
 import { campaignTable } from '@src/db/campaigns';
+import { StatusType } from '../dto/publishCampaignDto';
+
 
 export type CampaignStatus = 'draft' | 'pending' | 'active' | 'completed';
 export type packageType = 'starter' | 'basic' | 'premium' | 'custom';
@@ -13,7 +15,7 @@ export type uploadType = {
 
 export interface CreateCampaignData {
   packageType?: packageType;
-  duration?: string;
+  duration?: number;
   revisions?: string;
   price?: number;
   noOfDrivers?: number;
@@ -27,14 +29,14 @@ export interface CreateCampaignData {
   mainMessage?: string;
   slogan?: string;
   responseOnSeeingBanner?: string;
-  uploadMediaFiles?: uploadType[];
+  uploadedImages?: uploadType[];
   statusType: CampaignStatus;
   updatedAt?: Date;
 }
 
 export interface UpdateCampaignData {
   packageType?: packageType;
-  duration?: string;
+  duration?: number;
   revisions?: string;
   price?: number;
   noOfDrivers?: number;
@@ -42,13 +44,16 @@ export interface UpdateCampaignData {
   campaignDescriptions?: string;
   startDate?: Date | null;
   endDate?: Date | null;
-  companyLogo?: uploadType | null;
   colorPallete?: string[];
   callToAction?: string;
   mainMessage?: string;
+  companyLogo?: {
+    secure_url: string;
+    public_id: string;
+  };
   slogan?: string;
   responseOnSeeingBanner?: string;
-  uploadMediaFiles?: uploadType[] | null;
+  uploadedImages?: uploadType[];
   statusType?: CampaignStatus;
   updatedAt?: Date;
 }
@@ -107,6 +112,19 @@ export class CampaignRepository {
 
     return campaign || null;
   }
+  async findByStatus(userId: string, status:any) {
+    const [campaign] = await this.DbProvider.select()
+      .from(campaignTable)
+      .where(
+        and(
+          eq(campaignTable.userId, userId),
+          eq(campaignTable.statusType, status),
+        ),
+      )
+      .limit(1);
+
+    return campaign || null;
+  }
 
   /**
    * Update a campaign by ID
@@ -156,7 +174,7 @@ export class CampaignRepository {
       .where(
         and(
           eq(campaignTable.userId, userId),
-          eq(campaignTable.statusType, 'pending'),
+          eq(campaignTable.statusType, 'active'),
         ),
       );
 
@@ -195,7 +213,7 @@ export class CampaignRepository {
   /**
    * Find campaigns by status for a user
    */
-  async findByStatusAndUserId(userId: string, status: CampaignStatus) {
+  async findByStatusAndUserId(userId: string, status: StatusType) {
     const campaigns = await this.DbProvider.select()
       .from(campaignTable)
       .where(

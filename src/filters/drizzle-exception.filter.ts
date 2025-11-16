@@ -14,6 +14,8 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
+    console.log(exception)
+
     //! Handle Postgres duplicate key (wrapped in cause)
     if (exception.cause?.code === '23505') {
       return response.status(HttpStatus.BAD_REQUEST).json({
@@ -53,6 +55,26 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
         message:
           exception?.response?.message || 'Bad request was sent to the server',
         error: 'Bad Request',
+        timestamp: new Date().toISOString(),
+        path: request.url,
+      });
+    }
+    if (exception?.response?.statusCode === 401 || exception.status === 401) {
+      return response.status(HttpStatus.UNAUTHORIZED).json({
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message:
+          exception?.response?.message || 'You are not authorized to access this place',
+        error: 'Unauthorized',
+        timestamp: new Date().toISOString(),
+        path: request.url,
+      });
+    }
+    if (exception?.response?.statusCode === 404 || exception.status === 404) {
+      return response.status(HttpStatus.NOT_FOUND).json({
+        statusCode: HttpStatus.NOT_FOUND,
+        message:
+          exception?.response?.message || 'We could not find what you are looking for',
+        error: 'Resource not found',
         timestamp: new Date().toISOString(),
         path: request.url,
       });

@@ -176,6 +176,13 @@
       "when": 1763129688009,
       "tag": "0024_absurd_beast",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1763254949086,
+      "tag": "0025_silky_speed_demon",
+      "breakpoints": true
     }
   ]
 }

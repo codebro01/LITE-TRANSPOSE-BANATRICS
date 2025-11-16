@@ -6,11 +6,12 @@ import {
   Inject,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import type { Request } from '@src/types';
 import { jwtConstants } from '@src/auth/jwtContants';
 import { userTable } from '@src/db';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -109,7 +110,7 @@ export class JwtAuthGuard implements CanActivate {
       }
       // console.log(newTokenUser);
   
-      request['user']  = newTokenUser; // attach user to request
+      request['user']   = newTokenUser; // attach user to request
       return true;
     }
   }

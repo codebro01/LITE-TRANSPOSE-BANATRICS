@@ -51,12 +51,12 @@ export class AuthRepository {
     .where(whereClause);
     if (!user)
       throw new UnauthorizedException(
-    'Bad credentials, Please check email and password',
+    'Invalid credentials, Please check email and password',
   );
   const passwordIsCorrect = await bcrypt.compare(password, user.password);
   if (!passwordIsCorrect)
     throw new UnauthorizedException(
-  'Bad credentials, Please check email and password',
+  'Invalid credentials, Please check email and password',
 );
 
     const payload = { id: user.id, email: user.email, role: user.role };

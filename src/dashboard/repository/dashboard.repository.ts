@@ -2,7 +2,6 @@ import { Injectable, Inject } from '@nestjs/common';
 import { businessOwnerTable, campaignTable } from '@src/db';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq, sql, and } from 'drizzle-orm';
-import { PaymentRepository } from '@src/payment/repository/payment.repository';
 
 @Injectable()
 export class HomeDashboardsRepository {

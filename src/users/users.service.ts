@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { UserRepository } from '@src/users/repository/user.repository';
-import { businessOwnerInsertType } from '@src/db/users';
 import { AuthRepository } from '@src/auth/repository/auth.repository';
 import { createUserDto } from '@src/users/dto/create-user.dto';
 import { UpdatebusinessOwnerDto } from '@src/users/dto/update-user.dto';
