@@ -36,7 +36,7 @@ import {
 import type { Response } from 'express';
 import type { Request } from '@src/types';
 
-@ApiTags('campaign')
+@ApiTags('Campaign')
 @Controller('campaign')
 export class CampaignController {
   constructor(

@@ -23,7 +23,7 @@ import {
 import omit from 'lodash.omit';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
 
-@ApiTags('auth')
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(

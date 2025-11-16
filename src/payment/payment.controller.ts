@@ -13,6 +13,16 @@ import {
   Res,
   Patch,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiParam,
+  ApiHeader,
+  ApiExcludeEndpoint,
+} from '@nestjs/swagger';
 import { PaymentService } from '@src/payment/payment.service';
 import type { RawBodyRequest } from '@nestjs/common';
 import { PaystackMetedataDto } from './dto/paystackMetadataDto';
@@ -30,6 +40,8 @@ import {
   VariantType,
 } from '@src/notification/dto/createNotificationDto';
 
+@ApiTags('Payments')
+@ApiBearerAuth()
 @Controller('payments')
 export class PaymentController {
   constructor(
@@ -41,6 +53,78 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Post('initialize')
+  @ApiOperation({
+    summary: 'Initialize a payment transaction',
+    description:
+      'Initializes a payment transaction with Paystack. Returns a payment authorization URL and reference that can be used to complete the payment. Only accessible by business owners.',
+  })
+  @ApiBody({
+    description: 'Payment initialization data',
+    schema: {
+      type: 'object',
+      required: ['amount', 'metadata'],
+      properties: {
+        amount: {
+          type: 'number',
+          description: 'Amount in kobo (NGN minor unit, multiply naira by 100)',
+          example: 50000,
+          minimum: 100,
+        },
+        metadata: {
+          type: 'object',
+          description: 'Additional payment metadata',
+          properties: {
+            campaignName: {
+              type: 'string',
+              example: 'Christmas Campaign 2024',
+            },
+            invoiceId: {
+              type: 'string',
+              example: 'INV-2024-001',
+            },
+            dateInitiated: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-11-16T10:30:00Z',
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment initialized successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        data: {
+          type: 'object',
+          properties: {
+            authorization_url: {
+              type: 'string',
+              example: 'https://checkout.paystack.com/abc123xyz',
+            },
+            access_code: { type: 'string', example: 'abc123xyz' },
+            reference: { type: 'string', example: 'ref_1234567890' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Invalid payment data',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User is not a business owner',
+  })
   async initializePayment(
     @Body()
     body: { amount: number; metadata: PaystackMetedataDto },
@@ -48,11 +132,10 @@ export class PaymentController {
     @Res() res: Response,
   ) {
     const { email, id: userId } = req.user;
-    // console.log(userId);
 
     const result = await this.paymentService.initializePayment({
       email: email,
-      amount: body.amount, // Amount should be in kobo (multiply by 100 for NGN)
+      amount: body.amount,
       metadata: {
         ...body.metadata,
         userId,
@@ -60,8 +143,6 @@ export class PaymentController {
         amountInNaira: body.amount / 100,
       },
     });
-
-    // console.log(result);
 
     res.status(HttpStatus.OK).json({
       success: true,
@@ -72,6 +153,63 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('verify/:reference')
+  @ApiOperation({
+    summary: 'Verify a payment transaction',
+    description:
+      'Verifies the status of a payment transaction using its reference. This should be called after the customer completes payment on Paystack.',
+  })
+  @ApiParam({
+    name: 'reference',
+    type: String,
+    description: 'Payment reference returned during initialization',
+    example: 'ref_1234567890',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment verification result',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        message: { type: 'string', example: 'Verification successful' },
+        data: {
+          type: 'object',
+          properties: {
+            status: {
+              type: 'string',
+              enum: ['success', 'failed', 'pending'],
+              example: 'success',
+            },
+            reference: { type: 'string', example: 'ref_1234567890' },
+            amount: { type: 'number', example: 50000 },
+            currency: { type: 'string', example: 'NGN' },
+            paid_at: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-11-16T10:35:00Z',
+            },
+            channel: {
+              type: 'string',
+              enum: ['card', 'bank', 'ussd', 'qr', 'mobile_money'],
+              example: 'card',
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User is not a business owner',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found - Payment reference not found',
+  })
   async verifyPayment(@Param('reference') reference: string) {
     const result = await this.paymentService.verifyPayment(reference);
 
@@ -84,6 +222,87 @@ export class PaymentController {
 
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Handle Paystack webhook events',
+    description:
+      'Receives and processes webhook notifications from Paystack for payment events. Handles charge success, failure, pending, refund, and transfer events. This endpoint does not require authentication as it is called by Paystack.',
+  })
+  @ApiHeader({
+    name: 'x-paystack-signature',
+    description: 'Webhook signature for verification',
+    required: true,
+    schema: { type: 'string' },
+  })
+  @ApiBody({
+    description: 'Paystack webhook event payload',
+    schema: {
+      type: 'object',
+      properties: {
+        event: {
+          type: 'string',
+          enum: [
+            'charge.success',
+            'charge.failed',
+            'charge.pending',
+            'refund.processed',
+            'transfer.success',
+            'transfer.failed',
+            'transfer.reversed',
+          ],
+          example: 'charge.success',
+        },
+        data: {
+          type: 'object',
+          properties: {
+            reference: { type: 'string', example: 'ref_1234567890' },
+            amount: { type: 'number', example: 50000 },
+            currency: { type: 'string', example: 'NGN' },
+            status: { type: 'string', example: 'success' },
+            authorization: {
+              type: 'object',
+              properties: {
+                channel: { type: 'string', example: 'card' },
+              },
+            },
+            metadata: {
+              type: 'object',
+              properties: {
+                userId: { type: 'string' },
+                campaignName: { type: 'string' },
+                invoiceId: { type: 'string' },
+                amountInNaira: { type: 'number' },
+                dateInitiated: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Webhook processed successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        status: {
+          type: 'string',
+          enum: ['success', 'already processed', 'error logged'],
+          example: 'success',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Invalid webhook signature',
+    schema: {
+      type: 'object',
+      properties: {
+        status: { type: 'string', example: 'invalid signature' },
+      },
+    },
+  })
   async handleWebhook(
     @Req() req: RawBodyRequest<Request>,
     @Res() res: Response,
@@ -91,7 +310,6 @@ export class PaymentController {
   ) {
     const payload = JSON.stringify(req.body);
 
-    // Verify webhook signature
     const isValid = this.paymentService.verifyWebhookSignature(
       payload,
       signature,
@@ -104,7 +322,6 @@ export class PaymentController {
     }
 
     const event = req.body;
-    // console.log('Webhook event received:', event);
 
     try {
       const { reference } = event.data;
@@ -114,12 +331,10 @@ export class PaymentController {
 
       switch (event.event) {
         case 'charge.success': {
-          // Check if this payment was already processed
           const existingPayment =
             await this.paymentRepository.findByReference(reference);
 
           if (existingPayment && existingPayment.paymentStatus === 'success') {
-            // console.log('Payment already processed:', reference);
             return res
               .status(HttpStatus.OK)
               .json({ status: 'already processed' });
@@ -135,7 +350,7 @@ export class PaymentController {
                 paymentStatus: 'success',
                 paymentMethod: channel,
                 reference,
-                transactionType: 'deposit', // Mark as deposit, not a transfer
+                transactionType: 'deposit',
               },
               userId,
               trx,
@@ -160,7 +375,6 @@ export class PaymentController {
             userId,
           );
 
-          // console.log('Payment and balance updated successfully:', reference);
           break;
         }
         case 'charge.failed': {
@@ -235,9 +449,8 @@ export class PaymentController {
               trx,
             );
 
-            // Deduct the refunded amount from balance
             await this.paymentRepository.updateBalance(
-              { amount: -amountInNaira }, // Negative amount
+              { amount: -amountInNaira },
               userId,
               trx,
             );
@@ -255,19 +468,16 @@ export class PaymentController {
             userId,
           );
 
-          // console.log('Refund processed:', reference);
           break;
         }
 
         case 'transfer.success':
         case 'transfer.failed':
         case 'transfer.reversed': {
-          // console.log('Transfer event:', event.event, reference);
           break;
         }
 
         default:
-        // console.log('Unhandled event type:', event.event);
       }
 
       return res.status(HttpStatus.OK).json({ status: 'success' });
@@ -280,6 +490,45 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('list-all-transactions')
+  @ApiOperation({
+    summary: 'List all transactions from Paystack',
+    description:
+      'Retrieves all transactions from Paystack API. Returns a comprehensive list of all payment transactions across the platform.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Transactions retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        status: { type: 'boolean', example: true },
+        message: { type: 'string', example: 'Transactions retrieved' },
+        data: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'number', example: 123456 },
+              reference: { type: 'string', example: 'ref_1234567890' },
+              amount: { type: 'number', example: 50000 },
+              status: { type: 'string', example: 'success' },
+              currency: { type: 'string', example: 'NGN' },
+              created_at: { type: 'string', format: 'date-time' },
+              channel: { type: 'string', example: 'card' },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User is not a business owner',
+  })
   async listTransactions() {
     const result = await this.paymentService.listAllTransactions();
     return result;
@@ -288,6 +537,59 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Patch('make-payment-for-campaign')
+  @ApiOperation({
+    summary: 'Make payment for a campaign',
+    description:
+      'Initiates payment from user balance for a specific campaign. Deducts the campaign cost from the business owner wallet balance.',
+  })
+  @ApiBody({
+    type: MakePaymentForCampaignDto,
+    description: 'Campaign payment data',
+    examples: {
+      example1: {
+        summary: 'Pay for campaign',
+        value: {
+          campaignId: 'camp_123abc',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Campaign payment initiated successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        data: {
+          type: 'object',
+          properties: {
+            campaignId: { type: 'string', example: 'camp_123abc' },
+            amount: { type: 'number', example: 25000 },
+            previousBalance: { type: 'number', example: 100000 },
+            newBalance: { type: 'number', example: 75000 },
+            paymentStatus: { type: 'string', example: 'completed' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Insufficient balance or invalid campaign',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User is not a business owner',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found - Campaign not found',
+  })
   async makePaymentForCampaign(
     @Body()
     body: MakePaymentForCampaignDto,
@@ -295,7 +597,6 @@ export class PaymentController {
     @Res() res: Response,
   ) {
     const { id: userId } = req.user;
-    // console.log(userId);
 
     const result = await this.paymentService.makePaymentForCampaign(
       { campaignId: body.campaignId },
@@ -311,6 +612,61 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Patch('finalize-payment-for-campaign')
+  @ApiOperation({
+    summary: 'Finalize campaign payment',
+    description:
+      'Completes and finalizes the payment process for a campaign. This confirms the payment and updates the campaign status to paid.',
+  })
+  @ApiBody({
+    type: MakePaymentForCampaignDto,
+    description: 'Campaign finalization data',
+    examples: {
+      example1: {
+        summary: 'Finalize campaign payment',
+        value: {
+          campaignId: 'camp_123abc',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Campaign payment finalized successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        data: {
+          type: 'object',
+          properties: {
+            campaignId: { type: 'string', example: 'camp_123abc' },
+            paymentStatus: { type: 'string', example: 'finalized' },
+            finalizedAt: {
+              type: 'string',
+              format: 'date-time',
+              example: '2024-11-16T10:40:00Z',
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Payment cannot be finalized',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User is not a business owner',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found - Campaign or payment not found',
+  })
   async finalizePaymentForCampaign(
     @Body()
     body: MakePaymentForCampaignDto,
@@ -318,7 +674,6 @@ export class PaymentController {
     @Res() res: Response,
   ) {
     const { id: userId } = req.user;
-    // console.log(userId);
 
     const result = await this.paymentService.finalizePaymentForCampaign(
       { campaignId: body.campaignId },
@@ -334,9 +689,57 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('list-transactions')
+  @ApiOperation({
+    summary: 'Get user transactions from database',
+    description:
+      'Retrieves all payment transactions for the authenticated user from the application database. Includes deposits, campaign payments, and refunds.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User transactions retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        data: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', example: 'txn_123abc' },
+              reference: { type: 'string', example: 'ref_1234567890' },
+              amount: { type: 'number', example: 50000 },
+              transactionType: {
+                type: 'string',
+                enum: ['deposit', 'withdrawal', 'campaign_payment', 'refund'],
+                example: 'deposit',
+              },
+              paymentStatus: {
+                type: 'string',
+                enum: ['success', 'failed', 'pending', 'refunded'],
+                example: 'success',
+              },
+              paymentMethod: { type: 'string', example: 'card' },
+              campaignName: { type: 'string', example: 'Christmas Campaign' },
+              invoiceId: { type: 'string', example: 'INV-2024-001' },
+              dateInitiated: { type: 'string', format: 'date-time' },
+              createdAt: { type: 'string', format: 'date-time' },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User is not a business owner',
+  })
   async getTransactionsFromDB(@Req() req: Request, @Res() res: Response) {
     const { id: userId } = req.user;
-    // console.log(userId);
 
     const result = await this.paymentService.listTransactions(userId);
 
@@ -349,9 +752,83 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('dashboard-data')
+  @ApiOperation({
+    summary: 'Get payment dashboard analytics',
+    description:
+      'Retrieves comprehensive payment analytics and statistics for the dashboard. Includes total deposits, withdrawals, balance, transaction counts, and trends.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Dashboard data retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        data: {
+          type: 'object',
+          properties: {
+            currentBalance: {
+              type: 'number',
+              example: 150000,
+              description: 'Current wallet balance',
+            },
+            totalDeposits: {
+              type: 'number',
+              example: 500000,
+              description: 'Total amount deposited',
+            },
+            totalWithdrawals: {
+              type: 'number',
+              example: 350000,
+              description: 'Total amount withdrawn/spent',
+            },
+            transactionCount: {
+              type: 'number',
+              example: 45,
+              description: 'Total number of transactions',
+            },
+            successfulTransactions: {
+              type: 'number',
+              example: 42,
+            },
+            failedTransactions: {
+              type: 'number',
+              example: 3,
+            },
+            recentTransactions: {
+              type: 'array',
+              description: 'Last 10 transactions',
+              items: {
+                type: 'object',
+              },
+            },
+            monthlyTrend: {
+              type: 'array',
+              description: 'Monthly transaction trends',
+              items: {
+                type: 'object',
+                properties: {
+                  month: { type: 'string', example: '2024-11' },
+                  deposits: { type: 'number', example: 100000 },
+                  withdrawals: { type: 'number', example: 75000 },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User is not a business owner',
+  })
   async getPaymentDashboardData(@Req() req: Request, @Res() res: Response) {
     const { id: userId } = req.user;
-    // console.log(userId);
 
     const result = await this.paymentService.paymentDashboard(userId);
 
@@ -362,13 +839,10 @@ export class PaymentController {
   }
 
   @Get('callback-test')
+  @ApiExcludeEndpoint()
   async handleCallback(@Query() query: any) {
-    // console.log('Callback received:', query);
-
-    // Verify the payment
     const verified = await this.paymentService.verifyPayment(query.reference);
 
-    // Return HTML so you can see it in browser
     return `
     <html>
       <body>

@@ -24,7 +24,7 @@ import type { Response } from 'express';
 import { UpdatePasswordDto } from '@src/users/dto/updatePasswordDto';
 
 
-@ApiTags('settings')
+@ApiTags('Settings')
 @Controller('settings')
 export class SettingsController {
   constructor(private readonly userService: UserService) {}

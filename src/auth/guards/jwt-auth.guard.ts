@@ -25,14 +25,15 @@ export class JwtAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const response = context.switchToHttp().getResponse<Response>();
 
-    const access_token =
-      request.cookies?.access_token // for browser cookies // for mobile apps
-    const refresh_token =
-      request.cookies?.refresh_token // for browser cookies // for mobile apps
+    const access_token = request.cookies?.access_token; // for browser cookies // for mobile apps
+    const refresh_token = request.cookies?.refresh_token; // for browser cookies // for mobile apps
 
     if (!access_token && !refresh_token) {
       throw new UnauthorizedException('No token provided');
     }
+
+    // console.log('access token', access_token)
+    // console.log('refresh token', refresh_token)
 
     try {
       const token = await this.jwtService.verifyAsync(access_token, {
@@ -109,8 +110,8 @@ export class JwtAuthGuard implements CanActivate {
         throw new UnauthorizedException('Token issue failed!!!');
       }
       // console.log(newTokenUser);
-  
-      request['user']   = newTokenUser; // attach user to request
+
+      request['user'] = newTokenUser; // attach user to request
       return true;
     }
   }

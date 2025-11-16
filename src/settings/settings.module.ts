@@ -6,7 +6,7 @@ import { AuthModule } from '@src/auth/auth.module';
 import { DbModule } from '@src/db/db.module';
 
 @Module({
-imports:[UserModule, AuthModule, DbModule],
+  imports: [UserModule, AuthModule, DbModule],
   controllers: [SettingsController],
   providers: [UserService],
 })
