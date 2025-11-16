@@ -7,7 +7,7 @@ import {
 import { DraftCampaignDto } from '@src/campaign/dto/draftCampaignDto';
 import { PublishCampaignDto } from '@src/campaign/dto/publishCampaignDto';
 import { CloudinaryService } from '@src/cloudinary/cloudinary.service';
-import { CampaignRepository, CampaignStatus } from '@src/campaign/repository/campaign.repository';
+import { CampaignRepository } from '@src/campaign/repository/campaign.repository';
 import { NotificationService } from '@src/notification/notification.service';
 import {
   StatusType,

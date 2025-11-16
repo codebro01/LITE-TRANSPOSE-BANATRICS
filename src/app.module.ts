@@ -19,6 +19,7 @@ import { CatchErrorModule } from './catch-error/catch-error.module';
 import { NotificationModule } from './notification/notification.module';
 import { EmailModule } from './email/email.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     NotificationModule,
     EmailModule,
     DashboardModule,
+    SettingsModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService, NeonProvider, MulterService],
