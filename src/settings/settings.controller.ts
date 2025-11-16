@@ -26,7 +26,7 @@ import { UpdatePasswordDto } from '@src/users/dto/updatePasswordDto';
 
 @ApiTags('settings')
 @Controller('settings')
-export class UserController {
+export class SettingsController {
   constructor(private readonly userService: UserService) {}
 
   @UseGuards(JwtAuthGuard)
