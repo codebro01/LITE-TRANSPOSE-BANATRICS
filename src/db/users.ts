@@ -22,7 +22,7 @@ export const userTable = pgTable('users', {
 
 export const businessOwnerTable = pgTable('businessOwners', {
   id: uuid('id').defaultRandom().primaryKey().notNull(),
-  userId: uuid('userId').references(() => userTable.id),
+  userId: uuid('userId').references(() => userTable.id, {onDelete: 'cascade'}),
   balance: doublePrecision('balance').default(0).notNull(),
   pending: doublePrecision('pending').default(0).notNull(),
   businessName: varchar('businessName', { length: 255 }).notNull(),
@@ -37,10 +37,7 @@ export const businessOwnerTable = pgTable('businessOwners', {
 });
 export const driverTable = pgTable('drivers', {
   id: uuid().defaultRandom().primaryKey().notNull(),
-  userId: uuid('userId').references(() => userTable.id), // Add this line
-  role: varchar('role', { length: 10 }).default('user').notNull(),
-  fullName: varchar('fullName', { length: 255 }).notNull(),
-  refreshToken: varchar('refreshToken', { length: 255 }),
+  userId: uuid('userId').references(() => userTable.id, {onDelete: 'cascade'}), // Add this line
   balance: doublePrecision('balance').default(0).notNull(),
   pending: doublePrecision('pending').default(0).notNull(),
   dp: varchar('dp', { length: 255 }),

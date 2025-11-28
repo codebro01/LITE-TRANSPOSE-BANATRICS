@@ -18,6 +18,12 @@ export const packageTypeEnum = pgEnum('package_type', [
   'premium',
   'custom',
 ]);
+
+export const maintenanceTypeEnum = pgEnum('maintenance_type', [
+  'basic',
+  'standard',
+  'premium',
+]);
 export const paymentStatusEnum = pgEnum('payment_status', ['spent', 'pending']);
 export const statusTypeEnum = pgEnum('status_type', [
   'draft', //! this is the stutus when the business Owner decides to save the campaign as draft
@@ -31,7 +37,7 @@ export const campaignTable = pgTable('campaigns', {
   packageType: packageTypeEnum('package_type'),
   statusType: statusTypeEnum('status_type'),
   paymentStatus: paymentStatusEnum('payment_status'),
-  duration: integer('duration'),
+  duration: integer('duration').default(30).notNull(),
   revisions: varchar('revisions'),
   price: integer('price'),
   noOfDrivers: integer('no_of_drivers'),

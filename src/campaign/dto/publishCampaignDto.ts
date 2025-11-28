@@ -13,6 +13,13 @@ import {
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
+export enum MaintenanceType {
+  BASIC = 'basic',
+  STANDARD  = 'standard',
+  PREMIUM = 'premium',
+}
+
+
 export enum PackageType {
   STARTER = 'starter',
   BASIC = 'basic',

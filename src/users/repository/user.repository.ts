@@ -20,7 +20,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { eq, or } from 'drizzle-orm';
 import { jwtConstants } from '@src/auth/jwtContants';
-import { createUserDto } from '@src/users/dto/create-user.dto';
+import { createUserDto, UserRole } from '@src/users/dto/create-user.dto';
 import { UpdatebusinessOwnerDto } from '@src/users/dto/update-user.dto';
 import { UpdatePasswordDto } from '@src/users/dto/updatePasswordDto';
 
@@ -42,7 +42,7 @@ export class UserRepository {
 
       // ! ----------------------Create user for business owners--------------------
 
-      if (role && role === 'businessOwner') {
+      if (role && role === UserRole.BUSINESS_OWNER) {
         const { businessName, email, password, phone } = data;
 
         if (!email || !password || !businessName || !phone)
@@ -138,7 +138,7 @@ export class UserRepository {
 
       // ! ---------------Create user for drivers----------------------
 
-      if (role && role === 'driver') {
+      if (role && role === UserRole.DRIVER) {
         const { fullName, email, password, phone } = data;
 
         if (!email || !password || !fullName || !phone)
@@ -191,7 +191,6 @@ export class UserRepository {
           const [addUserProfile] = (await tx
             .insert(driverTable)
             .values({
-              fullName: fullName,
               userId: user.id, // Use the actual user.id here, not businessName
             })
             .returning()) as driverInsertType[];
@@ -203,6 +202,90 @@ export class UserRepository {
           }
 
           return { user, addUserProfile };
+        });
+
+        // Access the results
+        const { user } = result;
+        const payload = {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+        };
+
+        const accessToken = await this.jwtService.signAsync(payload, {
+          secret: jwtConstants.accessTokenSecret,
+          expiresIn: '1h',
+        });
+        const refreshToken = await this.jwtService.signAsync(payload, {
+          secret: jwtConstants.refreshTokenSecret,
+          expiresIn: '30d',
+        });
+
+        const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+
+        const updateUserToken = await this.DbProvider.update(userTable)
+          .set({ refreshToken: hashedRefreshToken })
+          .where(eq(userTable.id, user.id!));
+
+        if (!updateUserToken) throw new InternalServerErrorException();
+        return { user, accessToken, refreshToken };
+      }
+
+
+
+      if (role && role === UserRole.ADMIN) {
+        const { fullName, email, password, phone } = data;
+
+        if (!email || !password || !fullName || !phone)
+          throw new BadRequestException(
+            'Please email, password, phone and business Fullname is required',
+          );
+
+        //! check if email or phone provided has been used
+
+        const [existingUser] = await this.DbProvider.select({
+          email: userTable.email,
+          phone: userTable.phone,
+        })
+          .from(userTable)
+          .where(or(eq(userTable.email, email), eq(userTable.phone, phone)));
+
+        if (existingUser) {
+          // Check which one matched
+          if (existingUser.email === email && existingUser.phone === phone) {
+            throw new Error('Email and phone number are already in use');
+          } else if (existingUser.email === email) {
+            throw new Error('Email is already in use');
+          } else {
+            throw new Error('Phone number is already in use');
+          }
+        }
+
+        //! create user here if email has not been used
+        const hashedPwd = await bcrypt.hash(password, 10);
+
+        const result = await this.DbProvider.transaction(async (tx) => {
+          // First insert - user
+          const [user] = (await tx
+            .insert(userTable)
+            .values({
+              email: data.email,
+              phone: data.phone,
+              password: hashedPwd,
+              role,
+              emailVerified: true,
+            })
+            .returning()) as userInsertType[];
+
+          if (!user || !user.id) {
+            throw new InternalServerErrorException(
+              'Could not create user, please try again',
+            );
+          }
+
+      
+
+          return { user };
         });
 
         // Access the results

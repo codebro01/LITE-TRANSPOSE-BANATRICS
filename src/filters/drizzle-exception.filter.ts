@@ -80,6 +80,8 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
       });
     }
 
+    console.log(exception?.cause);
+
     //! Default fallback (true 500s only)
     return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,

@@ -35,7 +35,7 @@ export class createUserDto {
   @IsEnum(UserRole, {
     message: 'Role must be one of: businessOwner, driver, admin',
   })
-  role: string;
+  role: UserRole;
 
   @ApiProperty({ example: 'sales@banatrics.com' })
   @IsString()

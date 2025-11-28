@@ -6,12 +6,17 @@ import {
   integer
 } from 'drizzle-orm/pg-core';
 import { userTable } from './users';
+import { packageTypeEnum } from '@src/db/campaigns'; 
+import { maintenanceTypeEnum } from '@src/db/campaigns';
+
 
 export const packageTable = pgTable('packages', {
   id: uuid('id').defaultRandom().primaryKey().notNull(),
   userId: uuid('adminId').references(() => userTable.id, {
     onDelete: 'cascade',
   }),
+  packageType: packageTypeEnum('package_type').notNull(), 
+  maintenanceType: maintenanceTypeEnum('maintenance_type').notNull(), 
   duration: integer('duration'),
   revisions: varchar('revisions'),
   price: integer('price'),
