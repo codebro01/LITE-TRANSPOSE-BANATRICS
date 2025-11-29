@@ -21,6 +21,7 @@ import { EmailModule } from './email/email.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { SettingsModule } from './settings/settings.module';
 import { PackageModule } from './package/package.module';
+import { ResendModule } from './resend/resend.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { PackageModule } from './package/package.module';
     DashboardModule,
     SettingsModule,
     PackageModule,
+    ResendModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService, NeonProvider, MulterService],
