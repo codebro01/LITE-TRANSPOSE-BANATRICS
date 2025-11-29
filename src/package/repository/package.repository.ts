@@ -1,4 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { PackageType } from '@src/campaign/dto/publishCampaignDto';
 import { packageTable } from '@src/db/package';
 import { CreatePackageDto } from '@src/package/dto/create-package.dto';
 import { UpdatePackageDto } from '@src/package/dto/update-package.dto';
@@ -34,11 +35,18 @@ export class PackageRepository {
 
     return pkg;
   }
+  async findByPackageType(packageType: PackageType) {
+    const pkg = await this.DbProvider.select()
+      .from(packageTable)
+      .where(eq(packageTable.packageType, packageType)).limit(1);
+
+    return pkg;
+  }
 
   async update(updatePackageDto: UpdatePackageDto, packageId: string) {
-    const pkg = await this.DbProvider.update(packageTable)
+    const [pkg] = await this.DbProvider.update(packageTable)
       .set(updatePackageDto)
-      .where(eq(packageTable.id, packageId));
+      .where(eq(packageTable.id, packageId)).returning();
 
     return pkg;
   }

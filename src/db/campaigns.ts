@@ -39,6 +39,8 @@ export const campaignTable = pgTable('campaigns', {
   paymentStatus: paymentStatusEnum('payment_status'),
   duration: integer('duration').default(30).notNull(),
   revisions: varchar('revisions'),
+  maintenanceType: maintenanceTypeEnum('maintenance_type'),
+  lgaCoverage: varchar('lga_coverage', { length: 10 }),
   price: integer('price'),
   noOfDrivers: integer('no_of_drivers'),
   campaignName: varchar('campaign_name', { length: 255 }),

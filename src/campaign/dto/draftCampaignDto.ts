@@ -11,13 +11,11 @@ import {
   IsArray,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { MaintenanceType } from '@src/campaign/dto/publishCampaignDto';
+import { IsNotAllowedWithPackageType } from '@src/campaign/validators/conditional-fields.validator';
+import { PackageType } from '@src/campaign/dto/publishCampaignDto';
 
-export enum PackageType {
-  STARTER = 'starter',
-  BASIC = 'basic',
-  PREMIUM = 'premium',
-  CUSTOM = 'custom',
-}
+
 export enum StatusType {
   PENDING = 'pending',
   DRAFT = 'draft',
@@ -38,6 +36,19 @@ export class DraftCampaignDto {
   packageType: PackageType;
 
   @ApiProperty({
+    example: 'premium',
+    enum: PackageType,
+    description:
+      'Maintenance Type of the package, it could be either of premium, basic or standard',
+  })
+  @IsEnum(MaintenanceType, {
+    message: 'Package type must be one of: starter, basic, premium, custom',
+  })
+  @IsOptional()
+  @IsNotAllowedWithPackageType()
+  maintenanceType: MaintenanceType;
+
+  @ApiProperty({
     example: 'draft',
     enum: StatusType,
     description: 'Campaign status type',
@@ -49,12 +60,24 @@ export class DraftCampaignDto {
   statusType: StatusType;
 
   @ApiProperty({
+    example: '5-7',
+    description: 'Number of LGA that ads will take place ',
+  })
+  @IsString()
+  @IsOptional()
+  @MaxLength(10)
+  @Transform(({ value }) => (value ? value?.trim() : value))
+  @IsNotAllowedWithPackageType()
+  lgaCoverage: string;
+
+  @ApiProperty({
     example: 30,
     description:
       'Campaign duration is a number and its calculated in days so 30 means 30 days',
   })
   @IsNumber()
   @IsOptional()
+  @IsNotAllowedWithPackageType()
   duration: number;
 
   @ApiProperty({
@@ -64,6 +87,7 @@ export class DraftCampaignDto {
   @IsString()
   @IsOptional()
   @Transform(({ value }) => value?.trim())
+  @IsNotAllowedWithPackageType()
   revisions: string;
 
   @ApiProperty({
@@ -73,6 +97,7 @@ export class DraftCampaignDto {
   @IsNumber()
   @IsOptional()
   @Min(0, { message: 'Price must be a positive number' })
+  @IsNotAllowedWithPackageType()
   price: number;
 
   @ApiProperty({
@@ -82,6 +107,7 @@ export class DraftCampaignDto {
   @IsNumber()
   @IsOptional()
   @Min(1, { message: 'At least 1 driver is required' })
+  @IsNotAllowedWithPackageType()
   noOfDrivers: number;
 
   @ApiProperty({
@@ -112,6 +138,14 @@ export class DraftCampaignDto {
   @IsOptional()
   startDate: string;
 
+  @ApiProperty({
+    example: '2025-11-01T00:00:00.000Z',
+    description: 'Campaign start date (ISO 8601 format)',
+  })
+  @IsDateString()
+  @IsOptional()
+  @IsNotAllowedWithPackageType()
+  endDate: string;
 
   @ApiProperty({
     example: ['#FF5733', '#C70039', '#900C3F'],

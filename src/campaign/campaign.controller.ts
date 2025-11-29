@@ -3,7 +3,6 @@ import {
   UseGuards,
   Req,
   Res,
-  UseInterceptors,
   Body,
   Patch,
   Get,
@@ -12,7 +11,6 @@ import {
   Param, 
   Query
 } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
@@ -22,7 +20,6 @@ import {
   ApiQuery,
   ApiParam,
 } from '@nestjs/swagger';
-import multer, { StorageEngine } from 'multer';
 import { PublishCampaignDto } from './dto/publishCampaignDto';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@src/auth/guards/roles.guard';
@@ -72,17 +69,6 @@ export class CampaignController {
     status: 403,
     description: 'Forbidden - Not a business owner',
   })
-  @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'files', maxCount: 5 },
-        { name: 'companyLogo', maxCount: 1 },
-      ],
-      {
-        storage: multer.memoryStorage() as StorageEngine,
-      },
-    ),
-  )
   async createAndPublishCampaign(
     @Req() req: Request,
     @Res() res: Response,
@@ -125,17 +111,7 @@ export class CampaignController {
     status: 403,
     description: 'Forbidden - Not a business owner',
   })
-  @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'files', maxCount: 5 },
-        { name: 'companyLogo', maxCount: 1 },
-      ],
-      {
-        storage: multer.memoryStorage() as StorageEngine,
-      },
-    ),
-  )
+ 
   async draftCampaign(
     @Req() req: Request,
     @Res() res: Response,
@@ -258,17 +234,6 @@ export class CampaignController {
     status: 404,
     description: 'Campaign draft not found',
   })
-  @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'files', maxCount: 5 },
-        { name: 'companyLogo', maxCount: 1 },
-      ],
-      {
-        storage: multer.memoryStorage() as StorageEngine,
-      },
-    ),
-  )
   async publishDraftCampaign(
     @Req() req: Request,
     @Res() res: Response,
@@ -348,7 +313,7 @@ export class CampaignController {
 
     const campaign = await this.campaignService.getDrafts(userId);
     res.status(HttpStatus.CREATED).json({
-      message: 'Campaign updated successfully',
+      message: 'success',
       data: campaign,
     });
   }
@@ -380,7 +345,7 @@ export class CampaignController {
 
     const campaign = await this.campaignService.getPublished(userId);
     res.status(HttpStatus.CREATED).json({
-      message: 'Campaign updated successfully',
+      message: 'Success',
       data: campaign,
     });
   }
@@ -412,7 +377,7 @@ export class CampaignController {
 
     const campaign = await this.campaignService.getCompleted(userId);
     res.status(HttpStatus.CREATED).json({
-      message: 'Campaign updated successfully',
+      message: 'success',
       data: campaign,
     });
   }

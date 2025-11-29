@@ -10,15 +10,19 @@ import {
   Min,
   MaxLength,
   IsArray,
+  ValidateIf,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import {
+  IsNotAllowedWithPackageType,
+  IsRequiredForCustomPackage,
+} from '@src/campaign/validators/conditional-fields.validator';
 
 export enum MaintenanceType {
   BASIC = 'basic',
-  STANDARD  = 'standard',
+  STANDARD = 'standard',
   PREMIUM = 'premium',
 }
-
 
 export enum PackageType {
   STARTER = 'starter',
@@ -26,7 +30,6 @@ export enum PackageType {
   PREMIUM = 'premium',
   CUSTOM = 'custom',
 }
-
 
 export enum StatusType {
   PENDING = 'pending',
@@ -48,41 +51,80 @@ export class PublishCampaignDto {
   packageType: PackageType;
 
   @ApiProperty({
-    example: 30,
-    description: 'Campaign duration is a number and its calculated in days so 30 means 30 days',
+    example: 'premium',
+    enum: MaintenanceType,
+    description:
+      'Maintenance Type of the package, it could be either of premium, basic or standard. Required when packageType is custom.',
+    required: false,
   })
+  @ValidateIf((o) => o.maintenanceType !== undefined)
+  @IsEnum(MaintenanceType, {
+    message: 'Maintenance type must be one of: basic, standard, premium',
+  })
+  @IsNotAllowedWithPackageType()
+  @IsRequiredForCustomPackage()
+  maintenanceType?: MaintenanceType;
+
+  @ApiProperty({
+    example: 30,
+    description:
+      'Campaign duration is a number and its calculated in days so 30 means 30 days. Required when packageType is custom.',
+    required: false,
+  })
+  @ValidateIf(
+    (o) => o.packageType === PackageType.CUSTOM || o.duration !== undefined,
+  )
   @IsNumber()
-  @IsNotEmpty()
-  duration: number;
+  @IsNotAllowedWithPackageType()
+  @IsRequiredForCustomPackage()
+  duration?: number;
 
   @ApiProperty({
     example: '3 revisions',
-    description: 'Number of revisions allowed',
+    description:
+      'Number of revisions allowed. Required when packageType is custom.',
+    required: false,
   })
+  @ValidateIf(
+    (o) => o.packageType === PackageType.CUSTOM || o.revisions !== undefined,
+  )
   @IsString()
-  @IsNotEmpty()
   @Transform(({ value }) => (value ? value?.trim() : value))
-  revisions: string;
+  @IsNotAllowedWithPackageType()
+  @IsRequiredForCustomPackage()
+  revisions?: string;
 
   @ApiProperty({
     example: 150000,
-    description: 'Campaign price in Naira',
+    description:
+      'Campaign price in Naira. Required when packageType is custom.',
+    required: false,
   })
+  @ValidateIf(
+    (o) => o.packageType === PackageType.CUSTOM || o.price !== undefined,
+  )
   @Type(() => Number)
   @IsNumber()
-  @IsNotEmpty()
   @Min(0, { message: 'Price must be a positive number' })
-  price: number;
+  @IsNotAllowedWithPackageType()
+  @IsRequiredForCustomPackage()
+  price?: number;
 
   @ApiProperty({
     example: 50,
-    description: 'Number of drivers for the campaign',
+    description:
+      'Number of drivers for the campaign. Required when packageType is custom.',
+    required: false,
   })
+  @ValidateIf(
+    (o) => o.packageType === PackageType.CUSTOM || o.noOfDrivers !== undefined,
+  )
   @Type(() => Number)
   @IsNumber()
-  @IsNotEmpty()
   @Min(1, { message: 'At least 1 driver is required' })
-  noOfDrivers: number;
+  @IsNotAllowedWithPackageType()
+  @IsRequiredForCustomPackage()
+  noOfDrivers?: number;
 
   @ApiProperty({
     example: 'Summer Sale 2025',
@@ -93,6 +135,20 @@ export class PublishCampaignDto {
   @MaxLength(255)
   @Transform(({ value }) => (value ? value?.trim() : value))
   campaignName: string;
+
+  @ApiProperty({
+    example: '5-7',
+    description:
+      'Number of LGA that ads will take place. Required when packageType is custom.',
+    required: false,
+  })
+  @ValidateIf(
+    (o) => o.packageType === PackageType.CUSTOM || o.lgaCoverage !== undefined,
+  )
+  @IsString()
+  @IsNotAllowedWithPackageType()
+  @IsRequiredForCustomPackage()
+  lgaCoverage?: string;
 
   @ApiProperty({
     example:
@@ -112,16 +168,19 @@ export class PublishCampaignDto {
   @IsNotEmpty()
   startDate: string;
 
- 
-
-  // @ApiProperty({
-  //   example: 'https://example.com/uploads/logo.png',
-  //   description: 'URL of uploaded company logo',
-  // })
-  // @IsString()
-  // @IsNotEmpty()
-  // @Transform(({ value }) => (value ? value?.trim() : value))
-  // companyLogo: string;
+  @ApiProperty({
+    example: '2025-11-01T00:00:00.000Z',
+    description:
+      'Campaign end date (ISO 8601 format). Required when packageType is custom.',
+    required: false,
+  })
+  @ValidateIf(
+    (o) => o.packageType === PackageType.CUSTOM || o.endDate !== undefined,
+  )
+  @IsDateString()
+  @IsNotAllowedWithPackageType()
+  @IsRequiredForCustomPackage()
+  endDate?: string;
 
   @ApiProperty({
     example: ['#FF5733', '#C70039', '#900C3F'],

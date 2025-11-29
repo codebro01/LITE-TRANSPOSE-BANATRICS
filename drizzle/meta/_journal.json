@@ -218,6 +218,13 @@
       "when": 1764355988218,
       "tag": "0030_purple_lord_tyger",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1764388908820,
+      "tag": "0031_light_harrier",
+      "breakpoints": true
     }
   ]
 }

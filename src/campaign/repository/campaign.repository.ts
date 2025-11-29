@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { and, eq } from 'drizzle-orm';
 import { campaignTable } from '@src/db/campaigns';
-import { StatusType } from '../dto/publishCampaignDto';
+import { MaintenanceType, StatusType } from '../dto/publishCampaignDto';
 
 
 export type CampaignStatus = 'draft' | 'pending' | 'active' | 'completed';
@@ -32,6 +32,9 @@ export interface CreateCampaignData {
   uploadedImages?: uploadType[];
   statusType: CampaignStatus;
   updatedAt?: Date;
+  maintenanceType?:MaintenanceType, 
+  lgaCoverage?:string, 
+  
 }
 
 export interface UpdateCampaignData {
@@ -56,6 +59,8 @@ export interface UpdateCampaignData {
   uploadedImages?: uploadType[];
   statusType?: CampaignStatus;
   updatedAt?: Date;
+  maintenanceType?: MaintenanceType;
+  lgaCoverage?: string;
 }
 
 @Injectable()

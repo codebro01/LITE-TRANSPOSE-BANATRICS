@@ -8,5 +8,6 @@ import { PackageRepository } from '@src/package/repository/package.repository';
   imports:[DbModule], 
   controllers: [PackageController],
   providers: [PackageService, PackageRepository],
+  exports : [PackageRepository, PackageService]
 })
 export class PackageModule {}
