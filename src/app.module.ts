@@ -25,17 +25,27 @@ import { ResendModule } from './resend/resend.module';
 import { BullModule } from '@nestjs/bull';
 import { PasswordResetModule } from './password-reset/password-reset.module';
 import { EmailVerificationModule } from './email-verification/email-verification.module';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, // makes ConfigService available everywhere
+      isGlobal: true,
     }),
-    BullModule.forRoot({
-      redis: {
-        host: 'localhost',
-        port: 6379,
-      },
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        redis: {
+          host: configService.get('REDIS_HOST') || 'localhost',
+          port: configService.get('REDIS_PORT') || 6379,
+          password: configService.get('REDIS_PASSWORD'),
+          tls:
+            configService.get('NODE_ENV') === 'production'
+              ? { rejectUnauthorized: false }
+              : undefined,
+        },
+      }),
+      inject: [ConfigService],
     }),
     UserModule,
     AuthModule,
