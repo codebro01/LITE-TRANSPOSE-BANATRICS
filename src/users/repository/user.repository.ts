@@ -155,4 +155,5 @@ export class UserRepository {
       })
       .where(eq(userTable.email, email));
   }
+
 }

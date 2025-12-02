@@ -7,7 +7,7 @@ import {
   Res,
   HttpStatus,
   Req,
-  Patch, 
+  Patch,
 } from '@nestjs/common';
 import { UserService } from '@src/users/users.service';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
@@ -45,12 +45,11 @@ export class UserController {
     @Body() body: createUserDto,
     @Res() res: Response,
   ) {
-  const result   =   await this.userService.initializeUserCreation(body);
-
+    const result = await this.userService.initializeUserCreation(body);
 
     res.status(HttpStatus.ACCEPTED).json({ message: result });
   }
-  // ! initialize users creation
+  // ! finalize users creation
   @Post('signup/finalize')
   @ApiOperation({
     summary: 'Initialize the creation of a new uswe',
@@ -107,7 +106,7 @@ export class UserController {
 
   // ! update user basic information
   @UseGuards(JwtAuthGuard)
-  @Post('business/update')
+  @Patch('business/update')
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Update business owner information',
@@ -139,7 +138,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'driver', 'businessOwner')
-  @Post('update/password')
+  @Patch('update/password')
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Update user password',
@@ -176,6 +175,28 @@ export class UserController {
   }
 
   @Post('password/forgot')
+  @ApiOperation({
+    summary: 'Request password reset',
+    description: "Sends a password reset code to the user's email address",
+  })
+  @ApiBody({ type: ForgotPasswordDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset code sent successfully',
+    schema: {
+      example: {
+        message: 'Password reset code sent to your email',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid email format',
+  })
   async forgotPassword(
     @Req() req: Request,
     @Res() res: Response,
@@ -188,6 +209,28 @@ export class UserController {
   }
 
   @Post('password/token-verify')
+  @ApiOperation({
+    summary: 'Verify password reset code',
+    description: "Validates the password reset code sent to user's email",
+  })
+  @ApiBody({ type: ForgotPasswordDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Reset code verified successfully',
+    schema: {
+      example: {
+        message: 'success',
+        data: {
+          resetToken: 'ey.fjkjjdfkjdkjkl23049820948dkfjlkdjlfksjlkdjfl',
+          expiresAt: '2024-12-03T10:30:00Z',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid or expired reset code',
+  })
   async verifyPasswordResetCode(
     @Req() req: Request,
     @Res() res: Response,
@@ -201,6 +244,32 @@ export class UserController {
   }
 
   @Patch('password/reset')
+  @ApiOperation({
+    summary: 'Reset password',
+    description: 'Resets user password using the reset token',
+  })
+  @ApiBody({ type: ResetPasswordDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset successfully',
+    schema: {
+      example: {
+        message: 'success',
+        data: {
+          email: 'user@example.com',
+          passwordUpdated: true,
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid reset token or password requirements not met',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Reset token expired',
+  })
   async resetPassword(
     @Req() req: Request,
     @Res() res: Response,
@@ -210,6 +279,92 @@ export class UserController {
     res.status(HttpStatus.OK).json({
       message: 'success',
       data: result,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('businessOwner')
+  @Patch('update/become-a-driver')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Add driver role',
+    description:
+      'Allows a business owner to also become a driver (multi-role functionality)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Driver role added successfully',
+    schema: {
+      example: {
+        message: 'success',
+        data: {
+          id: '123',
+          email: 'user@example.com',
+          role: ['businessOwner', 'driver'],
+          createdAt: '2024-12-01T10:00:00Z',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User is not a business owner',
+  })
+  async addDriverRole(@Req() req: Request, @Res() res: Response) {
+    const { id: userId } = req.user;
+    const result = await this.userService.addDriverRole(userId);
+    const safeUser = omit(result, ['password', 'refreshToken']);
+
+    res.status(HttpStatus.OK).json({
+      message: 'success',
+      data: safeUser,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('driver')
+  @Patch('update/become-a-business-owner')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Add business owner role',
+    description:
+      'Allows a driver to also become a business owner (multi-role functionality)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Business owner role added successfully',
+    schema: {
+      example: {
+        message: 'success',
+        data: {
+          id: '123',
+          email: 'driver@example.com',
+          role: ['driver', 'businessOwner'],
+          createdAt: '2024-12-01T10:00:00Z',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User is not a driver',
+  })
+  async addBusinessOwnerRole(@Req() req: Request, @Res() res: Response) {
+    const { id: userId } = req.user;
+    const result = await this.userService.addBusinessOwnerRole(userId);
+    const safeUser = omit(result, ['password', 'refreshToken']);
+
+    res.status(HttpStatus.OK).json({
+      message: 'success',
+      data: safeUser,
     });
   }
 }

@@ -41,7 +41,7 @@ export class UserService {
 
   async initializeUserCreation(data: createUserDto): Promise<any> {
     try {
-      const { businessName, email, password, phone, fullName } = data;
+      const { businessName, email, password, phone, fullName , role} = data;
 
       if (!email || !password || !businessName || !phone)
         throw new BadRequestException(
@@ -60,6 +60,7 @@ export class UserService {
         if (existingUser.email === email && existingUser.phone === phone) {
           throw new Error('Email and phone number are already in use');
         } else if (existingUser.email === email) {
+          if(existingUser.role.includes(role))
           throw new Error('Email is already in use');
         } else {
           throw new Error('Phone number is already in use');
@@ -194,7 +195,7 @@ export class UserService {
             email: data.email,
             phone: data.phone,
             password: hashedPwd,
-            role,
+            role: ['businessOwner'],
             emailVerified: true,
           },
           trx,
@@ -267,7 +268,7 @@ export class UserService {
             email: data.email,
             phone: data.phone,
             password: hashedPwd,
-            role,
+            role: ['admin'],
           },
           trx,
         );
@@ -333,7 +334,7 @@ export class UserService {
             email: data.email,
             phone: data.phone,
             password: hashedPwd,
-            role,
+            role: ['driver'],
             emailVerified: true,
           },
           trx,
@@ -644,5 +645,17 @@ export class UserService {
     } catch (error) {
       throw new UnauthorizedException('Invalid or expired reset token:', error);
     }
+  }
+
+  async addDriverRole(userId: string) {
+      const addRole = await this.userRepository.updateByUserId({role: ['businessOwner', 'driver']}, userId);
+      return addRole;
+  }
+  async addBusinessOwnerRole(userId: string) {
+      const addRole = await this.userRepository.updateByUserId(
+        { role: ['driver', 'businessOwner'] },
+        userId,
+      );
+      return addRole;
   }
 }

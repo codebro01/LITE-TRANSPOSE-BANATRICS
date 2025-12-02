@@ -1,1 +1,0 @@
-ALTER TABLE "campaigns" ALTER COLUMN "duration" SET DATA TYPE varchar(30);

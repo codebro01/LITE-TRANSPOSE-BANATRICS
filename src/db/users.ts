@@ -11,7 +11,7 @@ import { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 export const userTable = pgTable('users', {
   id: uuid().defaultRandom().primaryKey().notNull(),
   phone: varchar('phone', { length: 50 }).notNull().unique(),
-  role: varchar('role', { length: 50 }).default('driver').notNull(),
+  role: varchar('role', { length: 50 }).array().default(['businessOwner']).notNull(),
   email: varchar('email', { length: 255 }).notNull().unique(), // can use date type if preferred
   password: varchar('password', { length: 255 }).notNull(),
   emailVerified: boolean('is_email_Verified').default(false).notNull(),

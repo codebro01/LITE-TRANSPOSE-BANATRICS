@@ -1,1 +1,0 @@
-ALTER TABLE "businessOwners" ADD COLUMN "moneySpent" double precision DEFAULT 0 NOT NULL;

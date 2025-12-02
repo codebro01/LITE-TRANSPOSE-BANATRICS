@@ -44,6 +44,8 @@ export class JwtAuthGuard implements CanActivate {
           'Could not verify token, Unauthorization error',
         );
 
+        console.log(token)
+
       // const payload = this.jwtService.verify(token); // verify with secret
       request['user'] = token; // attach user to request
       return true;
@@ -52,7 +54,7 @@ export class JwtAuthGuard implements CanActivate {
       if (!refresh_token) {
         response.redirect('/signin');
         throw new UnauthorizedException(
-          'Access token expired and no refresh token provided',
+          'You are not permitted to enter here',
         );
       }
       // console.log('got to is not refresh token', refresh_token);
