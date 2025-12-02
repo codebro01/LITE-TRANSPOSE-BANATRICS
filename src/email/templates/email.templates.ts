@@ -15,13 +15,13 @@ export class EmailTemplate {
         <body>
           <div class="container">
             <div class="header">
-              <h1>Welcome to Our Platform!</h1>
+              <h1>Welcome to Banatrics!</h1>
             </div>
             <div class="content">
               <h2>Hi ${data.name}! 👋</h2>
               <p>Thank you for joining us. We're excited to have you on board!</p>
               <p>Your account has been successfully created with email: <strong>${data.email}</strong></p>
-              <a href="https://yourapp.com/dashboard" class="button">Get Started</a>
+              <a href="https://" class="button">Get Started</a>
               <p>If you have any questions, feel free to reach out to our support team.</p>
             </div>
           </div>
@@ -77,7 +77,7 @@ export class EmailTemplate {
         <body>
           <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
             <div style="background: #4CAF50; color: white; padding: 20px; text-align: center;">
-              <h1>Campaign Approved! ✅</h1>
+              <h1>Campaign Approved!</h1>
             </div>
             <div style="padding: 20px; background: #f9f9f9;">
               <h2>Great News!</h2>
@@ -92,21 +92,17 @@ export class EmailTemplate {
     `;
   }
 
-  getPasswordResetTemplate(data: {
-    resetLink: string;
-    expiresIn: string;
-  }): string {
+  getPasswordResetTemplate(data: { resetCode: string }): string {
     return `
       <!DOCTYPE html>
       <html>
         <body>
           <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
             <h2>Reset Your Password</h2>
-            <p>You requested to reset your password. Click the button below to proceed:</p>
-            <a href="${data.resetLink}" style="display: inline-block; padding: 12px 24px; background: #f44336; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0;">
-              Reset Password
-            </a>
-            <p>This link will expire in ${data.expiresIn}.</p>
+            <p>You requested to reset your password. Here is your OTP:</p>
+            <a style="display: inline-block; padding: 12px 24px; background: #111111ff; color: white; text-decoration: none; margin: 20px 0;">
+${data.resetCode}            </a>
+            <p>This code will expire in 15 Minutes</p>
             <p><small>If you didn't request this, please ignore this email.</small></p>
           </div>
         </body>
@@ -115,7 +111,7 @@ export class EmailTemplate {
   }
 
   getEmailVerificationTemplate(data: {
-    verificationLink: string;
+    verificationCode: string;
     name: string;
   }): string {
     return `
@@ -125,10 +121,10 @@ export class EmailTemplate {
           <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
             <h2>Verify Your Email Address</h2>
             <p>Hi ${data.name},</p>
-            <p>Please verify your email address by clicking the button below:</p>
-            <a href="${data.verificationLink}" style="display: inline-block; padding: 12px 24px; background: #2196F3; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0;">
-              Verify Email
-            </a>
+            <p>Use the OTP Below to verify your email</p>
+            <h1 style="display: inline-block; padding: 12px 24px; background: #0e0e0fff; color: white; text-decoration: none; margin: 20px 0;">
+              ${data.verificationCode}
+            </h1>
             <p><small>If you didn't create an account, please ignore this email.</small></p>
           </div>
         </body>

@@ -58,8 +58,12 @@ export class EmailService {
     to: string | string[],
     data: Record<string, any>,
   ): Promise<string> {
+            console.log('got into queue');
+
     const emailData = this.buildTemplateEmail(template, to, data);
-    return this.queueEmail(emailData, this.getTemplatePriority(template));
+    const queueEmail =  await this.queueEmail(emailData, this.getTemplatePriority(template));
+    console.log(queueEmail)
+    return queueEmail
   }
 
 
@@ -72,7 +76,7 @@ export class EmailService {
       case EmailTemplateType.WELCOME:
         return {
           to,
-          subject: 'Welcome to Our Platform! 🎉',
+          subject: 'Welcome to Banatrics!',
           html: this.emailTemplate.getWelcomeTemplate(
             data as WelcomeTemplateData,
           ),

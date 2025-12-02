@@ -53,12 +53,11 @@ export interface CampaignApprovedTemplateData {
 }
 
 export interface PasswordResetTemplateData {
-  resetLink: string;
-  expiresIn: string;
+  resetCode: string;
 }
 
 export interface EmailVerificationTemplateData {
-  verificationLink: string;
+  verificationCode: string;
   name: string;
 }
 

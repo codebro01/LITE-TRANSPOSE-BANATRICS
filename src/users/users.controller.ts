@@ -7,6 +7,7 @@ import {
   Res,
   HttpStatus,
   Req,
+  Patch, 
 } from '@nestjs/common';
 import { UserService } from '@src/users/users.service';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
@@ -25,21 +26,43 @@ import omit from 'lodash.omit';
 import type { Request } from '@src/types';
 import type { Response } from 'express';
 import { UpdatePasswordDto } from './dto/updatePasswordDto';
+import { ForgotPasswordDto } from '@src/users/dto/forgot-password.dto';
+import { ResetPasswordDto } from '@src/users/dto/reset-password.dto';
+import { EmailVerificationDto } from '@src/users/dto/email-verification.dto';
 
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // ! create users
-  @Post('signup')
+  // ! initialize users creation
+  @Post('signup/initialize')
   @ApiOperation({
-    summary: 'Register a new user',
+    summary: 'Initialize the creation of a new uswe',
     description: 'Register new user using the information provided',
   })
   @ApiResponse({ status: 200, description: 'successs' })
-  async createUser(@Body() body: createUserDto, @Res() res: Response) {
+  async initializeUserCreation(
+    @Body() body: createUserDto,
+    @Res() res: Response,
+  ) {
+  const result   =   await this.userService.initializeUserCreation(body);
+
+
+    res.status(HttpStatus.ACCEPTED).json({ message: result });
+  }
+  // ! initialize users creation
+  @Post('signup/finalize')
+  @ApiOperation({
+    summary: 'Initialize the creation of a new uswe',
+    description: 'Register new user using the information provided',
+  })
+  @ApiResponse({ status: 200, description: 'successs' })
+  async finalizeUserCreation(
+    @Body() body: createUserDto & EmailVerificationDto,
+    @Res() res: Response,
+  ) {
     const { user, accessToken, refreshToken } =
-      await this.userService.createUser(body);
+      await this.userService.verifyEmailVerificationCodeAndSaveToDb(body);
 
     res.cookie('access_token', accessToken, {
       httpOnly: true,
@@ -146,6 +169,44 @@ export class UserController {
 
     console.log('got in here');
     const result = await this.userService.updatePassword(body, userId);
+    res.status(HttpStatus.OK).json({
+      message: 'success',
+      data: result,
+    });
+  }
+
+  @Post('password/forgot')
+  async forgotPassword(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() body: ForgotPasswordDto,
+  ) {
+    const result = await this.userService.forgotPassword(body);
+    res.status(HttpStatus.OK).json({
+      message: result,
+    });
+  }
+
+  @Post('password/token-verify')
+  async verifyPasswordResetCode(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() body: ForgotPasswordDto,
+  ) {
+    const result = await this.userService.verifyPasswordResetCode(body);
+    res.status(HttpStatus.OK).json({
+      message: 'success',
+      data: result,
+    });
+  }
+
+  @Patch('password/reset')
+  async resetPassword(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() body: ResetPasswordDto,
+  ) {
+    const result = await this.userService.resetPassword(body);
     res.status(HttpStatus.OK).json({
       message: 'success',
       data: result,
