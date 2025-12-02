@@ -28,7 +28,7 @@ import type { Response } from 'express';
 import { UpdatePasswordDto } from './dto/updatePasswordDto';
 import { ForgotPasswordDto } from '@src/users/dto/forgot-password.dto';
 import { ResetPasswordDto } from '@src/users/dto/reset-password.dto';
-import { EmailVerificationDto } from '@src/users/dto/email-verification.dto';
+import { FinalizeUserCreationDto } from '@src/users/dto/finalize-user-creation.dto';
 
 @Controller('users')
 export class UserController {
@@ -37,7 +37,7 @@ export class UserController {
   // ! initialize users creation
   @Post('signup/initialize')
   @ApiOperation({
-    summary: 'Initialize the creation of a new uswe',
+    summary: 'Initialize the creation of a new user',
     description: 'Register new user using the information provided',
   })
   @ApiResponse({ status: 200, description: 'successs' })
@@ -52,12 +52,12 @@ export class UserController {
   // ! finalize users creation
   @Post('signup/finalize')
   @ApiOperation({
-    summary: 'Initialize the creation of a new uswe',
+    summary: 'Finalize the creation of a new user',
     description: 'Register new user using the information provided',
   })
   @ApiResponse({ status: 200, description: 'successs' })
   async finalizeUserCreation(
-    @Body() body: createUserDto & EmailVerificationDto,
+    @Body() body: FinalizeUserCreationDto,
     @Res() res: Response,
   ) {
     const { user, accessToken, refreshToken } =
