@@ -12,8 +12,11 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { jwtConstants } from '@src/auth/jwtContants';
-import { createUserDto, UserRole } from '@src/users/dto/create-user.dto';
-import { UpdatebusinessOwnerDto } from '@src/users/dto/update-user.dto';
+import {
+  createBusinessOwnerDto,
+  UserRole,
+} from '@src/users/dto/create-business-owner.dto';
+import { UpdatebusinessOwnerDto } from '@src/users/dto/update-business-owner.dto';
 import { UpdatePasswordDto } from '@src/users/dto/updatePasswordDto';
 import { UserRepository } from '@src/users/repository/user.repository';
 import { EmailService } from '@src/email/email.service';
@@ -23,6 +26,7 @@ import { PasswordResetRepository } from '@src/password-reset/repository/password
 import { ResetPasswordDto } from '@src/users/dto/reset-password.dto';
 import { EmailVerificationRepository } from '@src/email-verification/repository/email-verification.repository';
 import { EmailVerificationDto } from '@src/users/dto/email-verification.dto';
+import { InitializeBusinessOwnerCreationDto } from '@src/users/dto/initialize-business-owner-creation.dto';
 @Injectable()
 export class UserService {
   constructor(
@@ -39,11 +43,13 @@ export class UserService {
 
   // ! create user here
 
-  async initializeUserCreation(data: createUserDto): Promise<any> {
+  async initializeBusinessOwnerCreation(
+    data: InitializeBusinessOwnerCreationDto,
+  ): Promise<any> {
     try {
-      const { businessName, email, password, phone, fullName , role} = data;
+      const { email, phone, businessName } = data;
 
-      if (!email || !password || !businessName || !phone)
+      if (!email || !phone)
         throw new BadRequestException(
           'Please email, password, phone and business name is required',
         );
@@ -60,7 +66,7 @@ export class UserService {
         if (existingUser.email === email && existingUser.phone === phone) {
           throw new Error('Email and phone number are already in use');
         } else if (existingUser.email === email) {
-          if(existingUser.role.includes(role))
+          // if (existingUser.role.includes(role))
           throw new Error('Email is already in use');
         } else {
           throw new Error('Phone number is already in use');
@@ -96,7 +102,7 @@ export class UserService {
         email,
         {
           verificationCode: generateRandomSixDigitCode,
-          name: businessName || fullName,
+          name: businessName,
         },
       );
 
@@ -108,8 +114,8 @@ export class UserService {
     }
   }
 
-  async verifyEmailVerificationCodeAndSaveToDb(
-    data: createUserDto & EmailVerificationDto,
+  async finalizeBusinessOwnerCreation(
+    data: createBusinessOwnerDto & EmailVerificationDto,
   ) {
     const {
       email,
@@ -648,14 +654,17 @@ export class UserService {
   }
 
   async addDriverRole(userId: string) {
-      const addRole = await this.userRepository.updateByUserId({role: ['businessOwner', 'driver']}, userId);
-      return addRole;
+    const addRole = await this.userRepository.updateByUserId(
+      { role: ['businessOwner', 'driver'] },
+      userId,
+    );
+    return addRole;
   }
   async addBusinessOwnerRole(userId: string) {
-      const addRole = await this.userRepository.updateByUserId(
-        { role: ['driver', 'businessOwner'] },
-        userId,
-      );
-      return addRole;
+    const addRole = await this.userRepository.updateByUserId(
+      { role: ['driver', 'businessOwner'] },
+      userId,
+    );
+    return addRole;
   }
 }

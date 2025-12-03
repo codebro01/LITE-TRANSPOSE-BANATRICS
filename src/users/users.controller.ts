@@ -13,8 +13,7 @@ import { UserService } from '@src/users/users.service';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@src/auth/guards/roles.guard';
 import { Roles } from '@src/auth/decorators/roles.decorators';
-import { createUserDto } from '@src/users/dto/create-user.dto';
-import { UpdatebusinessOwnerDto } from '@src/users/dto/update-user.dto';
+import { UpdatebusinessOwnerDto } from '@src/users/dto/update-business-owner.dto';
 import {
   ApiOperation,
   ApiResponse,
@@ -28,40 +27,41 @@ import type { Response } from 'express';
 import { UpdatePasswordDto } from './dto/updatePasswordDto';
 import { ForgotPasswordDto } from '@src/users/dto/forgot-password.dto';
 import { ResetPasswordDto } from '@src/users/dto/reset-password.dto';
-import { FinalizeUserCreationDto } from '@src/users/dto/finalize-user-creation.dto';
+import { FinalizeBusinessOwnerCreationDto } from '@src/users/dto/finalize-business-owner-creation.dto';
+import { InitializeBusinessOwnerCreationDto } from '@src/users/dto/initialize-business-owner-creation.dto';
 
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   // ! initialize users creation
-  @Post('signup/initialize')
+  @Post('signup/business-owner/initialize')
   @ApiOperation({
     summary: 'Initialize the creation of a new user',
     description: 'Register new user using the information provided',
   })
   @ApiResponse({ status: 200, description: 'successs' })
-  async initializeUserCreation(
-    @Body() body: createUserDto,
+  async initializeBusinessOwnerCreation(
+    @Body() body: InitializeBusinessOwnerCreationDto,
     @Res() res: Response,
   ) {
-    const result = await this.userService.initializeUserCreation(body);
+    const result = await this.userService.initializeBusinessOwnerCreation(body);
 
     res.status(HttpStatus.ACCEPTED).json({ message: result });
   }
   // ! finalize users creation
-  @Post('signup/finalize')
+  @Post('signup/business-owner/finalize')
   @ApiOperation({
     summary: 'Finalize the creation of a new user',
     description: 'Register new user using the information provided',
   })
   @ApiResponse({ status: 200, description: 'successs' })
-  async finalizeUserCreation(
-    @Body() body: FinalizeUserCreationDto,
+  async finalizeBusinessOwnerCreation(
+    @Body() body: FinalizeBusinessOwnerCreationDto,
     @Res() res: Response,
   ) {
     const { user, accessToken, refreshToken } =
-      await this.userService.verifyEmailVerificationCodeAndSaveToDb(body);
+      await this.userService.finalizeBusinessOwnerCreation(body);
 
     res.cookie('access_token', accessToken, {
       httpOnly: true,

@@ -21,7 +21,6 @@ import { EmailModule } from './email/email.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { SettingsModule } from './settings/settings.module';
 import { PackageModule } from './package/package.module';
-import { ResendModule } from './resend/resend.module';
 import { BullModule } from '@nestjs/bull';
 import { PasswordResetModule } from './password-reset/password-reset.module';
 import { EmailVerificationModule } from './email-verification/email-verification.module';
@@ -63,7 +62,6 @@ import { ConfigService } from '@nestjs/config';
     DashboardModule,
     SettingsModule,
     PackageModule,
-    ResendModule,
     PasswordResetModule,
     EmailVerificationModule,
   ],

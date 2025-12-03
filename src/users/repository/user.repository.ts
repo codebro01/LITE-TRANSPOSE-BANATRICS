@@ -65,7 +65,6 @@ export class UserRepository {
       email: userTable.email,
       phone: userTable.phone,
       role: userTable.role,
-      passwordResetCode: userTable.passwordResetCode,
     })
       .from(userTable)
       .where(or(...condition));

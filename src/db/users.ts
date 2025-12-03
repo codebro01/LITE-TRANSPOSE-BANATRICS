@@ -6,16 +6,18 @@ import {
   boolean,
   doublePrecision,
 } from 'drizzle-orm/pg-core';
-import { InferInsertModel, InferSelectModel } from 'drizzle-orm';
+import { jsonb } from 'drizzle-orm/pg-core';
 
 export const userTable = pgTable('users', {
   id: uuid().defaultRandom().primaryKey().notNull(),
   phone: varchar('phone', { length: 50 }).notNull().unique(),
-  role: varchar('role', { length: 50 }).array().default(['businessOwner']).notNull(),
+  role: varchar('role', { length: 50 })
+    .array()
+    .default(['businessOwner'])
+    .notNull(),
   email: varchar('email', { length: 255 }).notNull().unique(), // can use date type if preferred
   password: varchar('password', { length: 255 }).notNull(),
   emailVerified: boolean('is_email_Verified').default(false).notNull(),
-  passwordResetCode: varchar('password_reset_code'), 
   refreshToken: varchar('refreshToken', { length: 255 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -23,7 +25,9 @@ export const userTable = pgTable('users', {
 
 export const businessOwnerTable = pgTable('businessOwners', {
   id: uuid('id').defaultRandom().primaryKey().notNull(),
-  userId: uuid('userId').references(() => userTable.id, {onDelete: 'cascade'}),
+  userId: uuid('userId').references(() => userTable.id, {
+    onDelete: 'cascade',
+  }),
   balance: doublePrecision('balance').default(0).notNull(),
   pending: doublePrecision('pending').default(0).notNull(),
   businessName: varchar('businessName', { length: 255 }).notNull(),
@@ -38,11 +42,45 @@ export const businessOwnerTable = pgTable('businessOwners', {
 });
 export const driverTable = pgTable('drivers', {
   id: uuid().defaultRandom().primaryKey().notNull(),
-  userId: uuid('userId').references(() => userTable.id, {onDelete: 'cascade'}), // Add this line
+  userId: uuid('userId').references(() => userTable.id, {
+    onDelete: 'cascade',
+  }), 
+  fullName: varchar('full_name', { length: 255 })
+    .notNull()
+    .default('Null Driver'),
   balance: doublePrecision('balance').default(0).notNull(),
   pending: doublePrecision('pending').default(0).notNull(),
   dp: varchar('dp', { length: 255 }),
-  fullName: varchar('full_name', { length: 255 }).notNull().default('Null Driver'),
+  nin: varchar('nin', { length: 12 }).notNull(),
+  state: varchar('state', { length: 50 }).notNull(),
+  lga: varchar('lga', { length: 50 }).notNull(),
+  frontview: jsonb('frontview')
+    .$type<{
+      secure_url: string;
+      public_id: string;
+    }>()
+    .notNull(),
+  backview: jsonb('backview')
+    .$type<{
+      secure_url: string;
+      public_id: string;
+    }>()
+    .notNull(),
+  sideview: jsonb('sideview')
+    .$type<{
+      secure_url: string;
+      public_id: string;
+    }>()
+    .notNull(),
+  driverLicense: jsonb('driver_license').$type<{
+    secure_url: string;
+    public_id: string;
+  }>(),
+  owershipDocument: jsonb('ownership_document').$type<{
+    secure_url: string;
+    public_id: string;
+  }>(),
+
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   // authProvider: varchar('authProvider', { length: 20 })
@@ -50,13 +88,9 @@ export const driverTable = pgTable('drivers', {
   //   .notNull(),
 });
 
-export type businessOwnerInsertType = InferInsertModel<
-  typeof businessOwnerTable
->;
-export type businessOwnerSelectType = InferSelectModel<
-  typeof businessOwnerTable
->;
-export type userInsertType = InferInsertModel<typeof userTable>;
-export type userSelectType = InferSelectModel<typeof userTable>;
-export type driverInsertType = InferInsertModel<typeof driverTable>;
-export type driverSelectType = InferSelectModel<typeof driverTable>;
+export type businessOwnerInsertType = typeof businessOwnerTable.$inferInsert;
+export type businessOwnerSelectType = typeof businessOwnerTable.$inferSelect;
+export type userInsertType = typeof userTable.$inferInsert;
+export type userSelectType = typeof userTable.$inferSelect;
+export type driverInsertType = typeof driverTable.$inferInsert;
+export type driverSelectType = typeof driverTable.$inferSelect;

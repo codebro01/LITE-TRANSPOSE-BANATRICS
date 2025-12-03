@@ -5,11 +5,10 @@ import {
   MinLength,
   Matches,
   IsOptional,
-  IsEnum
+  IsEnum,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-
 
 export enum UserRole {
   BUSINESS_OWNER = 'businessOwner',
@@ -17,7 +16,7 @@ export enum UserRole {
   ADMIN = 'admin',
 }
 
-export class createUserDto {
+export class createBusinessOwnerDto {
   @ApiProperty({ example: 'John Doe' })
   @IsOptional()
   @IsString()

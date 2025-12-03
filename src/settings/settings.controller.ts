@@ -11,7 +11,7 @@ import { UserService } from '@src/users/users.service';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@src/auth/guards/roles.guard';
 import { Roles } from '@src/auth/decorators/roles.decorators';
-import { UpdatebusinessOwnerDto } from '@src/users/dto/update-user.dto';
+import { UpdatebusinessOwnerDto } from '@src/users/dto/update-business-owner.dto';
 import {
   ApiOperation,
   ApiResponse,
@@ -22,7 +22,6 @@ import {
 import type { Request } from '@src/types';
 import type { Response } from 'express';
 import { UpdatePasswordDto } from '@src/users/dto/updatePasswordDto';
-
 
 @ApiTags('Settings')
 @Controller('settings')
