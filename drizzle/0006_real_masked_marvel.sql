@@ -1,0 +1,1 @@
+ALTER TABLE "email_verifications" DROP CONSTRAINT "email_verifications_nin_unique";

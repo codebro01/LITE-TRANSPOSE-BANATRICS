@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { campaignTable } from '@src/db/campaigns';
 import { MaintenanceType, StatusType } from '../dto/publishCampaignDto';
 
@@ -70,9 +70,9 @@ export class CampaignRepository {
     private DbProvider: NodePgDatabase<typeof import('@src/db')>,
   ) {}
 
-  /**
-   * Create a new campaign
-   */
+  //!===================================business owner db calls ===========================================//
+
+  //Create a new campaign
   async create(data: CreateCampaignData, userId: string) {
     const [campaign] = await this.DbProvider.insert(campaignTable)
       .values({ userId, ...data })
@@ -117,7 +117,7 @@ export class CampaignRepository {
 
     return campaign || null;
   }
-  async findByStatus(userId: string, status:any) {
+  async findByStatus(userId: string, status: any) {
     const [campaign] = await this.DbProvider.select()
       .from(campaignTable)
       .where(
@@ -255,4 +255,41 @@ export class CampaignRepository {
 
     return deleted || null;
   }
+
+  //!===================================drivers db calls ===========================================//
+
+
+async getAllAvailableCampaigns() {
+  const campaigns = await this.DbProvider.select({
+    title: campaignTable.campaignName,
+    state: campaignTable.state,
+    duration: campaignTable.duration,
+    availability: campaignTable.availability,
+    requirements: campaignTable.requirements,
+  })
+    .from(campaignTable)
+    .where(
+      and(
+        eq(campaignTable.statusType, 'active'),
+        eq(campaignTable.paymentStatus, 'spent'),
+      ),
+    );
+
+    const [count] = await this.DbProvider.select({
+      totalCount: sql<number>`COUNT(*)`, 
+      todayCount: sql<number>`COUNT(*) filter (where date(${campaignTable.createdAt}) = current_date)`
+    })
+      .from(campaignTable)
+      .where(
+        and(
+          eq(campaignTable.statusType, 'active'),
+          eq(campaignTable.paymentStatus, 'spent'),
+        ),
+      );
+  return {campaigns, ...count};
+}
+
+
+
+
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "drivers" ADD COLUMN "approved_status" boolean DEFAULT false NOT NULL;

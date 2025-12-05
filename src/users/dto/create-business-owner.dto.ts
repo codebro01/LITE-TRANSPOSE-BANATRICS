@@ -5,7 +5,6 @@ import {
   MinLength,
   Matches,
   IsOptional,
-  IsEnum,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -29,12 +28,6 @@ export class createBusinessOwnerDto {
   @Transform(({ value }) => value?.trim())
   businessName: string;
 
-  @ApiProperty({ example: 'businessOwner' })
-  @IsNotEmpty()
-  @IsEnum(UserRole, {
-    message: 'Role must be one of: businessOwner, driver, admin',
-  })
-  role: UserRole;
 
   @ApiProperty({ example: 'sales@banatrics.com' })
   @IsString()
@@ -56,4 +49,12 @@ export class createBusinessOwnerDto {
       'Password must contain at least 1 uppercase, 1 lowercase, 1 number and 1 special character',
   })
   password: string;
+
+  @ApiProperty({
+    example: 547389,
+    description: 'The registered email of the user',
+  })
+  @IsNotEmpty()
+  @IsString()
+  emailVerificationCode?: string;
 }

@@ -12,9 +12,9 @@ export class EmailVerificationRepository {
   ) {}
 
   async createEmailVerificationData(data: EmailVerificationInsertType) {
-    await this.DbProvider.insert(emailVerificationTable).values(data);
+   const savedEmail =  await this.DbProvider.insert(emailVerificationTable).values(data).returning();
 
-    return { message: 'success' };
+    return { message: 'success', data: savedEmail };
   }
 
   async findUserByEmail(data: Pick<EmailVerificationInsertType, 'email'>) {
@@ -41,7 +41,8 @@ export class EmailVerificationRepository {
       .where(eq(emailVerificationTable.email, email))
       .returning();
 
-    return update;
+
+          return { message: 'success', data: update };
   }
 
 

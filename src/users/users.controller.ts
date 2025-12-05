@@ -27,14 +27,16 @@ import type { Response } from 'express';
 import { UpdatePasswordDto } from './dto/updatePasswordDto';
 import { ForgotPasswordDto } from '@src/users/dto/forgot-password.dto';
 import { ResetPasswordDto } from '@src/users/dto/reset-password.dto';
-import { FinalizeBusinessOwnerCreationDto } from '@src/users/dto/finalize-business-owner-creation.dto';
 import { InitializeBusinessOwnerCreationDto } from '@src/users/dto/initialize-business-owner-creation.dto';
+import { createBusinessOwnerDto } from '@src/users/dto/create-business-owner.dto';
+import { InitializeDriverCreationDto } from '@src/users/dto/initialize-driver-creation.dto';
+import { CreateDriverDto } from '@src/users/dto/create-driver.dto';
 
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // ! initialize users creation
+  // ! initialize business owner  creation
   @Post('signup/business-owner/initialize')
   @ApiOperation({
     summary: 'Initialize the creation of a new user',
@@ -49,7 +51,7 @@ export class UserController {
 
     res.status(HttpStatus.ACCEPTED).json({ message: result });
   }
-  // ! finalize users creation
+  // ! finalize business owner creation
   @Post('signup/business-owner/finalize')
   @ApiOperation({
     summary: 'Finalize the creation of a new user',
@@ -57,7 +59,7 @@ export class UserController {
   })
   @ApiResponse({ status: 200, description: 'successs' })
   async finalizeBusinessOwnerCreation(
-    @Body() body: FinalizeBusinessOwnerCreationDto,
+    @Body() body: createBusinessOwnerDto,
     @Res() res: Response,
   ) {
     const { user, accessToken, refreshToken } =
@@ -77,6 +79,52 @@ export class UserController {
     });
 
     const safeUser = omit(user, ['password', 'refreshToken']);
+
+    res.status(HttpStatus.ACCEPTED).json({ user: safeUser, accessToken });
+  }
+  // ! initialize driver creation
+  @Post('signup/driver/initialize')
+  @ApiOperation({
+    summary: 'Initialize the creation of a new driver',
+    description: 'Register new driver using the information provided',
+  })
+  @ApiResponse({ status: 200, description: 'successs' })
+  async initializeDriverCreation(
+    @Body() body: InitializeDriverCreationDto,
+    @Res() res: Response,
+  ) {
+    const result = await this.userService.initializeDriverCreation(body);
+
+    res.status(HttpStatus.ACCEPTED).json({ message: result });
+  }
+  // ! finalize driver creation
+  @Post('signup/driver/finalize')
+  @ApiOperation({
+    summary: 'Finalize the creation of a new driver',
+    description: 'Register new driver using the information provided',
+  })
+  @ApiResponse({ status: 200, description: 'successs' })
+  async finalizeDriverCreation(
+    @Body() body: CreateDriverDto,
+    @Res() res: Response,
+  ) {
+    const { savedUser, accessToken, refreshToken } =
+      await this.userService.finalizeDriverCreation(body);
+
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 1000 * 60 * 60, // 1h
+    });
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 1000 * 60 * 60 * 24 * 30, // 30d
+    });
+
+    const safeUser = omit(savedUser, ['password', 'refreshToken']);
 
     res.status(HttpStatus.ACCEPTED).json({ user: safeUser, accessToken });
   }

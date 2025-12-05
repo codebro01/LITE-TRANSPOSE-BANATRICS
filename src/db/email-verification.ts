@@ -13,6 +13,8 @@ export const emailVerificationTable = pgTable(
   {
     id: uuid('id').defaultRandom().primaryKey().notNull(),
     email: varchar('email', { length: 255 }).unique().notNull(),
+    phone: varchar('phone', { length: 255 }).notNull().unique(), 
+          nin: varchar('nin', { length: 255 }),
     emailVerificationCode: varchar('email_verification_code').notNull(),
     expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
     attempts: integer('attempts').notNull().default(0),

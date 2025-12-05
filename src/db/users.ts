@@ -48,10 +48,11 @@ export const driverTable = pgTable('drivers', {
   fullName: varchar('full_name', { length: 255 })
     .notNull()
     .default('Null Driver'),
+  approvedStatus: boolean('approved_status').default(false).notNull(), 
   balance: doublePrecision('balance').default(0).notNull(),
   pending: doublePrecision('pending').default(0).notNull(),
   dp: varchar('dp', { length: 255 }),
-  nin: varchar('nin', { length: 12 }).notNull(),
+  nin: varchar('nin', { length: 12 }).notNull().unique(),
   state: varchar('state', { length: 50 }).notNull(),
   lga: varchar('lga', { length: 50 }).notNull(),
   frontview: jsonb('frontview')

@@ -42,6 +42,14 @@ import { ConfigService } from '@nestjs/config';
             configService.get('NODE_ENV') === 'production'
               ? { rejectUnauthorized: false }
               : undefined,
+          // retryStrategy: (times) => {
+          //   if (times > 3) {
+          //     console.error('Redis connection failed after 3 attempts');
+          //     return null;
+          //   }
+          //   return Math.min(times * 1000, 3000);
+          // },
+          // connectTimeout: 5000,
         },
       }),
       inject: [ConfigService],

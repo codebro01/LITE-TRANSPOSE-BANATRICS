@@ -1,8 +1,6 @@
 import {
   IsString,
   IsEmail,
-  IsArray,
-  IsEnum,
   IsOptional,
   IsNotEmpty,
   MinLength,
@@ -14,11 +12,7 @@ import {
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-enum UserRole {
-  BUSINESS_OWNER = 'businessOwner',
-  DRIVER = 'driver',
-  ADMIN = 'admin',
-}
+
 
 class ImageUploadDto {
   @ApiProperty({
@@ -50,18 +44,6 @@ export class CreateDriverDto {
   @IsNotEmpty()
   @MaxLength(50)
   phone: string;
-
-  @ApiProperty({
-    description: 'User roles',
-    example: ['businessOwner', 'driver'],
-    enum: UserRole,
-    isArray: true,
-    default: ['businessOwner'],
-  })
-  @IsArray()
-  @IsEnum(UserRole, { each: true })
-  @IsOptional()
-  role?: UserRole[];
 
   @ApiProperty({
     description: 'User email address',
@@ -186,4 +168,12 @@ export class CreateDriverDto {
   @IsObject()
   @IsOptional()
   owershipDocument?: ImageUploadDto;
+
+  @ApiProperty({
+    example: 547389,
+    description: 'The registered email of the user',
+  })
+  @IsNotEmpty()
+  @IsString()
+  emailVerificationCode?: string;
 }

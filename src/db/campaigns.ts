@@ -34,6 +34,9 @@ export const statusTypeEnum = pgEnum('status_type', [
 
 export const campaignTable = pgTable('campaigns', {
   id: uuid().defaultRandom().primaryKey().notNull(),
+  userId: uuid('userId')
+    .notNull()
+    .references(() => userTable.id, { onDelete: 'cascade' }),
   packageType: packageTypeEnum('package_type'),
   statusType: statusTypeEnum('status_type'),
   paymentStatus: paymentStatusEnum('payment_status'),
@@ -43,6 +46,7 @@ export const campaignTable = pgTable('campaigns', {
   lgaCoverage: varchar('lga_coverage', { length: 10 }),
   price: integer('price'),
   noOfDrivers: integer('no_of_drivers'),
+  availability: integer('availability'),
   campaignName: varchar('campaign_name', { length: 255 }),
   campaignDescriptions: text('campaign_descriptions'),
   startDate: timestamp('start_date'),
@@ -51,23 +55,28 @@ export const campaignTable = pgTable('campaigns', {
     secure_url: string;
     public_id: string;
   }>(), // URL to uploaded logo
+  state: varchar('state', { length: 100 }),
+  bannerDetails: jsonb('banner_details').$type<{
+    url: {
+      secure_url: string;
+      public_id: string;
+    };
+    printHouse: string;
+    address: string;
+  }>(),
+  earningPerDriver: integer('earning_per_driver'),
   colorPallete: varchar('color_pallete').array(),
-  callToAction: varchar('call_to_action'),
+  callToAction: text('call_to_action'),
+  requirements: text('requirements'),
   mainMessage: text('main_message'),
+
   responseOnSeeingBanner: text('response_on_seeing_banner'),
   uploadedImages: jsonb('uploaded_images')
     .$type<{ secure_url: string; public_id: string }[]>()
-    .default([]), // Array of strings
+    .default([]),
 
-  // Optional field
   slogan: varchar('slogan', { length: 500 }),
 
-  // Foreign key (if campaigns belong to users)
-  userId: uuid('userId')
-    .notNull()
-    .references(() => userTable.id),
-
-  // Timestamps
   spentAt: timestamp('spent_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

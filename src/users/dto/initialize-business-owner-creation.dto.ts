@@ -25,6 +25,6 @@ export class InitializeBusinessOwnerCreationDto {
         description: "The business name of the user"
     })
     @IsNotEmpty()
-    @IsEmail()
+    @IsString()
     businessName: string
 }

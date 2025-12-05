@@ -12,10 +12,7 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { jwtConstants } from '@src/auth/jwtContants';
-import {
-  createBusinessOwnerDto,
-  UserRole,
-} from '@src/users/dto/create-business-owner.dto';
+import { createBusinessOwnerDto } from '@src/users/dto/create-business-owner.dto';
 import { UpdatebusinessOwnerDto } from '@src/users/dto/update-business-owner.dto';
 import { UpdatePasswordDto } from '@src/users/dto/updatePasswordDto';
 import { UserRepository } from '@src/users/repository/user.repository';
@@ -25,8 +22,9 @@ import { ForgotPasswordDto } from '@src/users/dto/forgot-password.dto';
 import { PasswordResetRepository } from '@src/password-reset/repository/password-reset.repository';
 import { ResetPasswordDto } from '@src/users/dto/reset-password.dto';
 import { EmailVerificationRepository } from '@src/email-verification/repository/email-verification.repository';
-import { EmailVerificationDto } from '@src/users/dto/email-verification.dto';
 import { InitializeBusinessOwnerCreationDto } from '@src/users/dto/initialize-business-owner-creation.dto';
+import { CreateDriverDto } from '@src/users/dto/create-driver.dto';
+import { InitializeDriverCreationDto } from '@src/users/dto/initialize-driver-creation.dto';
 @Injectable()
 export class UserService {
   constructor(
@@ -64,7 +62,7 @@ export class UserService {
       if (existingUser) {
         // Check which one matched
         if (existingUser.email === email && existingUser.phone === phone) {
-          throw new Error('Email and phone number are already in use');
+          throw new Error('Email and phone number already in use');
         } else if (existingUser.email === email) {
           // if (existingUser.role.includes(role))
           throw new Error('Email is already in use');
@@ -79,11 +77,10 @@ export class UserService {
       const { generateRandomSixDigitCode, hashRandomSixDigitCode } =
         await this.sixDigitCodeGenerator();
 
-      if (emailVerificationRecord) {
+      if (emailVerificationRecord && emailVerificationRecord.used === false) {
         await this.emailVerificationRepository.updateEmailVerification(
           {
             emailVerificationCode: hashRandomSixDigitCode,
-            used: false,
             expiresAt: new Date(Date.now() + 30 * 60 * 1000),
           },
           email,
@@ -93,6 +90,7 @@ export class UserService {
           email: email,
           emailVerificationCode: hashRandomSixDigitCode,
           used: false,
+          phone,
           expiresAt: new Date(Date.now() + 30 * 60 * 1000),
         });
       }
@@ -106,7 +104,7 @@ export class UserService {
         },
       );
 
-      return `An  OTP has been sent to your registered email`;
+      return `A one time password has been sent to your registered email`;
     } catch (dbError) {
       console.error('DB Insert Error:', dbError);
 
@@ -114,17 +112,8 @@ export class UserService {
     }
   }
 
-  async finalizeBusinessOwnerCreation(
-    data: createBusinessOwnerDto & EmailVerificationDto,
-  ) {
-    const {
-      email,
-      emailVerificationCode,
-      role,
-      password,
-      businessName,
-      fullName,
-    } = data;
+  async finalizeBusinessOwnerCreation(data: createBusinessOwnerDto) {
+    const { email, emailVerificationCode, password, businessName } = data;
 
     // ! -------------- verify code before saveing data into the db---------------
     if (!emailVerificationCode)
@@ -136,12 +125,9 @@ export class UserService {
       email,
     });
 
-    if (!user)
-      throw new NotFoundException(
-        `An error occured while, trying to verify the code`,
-      );
+    if (!user) throw new NotFoundException(`Invalid Verification Code`);
     if (!user.emailVerificationCode)
-      throw new Error('Code not initially  saved, ');
+      throw new Error('Not valid verication code');
 
     if (user.used) {
       throw new BadRequestException('This code has already been used');
@@ -190,200 +176,346 @@ export class UserService {
 
     // ! ----------------------Create user for business owners--------------------
 
-    if (role && role === UserRole.BUSINESS_OWNER) {
-      //! create user here if email has not been used
-      const hashedPwd = await bcrypt.hash(password, 10);
+    //! create user here if email has not been used
+    const hashedPwd = await bcrypt.hash(password, 10);
 
-      const result = await this.DbProvider.transaction(async (trx) => {
-        // First insert - user
-        const user = await this.userRepository.createUser(
+    const result = await this.DbProvider.transaction(async (trx) => {
+      // First insert - user
+      const savedUser = await this.userRepository.createUser(
+        {
+          email: user.email,
+          phone: user.phone,
+          password: hashedPwd,
+          role: ['businessOwner'],
+          emailVerified: true,
+        },
+        trx,
+      );
+
+      if (!savedUser || !savedUser.id) {
+        throw new InternalServerErrorException(
+          'Could not create user, please try again',
+        );
+      }
+
+      // Second insert - business owner profile
+      const addUserProfile =
+        await this.userRepository.addBusinessOwnerToBusinessOwnerTable(
           {
-            email: data.email,
-            phone: data.phone,
-            password: hashedPwd,
-            role: ['businessOwner'],
-            emailVerified: true,
+            businessName: businessName,
+            userId: savedUser.id,
           },
           trx,
         );
 
-        if (!user || !user.id) {
-          throw new InternalServerErrorException(
-            'Could not create user, please try again',
-          );
-        }
+      if (!addUserProfile) {
+        throw new InternalServerErrorException(
+          'Could not create user profile, please try again',
+        );
+      }
 
-        // Second insert - business owner profile
-        const addUserProfile =
-          await this.userRepository.addBusinessOwnerToBusinessOwnerTable(
+      return { savedUser, addUserProfile };
+    });
+
+    const { savedUser } = result;
+    const payload = {
+      id: savedUser.id,
+      email: savedUser.email,
+      role: ['businessOwner'],
+    };
+
+    const accessToken = await this.jwtService.signAsync(payload, {
+      secret: jwtConstants.accessTokenSecret,
+      expiresIn: '1h',
+    });
+    const refreshToken = await this.jwtService.signAsync(payload, {
+      secret: jwtConstants.refreshTokenSecret,
+      expiresIn: '30d',
+    });
+
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+
+    const updateUserToken = await this.userRepository.updateUserToken(
+      hashedRefreshToken,
+      savedUser.id,
+    );
+
+    if (!updateUserToken) throw new InternalServerErrorException();
+
+    return { user, accessToken, refreshToken };
+  }
+  async initializeDriverCreation(
+    data: InitializeDriverCreationDto,
+  ): Promise<any> {
+    try {
+      const { email, phone, fullName, nin } = data;
+
+      if (!email || !phone)
+        throw new BadRequestException(
+          'Please email, password, phone and business name is required',
+        );
+
+      //! check if email or phone provided has been used
+
+      const existingUser = await this.userRepository.findByEmailOrPhone({
+        email,
+        phone,
+      });
+
+      if (existingUser) {
+        // Check which one matched
+        if (existingUser.email === email && existingUser.phone === phone) {
+          throw new Error('Email and phone number already in use');
+        } else if (existingUser.email === email) {
+          // if (existingUser.role.includes(role))
+          throw new Error('Email is already in use');
+        } else {
+          throw new Error('Phone number is already in use');
+        }
+      }
+
+      const emailVerificationRecord =
+        await this.emailVerificationRepository.findUserByEmail({ email });
+
+      const { generateRandomSixDigitCode, hashRandomSixDigitCode } =
+        await this.sixDigitCodeGenerator();
+
+      if (emailVerificationRecord)
+         if (emailVerificationRecord.used === true)
+           throw new BadRequestException(
+             'This email has been used, please try another email',
+           );
+
+      if (
+        (emailVerificationRecord && emailVerificationRecord.used) ===
+        false
+      ) {
+        const saveCodeRecord =
+          await this.emailVerificationRepository.updateEmailVerification(
             {
-              businessName: businessName,
-              userId: user.id, // Use the actual user.id here, not businessName
+              emailVerificationCode: hashRandomSixDigitCode,
+              expiresAt: new Date(Date.now() + 30 * 60 * 1000),
             },
-            trx,
+            email,
           );
 
-        if (!addUserProfile) {
-          throw new InternalServerErrorException(
-            'Could not create user profile, please try again',
-          );
-        }
+        console.log('update', saveCodeRecord);
+      } else {
+        const saveCodeRecord =
+          await this.emailVerificationRepository.createEmailVerificationData({
+            email: email,
+            emailVerificationCode: hashRandomSixDigitCode,
+            used: false,
+            phone, 
+            nin, 
+            expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+          });
 
-        return { user, addUserProfile };
-      });
+        console.log('create', saveCodeRecord);
+      }
 
-      // Access the results
-      const { user } = result;
-      const payload = {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      };
-
-      const accessToken = await this.jwtService.signAsync(payload, {
-        secret: jwtConstants.accessTokenSecret,
-        expiresIn: '1h',
-      });
-      const refreshToken = await this.jwtService.signAsync(payload, {
-        secret: jwtConstants.refreshTokenSecret,
-        expiresIn: '30d',
-      });
-
-      const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-
-      const updateUserToken = await this.userRepository.updateUserToken(
-        hashedRefreshToken,
-        user.id,
+      await this.emailService.queueTemplatedEmail(
+        EmailTemplateType.EMAIL_VERIFICATION,
+        email,
+        {
+          verificationCode: generateRandomSixDigitCode,
+          name: fullName,
+        },
       );
 
-      if (!updateUserToken) throw new InternalServerErrorException();
+      return `A one time password has been sent to your registered email`;
+    } catch (dbError) {
+      console.error('DB Insert Error:', dbError);
 
-      return { user, accessToken, refreshToken };
+      throw dbError;
     }
+  }
+
+  async finalizeDriverCreation(data: CreateDriverDto) {
+    const { email, emailVerificationCode, password } = data;
+
+    // ! -------------- verify code before saveing data into the db---------------
+    if (!emailVerificationCode)
+      throw new Error(
+        'Code sent to your email must  be provided in order to proceed',
+      );
+
+    const user = await this.emailVerificationRepository.findUserByEmail({
+      email,
+    });
+
+    console.log('user', user)
+    if (!user) throw new NotFoundException(`An error has occured while trying to verify the code, please try again`);
+    if (!user.emailVerificationCode)
+      throw new Error('Code not initially  saved, ');
+
+    if (user.used) {
+      throw new BadRequestException('This code has already been used');
+    }
+
+    if (user.attempts === 3) {
+      const { hashRandomSixDigitCode } = await this.sixDigitCodeGenerator();
+
+      await this.emailVerificationRepository.updateEmailVerification(
+        { emailVerificationCode: hashRandomSixDigitCode },
+        email,
+      );
+      throw new BadRequestException(
+        'Attempts reached, if more failed attempts comes up, account will be suspended!!!',
+      );
+    }
+
+    if (new Date() > user.expiresAt) {
+      throw new BadRequestException(
+        'Code has expired, please request a new one',
+      );
+    }
+
+    console.log(emailVerificationCode, user.emailVerificationCode);
+
+    const verifyHashedCode = await bcrypt.compare(
+      emailVerificationCode,
+      user.emailVerificationCode,
+    );
+    await this.emailVerificationRepository.updateEmailVerification(
+      { attempts: user.attempts + 1 },
+      email,
+    );
+
+
+    if (!verifyHashedCode)
+      throw new BadRequestException('Invalid code inserted, please try again');
+
+    await this.emailVerificationRepository.updateEmailVerification(
+      { used: true },
+      email,
+    );
+
+    // ! now save user to the db
 
     // ! ---------------Create user for drivers----------------------
 
-    if (role && role === UserRole.DRIVER) {
-      //! create user here if email has not been used
-      const hashedPwd = await bcrypt.hash(password, 10);
+    //! create user here if email has not been used
+    const hashedPwd = await bcrypt.hash(password, 10);
 
-      const result = await this.DbProvider.transaction(async (trx) => {
-        // First insert - user
-        const user = await this.userRepository.createUser(
-          {
-            email: data.email,
-            phone: data.phone,
-            password: hashedPwd,
-            role: ['admin'],
-          },
-          trx,
-        );
-
-        if (!user || !user.id) {
-          throw new InternalServerErrorException(
-            'Could not create user, please try again',
-          );
-        }
-
-        // Second insert - business owner profile
-        const addUserProfile = await this.userRepository.addDriverToDriverTable(
-          { userId: user.id, fullName },
-          trx,
-        );
-
-        if (!addUserProfile) {
-          throw new InternalServerErrorException(
-            'Could not create user profile, please try again',
-          );
-        }
-
-        return { user, addUserProfile };
-      });
-
-      // Access the results
-      const { user } = result;
-      const payload = {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      };
-
-      const accessToken = await this.jwtService.signAsync(payload, {
-        secret: jwtConstants.accessTokenSecret,
-        expiresIn: '1h',
-      });
-      const refreshToken = await this.jwtService.signAsync(payload, {
-        secret: jwtConstants.refreshTokenSecret,
-        expiresIn: '30d',
-      });
-
-      const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-
-      const updateUserToken = await this.userRepository.updateUserToken(
-        hashedRefreshToken,
-        user.id,
+    const result = await this.DbProvider.transaction(async (trx) => {
+      // First insert - user
+      const savedUser = await this.userRepository.createUser(
+        {
+          email: user.email,
+          phone: user.phone,
+          password: hashedPwd,
+          role: ['driver'],
+          emailVerified: true, 
+        },
+        trx,
       );
 
-      if (!updateUserToken) throw new InternalServerErrorException();
-      return { user, accessToken, refreshToken };
-    }
+      if (!savedUser || !savedUser.id) {
+        throw new InternalServerErrorException(
+          'Could not create user, please try again',
+        );
+      }
+      if(!user.nin) throw new BadRequestException('could not get nin')
+      // Second insert - business owner profile
+      const addUserProfile = await this.userRepository.addDriverToDriverTable(
+        { ...data, nin: user.nin },
+        savedUser.id,
+        trx,
+      );
+
+      if (!addUserProfile) {
+        throw new InternalServerErrorException(
+          'Could not create user profile, please try again',
+        );
+      }
+
+      return { savedUser, addUserProfile };
+    });
+
+    // Access the results
+    const { savedUser } = result;
+    const payload = {
+      id: savedUser.id,
+      email: savedUser.email,
+      role: ['driver'],
+    };
+
+    const accessToken = await this.jwtService.signAsync(payload, {
+      secret: jwtConstants.accessTokenSecret,
+      expiresIn: '1h',
+    });
+    const refreshToken = await this.jwtService.signAsync(payload, {
+      secret: jwtConstants.refreshTokenSecret,
+      expiresIn: '30d',
+    });
+
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+
+    const updateUserToken = await this.userRepository.updateUserToken(
+      hashedRefreshToken,
+      savedUser.id,
+    );
+
+
+
+    if (!updateUserToken) throw new InternalServerErrorException();
+    return { savedUser, accessToken, refreshToken };
 
     // ! Create admin user, this will never ever be made public
-    if (role && role === UserRole.ADMIN) {
-      //! create user here if email has not been used
-      const hashedPwd = await bcrypt.hash(password, 10);
+    // if (role && role === UserRole.ADMIN) {
+    //   //! create user here if email has not been used
+    //   const hashedPwd = await bcrypt.hash(password, 10);
 
-      const result = await this.DbProvider.transaction(async (trx) => {
-        // First insert - user
-        const user = await this.userRepository.createUser(
-          {
-            email: data.email,
-            phone: data.phone,
-            password: hashedPwd,
-            role: ['driver'],
-            emailVerified: true,
-          },
-          trx,
-        );
+    //   const result = await this.DbProvider.transaction(async (trx) => {
+    //     // First insert - user
+    //     const user = await this.userRepository.createUser(
+    //       {
+    //         email: data.email,
+    //         phone: data.phone,
+    //         password: hashedPwd,
+    //         role: ['driver'],
+    //         emailVerified: true,
+    //       },
+    //       trx,
+    //     );
 
-        if (!user || !user.id) {
-          throw new InternalServerErrorException(
-            'Could not create user, please try again',
-          );
-        }
+    //     if (!user || !user.id) {
+    //       throw new InternalServerErrorException(
+    //         'Could not create user, please try again',
+    //       );
+    //     }
 
-        return { user };
-      });
+    //     return { user };
+    //   });
 
-      // Access the results
-      const { user } = result;
-      const payload = {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      };
+    //   // Access the results
+    //   const { user } = result;
+    //   const payload = {
+    //     id: user.id,
+    //     email: user.email,
+    //     role: user.role,
+    //   };
 
-      const accessToken = await this.jwtService.signAsync(payload, {
-        secret: jwtConstants.accessTokenSecret,
-        expiresIn: '1h',
-      });
-      const refreshToken = await this.jwtService.signAsync(payload, {
-        secret: jwtConstants.refreshTokenSecret,
-        expiresIn: '30d',
-      });
+    //   const accessToken = await this.jwtService.signAsync(payload, {
+    //     secret: jwtConstants.accessTokenSecret,
+    //     expiresIn: '1h',
+    //   });
+    //   const refreshToken = await this.jwtService.signAsync(payload, {
+    //     secret: jwtConstants.refreshTokenSecret,
+    //     expiresIn: '30d',
+    //   });
 
-      const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    //   const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
 
-      const updateUserToken = await this.userRepository.updateUserToken(
-        hashedRefreshToken,
-        user.id,
-      );
+    //   const updateUserToken = await this.userRepository.updateUserToken(
+    //     hashedRefreshToken,
+    //     user.id,
+    //   );
 
-      if (!updateUserToken) throw new InternalServerErrorException();
-      return { user, accessToken, refreshToken };
-    }
-
-    return { message: 'success' };
+    //   if (!updateUserToken) throw new InternalServerErrorException();
+    //   return { user, accessToken, refreshToken };
+    // }
   }
 
   async getAllUsers(): Promise<
@@ -530,10 +662,7 @@ export class UserService {
 
     const user = await this.passwordResetRepository.findUserByEmail({ email });
 
-    if (!user)
-      throw new NotFoundException(
-        `An error occured while, trying to verify the code`,
-      );
+    if (!user) throw new NotFoundException(`An error has occured while trying to verify the code, please try again`);
     if (!user.passwordResetCode) throw new Error('Code not initially  saved, ');
 
     if (user.used) {

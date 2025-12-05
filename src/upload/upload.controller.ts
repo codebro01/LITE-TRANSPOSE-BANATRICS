@@ -6,9 +6,10 @@ import {
   UploadedFiles,
   UseInterceptors,
   BadRequestException,
+  Param,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import multer, { StorageEngine } from 'multer';
+import multer from 'multer';
 import { CloudinaryService } from '@src/cloudinary/cloudinary.service';
 import {
   ApiTags,
@@ -16,6 +17,7 @@ import {
   ApiResponse,
   ApiConsumes,
   ApiBody,
+  ApiParam
 } from '@nestjs/swagger';
 
 @ApiTags('upload')
@@ -26,7 +28,7 @@ export class UploadController {
   @Post('image')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: multer.memoryStorage() as StorageEngine,
+      storage: multer.memoryStorage(),
     }),
   )
   @ApiOperation({
@@ -87,7 +89,7 @@ export class UploadController {
   @Post('images')
   @UseInterceptors(
     FilesInterceptor('files', 5, {
-      storage: multer.memoryStorage() as StorageEngine,
+      storage: multer.memoryStorage(),
     }),
   )
   @ApiOperation({
@@ -144,5 +146,38 @@ export class UploadController {
     );
 
     return { uploaded: results };
+  }
+
+  @ApiOperation({
+    summary: 'Delete image from Cloudinary',
+    description: 'Deletes an image from Cloudinary storage using its public ID',
+  })
+  @ApiParam({
+    name: 'publicId',
+    description: 'The Cloudinary public ID of the image to delete',
+    example: 'driver_frontview_001',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Image deleted successfully',
+    schema: {
+      example: {
+        message: 'Image deleted successfully',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Image not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  async deleteImage(@Param('publicId') publicId: string) {
+    await this.cloudinaryService.deleteImage(publicId);
+
+    return { messgae: 'Image deleted successfully' };
   }
 }

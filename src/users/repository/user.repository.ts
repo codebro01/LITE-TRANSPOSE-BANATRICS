@@ -10,6 +10,7 @@ import {
   userSelectType,
   driverTable,
 } from '@src/db/users';
+import { CreateDriverDto } from '@src/users/dto/create-driver.dto';
 import { eq, or } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
@@ -37,18 +38,20 @@ export class UserRepository {
     const [addUserProfile] = await Trx.insert(businessOwnerTable)
       .values({
         businessName: data.businessName,
-        userId: data.userId, // Use the actual user.id here, not businessName
+        userId: data.userId, // Use the actual user.id
       })
       .returning();
 
     return addUserProfile;
   }
-  async addDriverToDriverTable(data: {userId: string, fullName: string}, trx?: any) {
+  async addDriverToDriverTable(data: CreateDriverDto, userId: string,  trx?: any) {
     const Trx = trx || this.DbProvider;
 
     const [addUserProfile] = await Trx.insert(driverTable)
       .values({
-        userId: data.userId, // Use the actual user.id here, not businessName
+        userId: userId, // Use the actual user.id 
+
+        ...data,
       })
       .returning();
 
