@@ -25,6 +25,7 @@ import { BullModule } from '@nestjs/bull';
 import { PasswordResetModule } from './password-reset/password-reset.module';
 import { EmailVerificationModule } from './email-verification/email-verification.module';
 import { ConfigService } from '@nestjs/config';
+import { EarningModule } from './earning/earning.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { ConfigService } from '@nestjs/config';
     PackageModule,
     PasswordResetModule,
     EmailVerificationModule,
+    EarningModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService, NeonProvider, MulterService],
