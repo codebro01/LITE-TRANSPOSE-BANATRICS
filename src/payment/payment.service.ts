@@ -57,7 +57,7 @@ export class PaymentService {
       Authorization: `Bearer ${this.secretKey}`,
       'Content-Type': 'application/json',
     };
-  }
+  } 
 
   async initializePayment(data: InitializePaymentDto) {
     try {
