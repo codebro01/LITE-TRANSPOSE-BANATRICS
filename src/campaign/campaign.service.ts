@@ -20,6 +20,7 @@ import {
 } from '@src/notification/dto/createNotificationDto';
 import { PackageRepository } from '@src/package/repository/package.repository';
 import { campaignSelectType } from '@src/db';
+import { duration } from 'drizzle-orm/gel-core';
 
 @Injectable()
 export class CampaignService {
@@ -30,7 +31,9 @@ export class CampaignService {
     private readonly packageRepository: PackageRepository,
   ) {}
 
-  // ! create and publish camnpaign------------------------------------------------------
+  //!===================================business owner db calls ===========================================//
+
+  //* create and publish camnpaign------------------------------------------------------
 
   async createAndPublishCampaign(userId: string, data: PublishCampaignDto) {
     if (!data.packageType)
@@ -158,6 +161,8 @@ export class CampaignService {
     };
   }
 
+  //* save campaign as draft ------------------------------------------------------
+
   async draftCampaign(userId: string, data: DraftCampaignDto): Promise<any> {
     try {
       if (!userId || !data)
@@ -243,7 +248,7 @@ export class CampaignService {
       throw error;
     }
   }
-  //!---------------- update camapaign draft------------------------------------------------------
+  //*---------------- update camapaign draft------------------------------------------------------
 
   async updateDraft(id: string, userId: string, data: DraftCampaignDto) {
     const existing = await this.campaignRepository.findDraftByIdAndUserId(
@@ -269,7 +274,7 @@ export class CampaignService {
         calculateEndDate.getDate() + isNotCustomPackageType[0].duration,
       );
       updated = await this.campaignRepository.updateById(
-        id, 
+        id,
         {
           packageType: isNotCustomPackageType[0].packageType,
           duration: isNotCustomPackageType[0].duration,
@@ -304,7 +309,7 @@ export class CampaignService {
 
     return { message: 'Draft updated successfully', campaign: updated };
   }
-  // //!---------------- publish camapaign draft------------------------------------------------------
+  //*---------------- publish camapaign draft------------------------------------------------------
   async publishDraftCampaign(
     id: string,
     userId: string,
@@ -338,7 +343,7 @@ export class CampaignService {
         calculateEndDate.getDate() + isNotCustomPackageType[0].duration,
       );
       published = await this.campaignRepository.updateById(
-        id, 
+        id,
         {
           packageType: isNotCustomPackageType[0].packageType,
           duration: isNotCustomPackageType[0].duration,
@@ -366,7 +371,7 @@ export class CampaignService {
           startDate: data.startDate ? new Date(data.startDate) : null,
           endDate: data.endDate ? new Date(data.endDate) : null,
           updatedAt: new Date(),
-          statusType: 'pending', 
+          statusType: 'pending',
         },
         userId,
       );
@@ -375,14 +380,14 @@ export class CampaignService {
     return { message: 'Campaign published successfully', campaign: published };
   }
 
-  //!---------------- get all camapaign particular to each business owners---------------------------
+  //*---------------- get all camapaign particular to each business owners---------------------------
 
   async getAllCampaigns(userId: string) {
     const campaigns = await this.campaignRepository.findAllByUserId(userId);
     return { campaigns };
   }
 
-  //!---------------- get all camapaign draft particular to each business owners-----------------------------
+  //*---------------- get all camapaign draft particular to each business owners-----------------------------
 
   async getDrafts(userId: string) {
     const drafts = await this.campaignRepository.findDraftsByUserId(userId);
@@ -390,7 +395,7 @@ export class CampaignService {
     return { drafts };
   }
 
-  //!---------------- get all published campaign particular to each business owners------------------------------
+  //*---------------- get all published campaign particular to each business owners------------------------------
 
   async getPublished(userId: string) {
     const campaigns =
@@ -398,7 +403,7 @@ export class CampaignService {
 
     return { campaigns };
   }
-  //!---------------- get all published campaign particular to each business owners------------------------------
+  //*---------------- get all published campaign particular to each business owners------------------------------
 
   async getCompleted(userId: string) {
     const campaigns =
@@ -406,14 +411,14 @@ export class CampaignService {
 
     return { campaigns };
   }
-  //!---------------- get all published campaign particular to each business owners------------------------------
+  //*---------------- get all published campaign particular to each business owners------------------------------
 
   async getActive(userId: string) {
     const campaigns = await this.campaignRepository.findActiveByUserId(userId);
 
     return { campaigns };
   }
-  //!---------------- get single campaign by id------------------------------------------------------
+  //*---------------- get single campaign by id------------------------------------------------------
 
   async getCampaignById(id: string, userId: string) {
     const campaign = await this.campaignRepository.findByIdAndUserId(
@@ -427,7 +432,7 @@ export class CampaignService {
 
     return { campaign };
   }
-  //!---------------- find campaign by status and userId ------------------------------------------------------
+  //*---------------- find campaign by status and userId ------------------------------------------------------
 
   async getCampaignsByStatusAndUserId(userId: string, status: any) {
     const campaign = await this.campaignRepository.findByStatus(userId, status);
@@ -438,4 +443,60 @@ export class CampaignService {
 
     return { campaign };
   }
+
+  //!===================================drivers db calls ===========================================//
+
+  //*---------------- get all available campaigns  ------------------------------------------------------
+
+  async getAllAvailableCampaigns() {
+    const campaigns = await this.campaignRepository.getAllAvailableCampaigns();
+    return campaigns;
+  }
+
+  async getDriverCampaignsById(userId: string) {
+    const campaigns =
+      await this.campaignRepository.getDriverCampaignsById(userId);
+
+    const calc = campaigns.map((campaign) => {
+      const totalEarning = campaign.totalEarning || 0;
+      const duration = campaign.duration || 0;
+
+      const monthlyEarning = totalEarning / (duration / 30);
+
+      if (!campaign.startDate) {
+        return {
+          monthlyEarning,
+          daysRemaining: duration, // Full duration remains if not started
+          daysPassed: 0,
+          isExpired: false,
+          notStarted: true,
+        };
+      }
+
+      const startDate = new Date(campaign.startDate);
+      const today = new Date();
+
+      const daysCompleted = Math.floor(
+        (today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      const daysRemaining = Math.max(0, duration - daysCompleted);
+
+      const campaignProgress = (daysCompleted / duration) * 100;
+
+      return {
+        ...campaign,
+        monthlyEarning: Math.round(monthlyEarning * 100) / 100,
+        daysRemaining,
+        daysCompleted,
+        campaignProgress,
+      };
+    });
+
+    return calc;
+  }
+
+  
+
+
 }

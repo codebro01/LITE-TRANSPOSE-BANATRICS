@@ -3,7 +3,8 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { and, eq, sql } from 'drizzle-orm';
 import { campaignTable } from '@src/db/campaigns';
 import { MaintenanceType, StatusType } from '../dto/publishCampaignDto';
-
+import { driverCampaignTable } from '@src/db';
+import { DriverCampaignStatusType } from '@src/campaign/dto/create-driver-campaign.dto';
 
 export type CampaignStatus = 'draft' | 'pending' | 'active' | 'completed';
 export type packageType = 'starter' | 'basic' | 'premium' | 'custom';
@@ -32,9 +33,8 @@ export interface CreateCampaignData {
   uploadedImages?: uploadType[];
   statusType: CampaignStatus;
   updatedAt?: Date;
-  maintenanceType?:MaintenanceType, 
-  lgaCoverage?:string, 
-  
+  maintenanceType?: MaintenanceType;
+  lgaCoverage?: string;
 }
 
 export interface UpdateCampaignData {
@@ -258,26 +258,14 @@ export class CampaignRepository {
 
   //!===================================drivers db calls ===========================================//
 
-
-async getAllAvailableCampaigns() {
-  const campaigns = await this.DbProvider.select({
-    title: campaignTable.campaignName,
-    state: campaignTable.state,
-    duration: campaignTable.duration,
-    availability: campaignTable.availability,
-    requirements: campaignTable.requirements,
-  })
-    .from(campaignTable)
-    .where(
-      and(
-        eq(campaignTable.statusType, 'active'),
-        eq(campaignTable.paymentStatus, 'spent'),
-      ),
-    );
-
-    const [count] = await this.DbProvider.select({
-      totalCount: sql<number>`COUNT(*)`, 
-      todayCount: sql<number>`COUNT(*) filter (where date(${campaignTable.createdAt}) = current_date)`
+  async getAllAvailableCampaigns() {
+    const campaigns = await this.DbProvider.select({
+      title: campaignTable.campaignName,
+      state: campaignTable.state,
+      duration: campaignTable.duration,
+      availability: campaignTable.availability,
+      requirements: campaignTable.requirements,
+      description: campaignTable.campaignDescriptions,
     })
       .from(campaignTable)
       .where(
@@ -286,10 +274,53 @@ async getAllAvailableCampaigns() {
           eq(campaignTable.paymentStatus, 'spent'),
         ),
       );
-  return {campaigns, ...count};
-}
 
+    const [count] = await this.DbProvider.select({
+      totalCount: sql<number>`COUNT(*)`,
+      todayCount: sql<number>`COUNT(*) filter (where date(${campaignTable.createdAt}) = current_date)`,
+    })
+      .from(campaignTable)
+      .where(
+        and(
+          eq(campaignTable.statusType, 'active'),
+          eq(campaignTable.paymentStatus, 'spent'),
+        ),
+      );
+    return { campaigns, ...count };
+  }
 
+  async getDriverCampaignsById(userId: string) {
+    const campaigns = await this.DbProvider.select({
+      driverCampaignStatus: driverCampaignTable.campaignStatus,
+      title: campaignTable.campaignName,
+      state: campaignTable.state,
+      startDate: campaignTable.startDate, 
+      duration: campaignTable.duration,
+      availability: campaignTable.availability,
+      requirements: campaignTable.requirements,
+      description: campaignTable.campaignDescriptions, 
+      totalEarning: campaignTable.earningPerDriver, 
+    })
+      .from(driverCampaignTable)
+      .where(eq(driverCampaignTable.userId, userId))
+      .leftJoin(
+        campaignTable,
+        eq(driverCampaignTable.campaignId, campaignTable.id),
+      );
+    return campaigns;
+  }
 
+  async filterDriverCampaigns(filter: DriverCampaignStatusType , userId: string) {
+      const campaign = await this.DbProvider.select()
+        .from(driverCampaignTable)
+        .where(
+          and(
+            eq(driverCampaignTable.campaignStatus, filter),
+            eq(driverCampaignTable.userId, userId),
+          ),
+        );
+        return campaign;
+  }
 
+  
 }
