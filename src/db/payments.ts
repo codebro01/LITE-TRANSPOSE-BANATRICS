@@ -6,6 +6,7 @@ import {
   doublePrecision
 } from 'drizzle-orm/pg-core';
 import { userTable } from '@src/db/users';
+import { campaignTable } from '@src/db/campaigns';
 
 
 
@@ -16,7 +17,7 @@ export const paymentTable = pgTable('payments', {
     .references(() => userTable.id),
   invoiceId: text('invoice_id'),
   reference: text('reference'),
-  campaignName: text('campaign_name').notNull(),
+  campaignName: uuid('campaign_id').references(() => campaignTable.id, {onDelete: 'cascade'}).notNull(),
   dateInitiated: text('date_initiated'),
   amount: doublePrecision('amount').notNull(),
   paymentMethod: text('payment_method').notNull(),

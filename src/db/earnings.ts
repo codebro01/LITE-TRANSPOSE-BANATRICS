@@ -23,3 +23,6 @@ export const earningsTable = pgTable('earnings', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+
+export type earningTableInsertType = typeof earningsTable.$inferInsert

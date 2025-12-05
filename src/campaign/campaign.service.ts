@@ -20,7 +20,6 @@ import {
 } from '@src/notification/dto/createNotificationDto';
 import { PackageRepository } from '@src/package/repository/package.repository';
 import { campaignSelectType } from '@src/db';
-import { duration } from 'drizzle-orm/gel-core';
 
 @Injectable()
 export class CampaignService {

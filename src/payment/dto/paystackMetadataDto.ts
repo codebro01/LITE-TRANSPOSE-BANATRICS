@@ -18,5 +18,5 @@ export class PaystackMetedataDto {
   })
   @IsString()
   @IsNotEmpty()
-  campaignName: string;
+  campaignId: string;
 }

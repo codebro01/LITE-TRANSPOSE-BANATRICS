@@ -1,26 +1,22 @@
+import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
-import { CreateEarningDto } from './dto/create-earning.dto';
-import { UpdateEarningDto } from './dto/update-earning.dto';
+// import { CreateEarningDto } from './dto/create-earning.dto';
+// import { UpdateEarningDto } from './dto/update-earning.dto';
+import { ConfigService } from '@nestjs/config';
+import { InitializeEarningDto } from '@src/earning/dto/initialize-earning.dto';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class EarningService {
-  create(createEarningDto: CreateEarningDto) {
-    return 'This action adds a new earning';
+  private readonly baseUrl: string = 'https://api.paystack.co';
+  private readonly secretkey: string; 
+  constructor(private readonly configService: ConfigService, private readonly httpService: HttpService) {}
+
+
+  async initializeWithdrawal(data: InitializeEarningDto) {
+    const response = await firstValueFrom(this.httpService.post(`${this.baseUrl}/transfer`))
   }
 
-  findAll() {
-    return `This action returns all earning`;
-  }
 
-  findOne(id: number) {
-    return `This action returns a #${id} earning`;
-  }
 
-  update(id: number, updateEarningDto: UpdateEarningDto) {
-    return `This action updates a #${id} earning`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} earning`;
-  }
 }

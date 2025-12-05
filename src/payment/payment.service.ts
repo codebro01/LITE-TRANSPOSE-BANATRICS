@@ -17,16 +17,6 @@ import crypto from 'crypto';
 import { InitializePaymentDto } from '@src/payment/dto/initializePaymentDto';
 import { MakePaymentForCampaignDto } from '@src/payment/dto/makePaymentForCampaignDto';
 import { CampaignRepository } from '@src/campaign/repository/campaign.repository';
-import { CatchErrorService } from '@src/catch-error/catch-error.service';
-
-// interface InitializePaymentDto {
-//   email: string;
-//   amount: number; // in kobo (NGN) or smallest currency unit
-//   reference?: string;
-//   callback_url?: string;
-//   metadata?: Record<string, any>;
-//   invoiceNumber?: string;
-// }
 
 interface VerifyPaymentResponse {
   status: boolean;
@@ -54,7 +44,6 @@ export class PaymentService {
     private userRepository: UserRepository,
     private paymentRepository: PaymentRepository,
     private campaignRepository: CampaignRepository,
-    private catchErrorService: CatchErrorService,
   ) {
     const key = this.configService.get<string>('PAYSTACK_SECRET_KEY');
     if (!key) {
@@ -226,10 +215,7 @@ export class PaymentService {
       return result;
     } catch (error) {
       console.error('error', error.message);
-      this.catchErrorService.catch(
-        error,
-        'An error occured listing transactions',
-      );
+      throw new Error(error)
     }
   }
   async paymentDashboard(userId: string) {
@@ -238,10 +224,7 @@ export class PaymentService {
       return result;
     } catch (error) {
       console.error('error', error.message);
-      this.catchErrorService.catch(
-        error,
-        'An error occured could not load dasboard data',
-      );
+      throw new Error(error)
     }
   }
 }

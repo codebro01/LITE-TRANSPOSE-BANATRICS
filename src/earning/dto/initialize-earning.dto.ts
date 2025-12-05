@@ -3,14 +3,16 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNumber,
+  IsString,
   IsOptional,
   IsObject,
   IsUrl,
   Min,
+  MaxLength,
   IsNotEmpty,
 } from 'class-validator';
 
-export class InitializePaymentDto {
+export class InitializeEarningDto {
   @ApiProperty({
     description: 'Customer email address',
     example: 'customer@example.com',
@@ -32,6 +34,16 @@ export class InitializePaymentDto {
   @IsNotEmpty({ message: 'Amount is required' })
   amount: number;
 
+  @ApiPropertyOptional({
+    description: 'Unique transaction reference. Auto-generated if not provided',
+    example: 'BNT-A3F7B2C9',
+    maxLength: 200,
+    type: String,
+  })
+  @IsOptional()
+  @IsString({ message: 'Reference must be a string' })
+  @MaxLength(200, { message: 'Reference cannot exceed 200 characters' })
+  reference?: string;
 
   @ApiPropertyOptional({
     description: 'URL to redirect to after payment',
@@ -53,4 +65,15 @@ export class InitializePaymentDto {
   @IsOptional()
   @IsObject({ message: 'Metadata must be an object' })
   metadata?: Record<string, any>;
+
+  @ApiPropertyOptional({
+    description: 'Invoice number for record keeping',
+    example: 'INV-2024-001',
+    maxLength: 100,
+    type: String,
+  })
+  @IsOptional()
+  @IsString({ message: 'Invoice number must be a string' })
+  @MaxLength(100, { message: 'Invoice number cannot exceed 100 characters' })
+  invoiceNumber?: string;
 }
