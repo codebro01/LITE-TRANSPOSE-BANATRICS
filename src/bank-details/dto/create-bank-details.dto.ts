@@ -26,4 +26,12 @@ export class CreateBankDetailsDto {
     @IsNotEmpty() 
     @IsString()
     bankId: number;
+
+    @ApiProperty({
+        example: "056", 
+        description: "bank code of the user"
+    })
+    @IsNotEmpty() 
+    @IsString()
+    bankCode: string;
 }

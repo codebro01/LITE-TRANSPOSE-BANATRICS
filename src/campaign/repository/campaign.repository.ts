@@ -1,10 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, sql, ne } from 'drizzle-orm';
 import { campaignTable } from '@src/db/campaigns';
 import { MaintenanceType, StatusType } from '../dto/publishCampaignDto';
 import { driverCampaignTable } from '@src/db';
-import { DriverCampaignStatusType } from '@src/campaign/dto/create-driver-campaign.dto';
+import {
+  CreateDriverCampaignDto,
+  DriverCampaignStatusType,
+} from '@src/campaign/dto/create-driver-campaign.dto';
 
 export type CampaignStatus = 'draft' | 'pending' | 'active' | 'completed';
 export type packageType = 'starter' | 'basic' | 'premium' | 'custom';
@@ -289,17 +292,44 @@ export class CampaignRepository {
     return { campaigns, ...count };
   }
 
+  async driverCampaignDashboard(userId: string) {
+    const [calc, campaignsExcludingPendingApproval] = await Promise.all([
+      this.DbProvider.select({
+        totalActiveCampaigns: sql<number>`COUNT(CASE WHEN active = true THEN 1 END) `,
+        totalCompletedCampaigns: sql<number>`COUNT(CASE WHEN campaignStatus = 'completed' THEN 1 END)`,
+      })
+        .from(driverCampaignTable)
+        .where(eq(driverCampaignTable.userId, userId)),
+
+      this.DbProvider.select({
+        eligibleCampaigns: sql<number>`COUNT(*)`,
+      })
+        .from(driverCampaignTable)
+        .where(
+          and(
+            ne(driverCampaignTable.campaignStatus, 'pending_approval'),
+            eq(driverCampaignTable.userId, userId),
+          ),
+        ),
+    ]);
+
+    return {
+      campaignCounts: calc[0],
+      eligibleCampaignsCount: campaignsExcludingPendingApproval[0],
+    };
+  }
+
   async getDriverCampaignsById(userId: string) {
     const campaigns = await this.DbProvider.select({
       driverCampaignStatus: driverCampaignTable.campaignStatus,
       title: campaignTable.campaignName,
       state: campaignTable.state,
-      startDate: campaignTable.startDate, 
+      startDate: campaignTable.startDate,
       duration: campaignTable.duration,
       availability: campaignTable.availability,
       requirements: campaignTable.requirements,
-      description: campaignTable.campaignDescriptions, 
-      totalEarning: campaignTable.earningPerDriver, 
+      description: campaignTable.campaignDescriptions,
+      totalEarning: campaignTable.earningPerDriver,
     })
       .from(driverCampaignTable)
       .where(eq(driverCampaignTable.userId, userId))
@@ -310,17 +340,26 @@ export class CampaignRepository {
     return campaigns;
   }
 
-  async filterDriverCampaigns(filter: DriverCampaignStatusType , userId: string) {
-      const campaign = await this.DbProvider.select()
-        .from(driverCampaignTable)
-        .where(
-          and(
-            eq(driverCampaignTable.campaignStatus, filter),
-            eq(driverCampaignTable.userId, userId),
-          ),
-        );
-        return campaign;
+  async filterDriverCampaigns(
+    filter: DriverCampaignStatusType,
+    userId: string,
+  ) {
+    const campaign = await this.DbProvider.select()
+      .from(driverCampaignTable)
+      .where(
+        and(
+          eq(driverCampaignTable.campaignStatus, filter),
+          eq(driverCampaignTable.userId, userId),
+        ),
+      );
+    return campaign;
   }
 
-  
+  async driverApplyForCampaign(data: CreateDriverCampaignDto, userId: string) {
+    await this.DbProvider.insert(driverCampaignTable).values({
+      ...data,
+      userId,
+    });
+    return { message: "We'll review your application and get back to you" };
+  }
 }

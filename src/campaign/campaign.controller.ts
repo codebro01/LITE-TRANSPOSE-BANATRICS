@@ -470,4 +470,19 @@ export class CampaignController {
       data: campaign,
     });
   }
+
+  // *========================= Busines owner section ended=======================
+
+
+// !============================driver section =================================
+
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('driver')
+@Get('get-all-available-campaigns')
+async getAllAVailableCampaigns() {
+  const campaigns = await this.campaignService.getAllAvailableCampaigns();
+  return {message: 'success', data: campaigns}
+}
+
+
 }

@@ -20,6 +20,7 @@ import {
 } from '@src/notification/dto/createNotificationDto';
 import { PackageRepository } from '@src/package/repository/package.repository';
 import { campaignSelectType } from '@src/db';
+import { CreateDriverCampaignDto, DriverCampaignStatusType } from '@src/campaign/dto/create-driver-campaign.dto';
 
 @Injectable()
 export class CampaignService {
@@ -452,6 +453,21 @@ export class CampaignService {
     return campaigns;
   }
 
+  async driverCampaignDashboard(userId: string) {
+    const result =   await this.campaignRepository.driverCampaignDashboard(userId);
+
+    const { campaignCounts, eligibleCampaignsCount } = result;
+
+    const { totalActiveCampaigns, totalCompletedCampaigns } = campaignCounts;
+    const { eligibleCampaigns } = eligibleCampaignsCount;
+    const successRate =
+      eligibleCampaigns > 0
+        ? ((totalCompletedCampaigns / eligibleCampaigns) * 100).toFixed(2)
+        : 0;
+
+      return {totalActiveCampaigns, totalCompletedCampaigns, successRate}
+  }
+
   async getDriverCampaignsById(userId: string) {
     const campaigns =
       await this.campaignRepository.getDriverCampaignsById(userId);
@@ -493,6 +509,14 @@ export class CampaignService {
     });
 
     return calc;
+  }
+
+  async filterDriverCampaigns(filter: DriverCampaignStatusType, userId: string) {
+   return  await this.campaignRepository.filterDriverCampaigns(filter, userId);
+  }
+
+  async driverApplyForCampaign(data: CreateDriverCampaignDto, userId: string) {
+    return await this.campaignRepository.driverApplyForCampaign(data, userId);
   }
 
   

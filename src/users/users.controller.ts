@@ -31,10 +31,15 @@ import { InitializeBusinessOwnerCreationDto } from '@src/users/dto/initialize-bu
 import { createBusinessOwnerDto } from '@src/users/dto/create-business-owner.dto';
 import { InitializeDriverCreationDto } from '@src/users/dto/initialize-driver-creation.dto';
 import { CreateDriverDto } from '@src/users/dto/create-driver.dto';
+import { EarningService } from '@src/earning/earning.service';
+import { VerifyBankDetailsDto } from '@src/earning/dto/verify-bank-details.dto';
 
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly earningService: EarningService,
+  ) {}
 
   // ! initialize business owner  creation
   @Post('signup/business-owner/initialize')
@@ -414,5 +419,14 @@ export class UserController {
       message: 'success',
       data: safeUser,
     });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('driver')
+  async updateBankInformation(@Body() body: VerifyBankDetailsDto, @Req() req: Request) {
+    const {id: userId} = req.user;
+    const updateBankInfo = await this.earningService.saveUserBankInformation(body, userId);
+
+    return updateBankInfo;
   }
 }

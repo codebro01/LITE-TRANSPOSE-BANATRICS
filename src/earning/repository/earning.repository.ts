@@ -8,11 +8,13 @@ import { NodePgDatabase } from "drizzle-orm/node-postgres";
 export class EarningRepository {
     constructor(@Inject('DB') private readonly DbProvider: NodePgDatabase<typeof import('@src/db')> ){}
 
- async createEarnings(data: earningTableInsertType, userId: string,  trx?:any) {
+ async createEarnings(data: earningTableInsertType, trx?:any) {
         const Trx  = trx || this.DbProvider;
 
-        const earnings  = await Trx.insert(earningsTable).values({...data, userId})
+        const earnings  = await Trx.insert(earningsTable).values({...data})
 
         return earnings; 
  }
+
+ 
 }

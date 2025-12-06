@@ -4,7 +4,6 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 // import { UpdateEarningDto } from './dto/update-earning.dto';
 import { ConfigService } from '@nestjs/config';
 import { BankDetailsRepository } from '@src/bank-details/repository/create-bank-details-repository';
-import { bankDetailsInsertType } from '@src/db/bank_details';
 import { CreateTransferRecipientDto } from '@src/earning/dto/create-transfer-recipients.dto';
 import { InitializeEarningDto } from '@src/earning/dto/initialize-earning.dto';
 import { VerifyBankDetailsDto } from '@src/earning/dto/verify-bank-details.dto';
@@ -85,10 +84,7 @@ export class EarningService {
     return response;
   }
 
-  async saveUserBankInformation(
-    data: bankDetailsInsertType & VerifyBankDetailsDto,
-    userId: string,
-  ) {
+  async saveUserBankInformation(data: VerifyBankDetailsDto, userId: string) {
     const getVerifiedBankDetails = await this.verifyBankDetails({
       accountNumber: data.accountNumber,
       bankCode: data.bankCode,
@@ -109,7 +105,6 @@ export class EarningService {
       account_number: accNumber,
       name: accountName,
       bank_code: bnkCode,
-
     } = createTransferRecipients.data.details;
 
     const saveBankRecords =
@@ -120,11 +115,11 @@ export class EarningService {
           accountNumber: accNumber,
           bankCode: bnkCode,
           bankId: bank_id,
-          transferRecipientCode: createTransferRecipients.data.recipient_code,
+          recipientCode: createTransferRecipients.data.recipient_code,
         },
         userId,
       );
 
-      return saveBankRecords;
+    return saveBankRecords;
   }
 }

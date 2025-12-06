@@ -11,6 +11,7 @@ import { jwtConstants } from '@src/auth/jwtContants';
 import { EmailModule } from '@src/email/email.module';
 import { PasswordResetModule } from '@src/password-reset/password-reset.module';
 import { EmailVerificationModule } from '@src/email-verification/email-verification.module';
+import { EarningModule } from '@src/earning/earning.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { EmailVerificationModule } from '@src/email-verification/email-verificat
       secret: jwtConstants.accessTokenSecret,
     }),
     EmailModule, 
-    PasswordResetModule
+    PasswordResetModule, 
+    EarningModule,
   ],
   controllers: [UserController],
   providers: [UserService, UserRepository, JwtService, NeonProvider],
