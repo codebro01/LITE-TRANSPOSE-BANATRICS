@@ -27,7 +27,7 @@ export const businessOwnerTable = pgTable('businessOwners', {
   id: uuid('id').defaultRandom().primaryKey().notNull(),
   userId: uuid('userId').references(() => userTable.id, {
     onDelete: 'cascade',
-  }),
+  }).unique().notNull(),
   balance: doublePrecision('balance').default(0).notNull(),
   pending: doublePrecision('pending').default(0).notNull(),
   businessName: varchar('businessName', { length: 255 }).notNull(),
@@ -44,7 +44,7 @@ export const driverTable = pgTable('drivers', {
   id: uuid().defaultRandom().primaryKey().notNull(),
   userId: uuid('userId').references(() => userTable.id, {
     onDelete: 'cascade',
-  }), 
+  }).unique().notNull(), 
   fullName: varchar('full_name', { length: 255 })
     .notNull()
     .default('Null Driver'),

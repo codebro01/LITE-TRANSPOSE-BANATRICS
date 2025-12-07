@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { and, eq, sql, ne } from 'drizzle-orm';
 import { campaignTable } from '@src/db/campaigns';
@@ -261,8 +261,14 @@ export class CampaignRepository {
 
   //!===================================drivers db calls ===========================================//
 
+  async findDriverCampaignById(campaignId: string, userId: string) {
+const campaign = await this.DbProvider.select().from(driverCampaignTable).where(and(eq(driverCampaignTable.campaignId, campaignId), eq(driverCampaignTable.userId, userId)))
+  return campaign;
+}
+
   async getAllAvailableCampaigns() {
     const campaigns = await this.DbProvider.select({
+      id: campaignTable.id, 
       title: campaignTable.campaignName,
       state: campaignTable.state,
       duration: campaignTable.duration,
@@ -355,11 +361,62 @@ export class CampaignRepository {
     return campaign;
   }
 
+  async getAllActiveCampaigns(userId: string) {
+    const campaigns = await this.DbProvider.select({
+      activeStatus: driverCampaignTable.active,
+      title: campaignTable.campaignName,
+      state: campaignTable.state,
+      driverCampaignStatus: driverCampaignTable.campaignStatus, 
+      startDate: campaignTable.startDate,
+      duration: campaignTable.duration,
+      availability: campaignTable.availability,
+      requirements: campaignTable.requirements,
+      description: campaignTable.campaignDescriptions,
+      totalEarning: campaignTable.earningPerDriver,
+    })
+      .from(driverCampaignTable)
+      .where(
+        and(
+          eq(driverCampaignTable.userId, userId),
+          eq(driverCampaignTable.active, true),
+        ),
+      )
+      .leftJoin(
+        campaignTable,
+        eq(driverCampaignTable.campaignId, campaignTable.id),
+      );
+
+    return campaigns;
+  }
+  async getAllCompletedCampaigns(userId: string) {
+    const campaigns = await this.DbProvider.select({
+      driverCampaignStatus: driverCampaignTable.campaignStatus,
+      title: campaignTable.campaignName,
+      totalEarning: campaignTable.earningPerDriver,
+    })
+      .from(driverCampaignTable)
+      .where(
+        and(
+          eq(driverCampaignTable.userId, userId),
+          eq(driverCampaignTable.campaignStatus, DriverCampaignStatusType.COMPLETED),
+        ),
+      )
+      .leftJoin(
+        campaignTable,
+        eq(driverCampaignTable.campaignId, campaignTable.id),
+      );
+
+    return campaigns;
+  }
+
   async driverApplyForCampaign(data: CreateDriverCampaignDto, userId: string) {
-    await this.DbProvider.insert(driverCampaignTable).values({
+    const alreadyApplied = await this.findDriverCampaignById(data.campaignId, userId);
+
+    if(alreadyApplied.length > 0) throw  new BadRequestException('You have already applied for this  campaign!!!')
+     await this.DbProvider.insert(driverCampaignTable).values({
       ...data,
       userId,
     });
-    return { message: "We'll review your application and get back to you" };
+  
   }
 }

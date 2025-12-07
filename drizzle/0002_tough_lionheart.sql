@@ -1,0 +1,1 @@
+ALTER TABLE "drivers" DROP CONSTRAINT "drivers_userId_unique";

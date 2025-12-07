@@ -175,6 +175,7 @@ export class UploadController {
     status: 500,
     description: 'Internal server error',
   })
+  @Post('delete')
   async deleteImage(@Param('publicId') publicId: string) {
     await this.cloudinaryService.deleteImage(publicId);
 

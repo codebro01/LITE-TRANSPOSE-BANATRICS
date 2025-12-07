@@ -9,7 +9,7 @@ export const driverCampaignTable = pgTable('driver_campaigns', {
     userId: uuid('userId').references(() => userTable.id, {onDelete:"cascade"}).notNull(), 
     campaignId: uuid('campaignId').references(() => campaignTable.id, {onDelete: 'cascade'}).notNull(), 
     campaignStatus: driverCampaignStatusType('campaign_status').default('pending_approval'), 
-    active: boolean('active_status').default(false), 
+    active: boolean('active_status').default(true), 
     createdAt: timestamp('created_at').defaultNow(), 
     updatedAt: timestamp('updated_at').defaultNow(), 
 

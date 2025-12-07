@@ -514,9 +514,15 @@ export class CampaignService {
   async filterDriverCampaigns(filter: DriverCampaignStatusType, userId: string) {
    return  await this.campaignRepository.filterDriverCampaigns(filter, userId);
   }
+  async getAllActiveCampaigns(userId: string) {
+   return  await this.campaignRepository.getAllActiveCampaigns(userId);
+  }
+  async getAllCompletedCampaigns(userId: string) {
+   return  await this.campaignRepository.getAllCompletedCampaigns(userId);
+  }
 
   async driverApplyForCampaign(data: CreateDriverCampaignDto, userId: string) {
-    return await this.campaignRepository.driverApplyForCampaign(data, userId);
+     await this.campaignRepository.driverApplyForCampaign(data, userId);
   }
 
   

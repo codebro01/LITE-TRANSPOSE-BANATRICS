@@ -5,71 +5,29 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1764668643862,
-      "tag": "0000_remarkable_jane_foster",
+      "when": 1765146935677,
+      "tag": "0000_chemical_catseye",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1764781018266,
-      "tag": "0001_omniscient_zuras",
+      "when": 1765148048413,
+      "tag": "0001_nice_junta",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
-      "when": 1764833227336,
-      "tag": "0002_silent_silver_sable",
+      "when": 1765148393079,
+      "tag": "0002_tough_lionheart",
       "breakpoints": true
     },
     {
       "idx": 3,
       "version": "7",
-      "when": 1764834910239,
-      "tag": "0003_sleepy_drax",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1764881625326,
-      "tag": "0004_polite_shape",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1764882174811,
-      "tag": "0005_serious_hedge_knight",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1764882198807,
-      "tag": "0006_real_masked_marvel",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1764882430491,
-      "tag": "0007_soft_champions",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1764883187652,
-      "tag": "0008_nappy_mephistopheles",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1764908791007,
-      "tag": "0009_bright_true_believers",
+      "when": 1765148628003,
+      "tag": "0003_nasty_harry_osborn",
       "breakpoints": true
     }
   ]

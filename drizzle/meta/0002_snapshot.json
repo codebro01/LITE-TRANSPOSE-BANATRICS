@@ -1,9 +1,79 @@
 {
-  "id": "5f0d1b8d-0abc-4aa1-a7c6-a45b64f63099",
-  "prevId": "a4f669b5-7564-4c02-bb28-c718d81d6734",
+  "id": "d0a4ae78-d271-4678-8fa4-d296595c1eee",
+  "prevId": "e39dfab8-1423-4e86-966f-42f76783f732",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.bank_details": {
+      "name": "bank_details",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_number": {
+          "name": "account_number",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_name": {
+          "name": "account_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bankId": {
+          "name": "bankId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bank_code": {
+          "name": "bank_code",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "transfer_recipient_code": {
+          "name": "transfer_recipient_code",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "bank_details_userId_users_id_fk": {
+          "name": "bank_details_userId_users_id_fk",
+          "tableFrom": "bank_details",
+          "tableTo": "users",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.campaigns": {
       "name": "campaigns",
       "schema": "",
@@ -14,6 +84,12 @@
           "primaryKey": true,
           "notNull": true,
           "default": "gen_random_uuid()"
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         },
         "package_type": {
           "name": "package_type",
@@ -74,6 +150,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "availability": {
+          "name": "availability",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "campaign_name": {
           "name": "campaign_name",
           "type": "varchar(255)",
@@ -104,6 +186,24 @@
           "primaryKey": false,
           "notNull": false
         },
+        "state": {
+          "name": "state",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "banner_details": {
+          "name": "banner_details",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "earning_per_driver": {
+          "name": "earning_per_driver",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "color_pallete": {
           "name": "color_pallete",
           "type": "varchar[]",
@@ -112,7 +212,13 @@
         },
         "call_to_action": {
           "name": "call_to_action",
-          "type": "varchar",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "requirements": {
+          "name": "requirements",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -140,12 +246,6 @@
           "type": "varchar(500)",
           "primaryKey": false,
           "notNull": false
-        },
-        "userId": {
-          "name": "userId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
         },
         "spent_at": {
           "name": "spent_at",
@@ -190,6 +290,177 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.driver_campaigns": {
+      "name": "driver_campaigns",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "campaignId": {
+          "name": "campaignId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "campaign_status": {
+          "name": "campaign_status",
+          "type": "driver_campaign_status_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'pending_approval'"
+        },
+        "active_status": {
+          "name": "active_status",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "driver_campaigns_userId_users_id_fk": {
+          "name": "driver_campaigns_userId_users_id_fk",
+          "tableFrom": "driver_campaigns",
+          "tableTo": "users",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "driver_campaigns_campaignId_campaigns_id_fk": {
+          "name": "driver_campaigns_campaignId_campaigns_id_fk",
+          "tableFrom": "driver_campaigns",
+          "tableTo": "campaigns",
+          "columnsFrom": [
+            "campaignId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.earnings": {
+      "name": "earnings",
+      "schema": "",
+      "columns": {
+        "campaignId": {
+          "name": "campaignId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "amount": {
+          "name": "amount",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reference": {
+          "name": "reference",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_initiated": {
+          "name": "date_initiated",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payment_method": {
+          "name": "payment_method",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recipient_code": {
+          "name": "recipient_code",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_status": {
+          "name": "payment_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "earnings_campaignId_campaigns_id_fk": {
+          "name": "earnings_campaignId_campaigns_id_fk",
+          "tableFrom": "earnings",
+          "tableTo": "campaigns",
+          "columnsFrom": [
+            "campaignId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.email_verifications": {
       "name": "email_verifications",
       "schema": "",
@@ -206,6 +477,18 @@
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nin": {
+          "name": "nin",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
         },
         "email_verification_code": {
           "name": "email_verification_code",
@@ -288,6 +571,13 @@
           "columns": [
             "email"
           ]
+        },
+        "email_verifications_phone_unique": {
+          "name": "email_verifications_phone_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "phone"
+          ]
         }
       },
       "policies": {},
@@ -309,7 +599,7 @@
           "name": "userId",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "balance": {
           "name": "balance",
@@ -381,7 +671,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "businessOwners_userId_unique": {
+          "name": "businessOwners_userId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "userId"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -401,7 +699,7 @@
           "name": "userId",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "full_name": {
           "name": "full_name",
@@ -409,6 +707,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'Null Driver'"
+        },
+        "approved_status": {
+          "name": "approved_status",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "balance": {
           "name": "balance",
@@ -639,9 +944,9 @@
           "primaryKey": false,
           "notNull": false
         },
-        "campaign_name": {
-          "name": "campaign_name",
-          "type": "text",
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
@@ -697,6 +1002,19 @@
             "id"
           ],
           "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "payments_campaign_id_campaigns_id_fk": {
+          "name": "payments_campaign_id_campaigns_id_fk",
+          "tableFrom": "payments",
+          "tableTo": "campaigns",
+          "columnsFrom": [
+            "campaign_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -837,6 +1155,123 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.weekly_proofs": {
+      "name": "weekly_proofs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "campaignId": {
+          "name": "campaignId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "frontview": {
+          "name": "frontview",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "backview": {
+          "name": "backview",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sideview": {
+          "name": "sideview",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "comment": {
+          "name": "comment",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "month": {
+          "name": "month",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "weekly_proof_status": {
+          "name": "weekly_proof_status",
+          "type": "weekly_proof_status_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'pending_review'"
+        },
+        "rejection_reason": {
+          "name": "rejection_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "weekly_proofs_campaignId_campaigns_id_fk": {
+          "name": "weekly_proofs_campaignId_campaigns_id_fk",
+          "tableFrom": "weekly_proofs",
+          "tableTo": "campaigns",
+          "columnsFrom": [
+            "campaignId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "weekly_proofs_userId_drivers_userId_fk": {
+          "name": "weekly_proofs_userId_drivers_userId_fk",
+          "tableFrom": "weekly_proofs",
+          "tableTo": "drivers",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "userId"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.notifications": {
       "name": "notifications",
       "schema": "",
@@ -922,7 +1357,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1067,6 +1502,25 @@
         "active",
         "pending",
         "completed"
+      ]
+    },
+    "public.driver_campaign_status_type": {
+      "name": "driver_campaign_status_type",
+      "schema": "public",
+      "values": [
+        "completed",
+        "pending_approval",
+        "due_soon",
+        "approved"
+      ]
+    },
+    "public.weekly_proof_status_type": {
+      "name": "weekly_proof_status_type",
+      "schema": "public",
+      "values": [
+        "approved",
+        "pending_review",
+        "rejected"
       ]
     },
     "public.category_type": {

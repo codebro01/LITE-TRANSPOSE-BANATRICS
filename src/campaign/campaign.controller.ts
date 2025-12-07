@@ -32,6 +32,7 @@ import {
 } from '@src/campaign/dto/draftCampaignDto';
 import type { Response } from 'express';
 import type { Request } from '@src/types';
+import { CreateDriverCampaignDto, DriverCampaignStatusType } from '@src/campaign/dto/create-driver-campaign.dto';
 
 @ApiTags('Campaign')
 @Controller('campaign')
@@ -111,7 +112,6 @@ export class CampaignController {
     status: 403,
     description: 'Forbidden - Not a business owner',
   })
- 
   async draftCampaign(
     @Req() req: Request,
     @Res() res: Response,
@@ -473,16 +473,68 @@ export class CampaignController {
 
   // *========================= Busines owner section ended=======================
 
+  // !============================driver section =================================
 
-// !============================driver section =================================
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('driver')
+  @Get('list')
+  async getAllAVailableCampaigns() {
+    const campaigns = await this.campaignService.getAllAvailableCampaigns();
+    return { message: 'success', data: campaigns };
+  }
 
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('driver')
-@Get('get-all-available-campaigns')
-async getAllAVailableCampaigns() {
-  const campaigns = await this.campaignService.getAllAvailableCampaigns();
-  return {message: 'success', data: campaigns}
-}
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('driver')
+  @Post('driver/appy')
+  async driverApplyForCampaign(@Req() req: Request, @Res() res: Response, @Body() body: CreateDriverCampaignDto) {
+    const {id: userId} = req.user;
+   const  campaign = await this.campaignService.driverApplyForCampaign(body, userId);
+
+   console.log(campaign)
+   
+  res.status(HttpStatus.CREATED).json( { message: "We'll review your application and get back to you" })
+  }
 
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('driver')
+  @Get('driver/dashboard')
+  async driverCamapaignDashboard(@Req() req: Request, @Res() res: Response) {
+    const {id: userId} = req.user;
+   const  campaign = await this.campaignService.driverCampaignDashboard(userId);
+
+   console.log(campaign)
+   
+  res.status(HttpStatus.CREATED).json({ message: 'success', data: campaign });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('driver')
+  @Get('driver/filter')
+  async filterDriverCampaign(@Req() req: Request, @Res() res: Response, @Query('filter') filter: DriverCampaignStatusType) {
+    const {id: userId} = req.user;
+   const  campaign = await this.campaignService.filterDriverCampaigns(filter, userId);
+   
+  res.status(HttpStatus.CREATED).json({ message: 'success', data: campaign });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('driver')
+  @Get('driver/active')
+  async getallActiveCampaigns(@Req() req: Request, @Res() res: Response) {
+    const {id: userId} = req.user;
+   const  campaign = await this.campaignService.getAllActiveCampaigns( userId);
+   
+  res.status(HttpStatus.CREATED).json({ message: 'success', data: campaign });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('driver')
+  @Get('driver/completed')
+  async getallCompletedCampaigns(@Req() req: Request, @Res() res: Response) {
+    const {id: userId} = req.user;
+   const  campaign = await this.campaignService.getAllCompletedCampaigns( userId);
+   
+  res.status(HttpStatus.CREATED).json({ message: 'success', data: campaign });
+  }
 }

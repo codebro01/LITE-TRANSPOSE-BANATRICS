@@ -27,6 +27,7 @@ import { EmailVerificationModule } from './email-verification/email-verification
 import { ConfigService } from '@nestjs/config';
 import { EarningModule } from './earning/earning.module';
 import { BankDetailsModule } from './bank-details/bank-details.module';
+import { WeeklyProofsModule } from './weekly-proofs/weekly-proofs.module';
 
 @Module({
   imports: [
@@ -76,6 +77,7 @@ import { BankDetailsModule } from './bank-details/bank-details.module';
     EmailVerificationModule,
     EarningModule,
     BankDetailsModule,
+    WeeklyProofsModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService, NeonProvider, MulterService],
