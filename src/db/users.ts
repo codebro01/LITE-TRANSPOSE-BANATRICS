@@ -42,16 +42,25 @@ export const businessOwnerTable = pgTable('businessOwners', {
 });
 export const driverTable = pgTable('drivers', {
   id: uuid().defaultRandom().primaryKey().notNull(),
-  userId: uuid('userId').references(() => userTable.id, {
-    onDelete: 'cascade',
-  }).unique().notNull(), 
-  fullName: varchar('full_name', { length: 255 })
+  userId: uuid('userId')
+    .references(() => userTable.id, {
+      onDelete: 'cascade',
+    })
+    .unique()
+    .notNull(),
+  firstname: varchar('firstname', { length: 255 })
     .notNull()
-    .default('Null Driver'),
-  approvedStatus: boolean('approved_status').default(false).notNull(), 
+    .default('firstname'),
+  lastname: varchar('lastname', { length: 255 })
+    .notNull()
+    .default('lastname'),
+  approvedStatus: boolean('approved_status').default(false).notNull(),
   balance: doublePrecision('balance').default(0).notNull(),
   pending: doublePrecision('pending').default(0).notNull(),
-  dp: varchar('dp', { length: 255 }),
+  dp: jsonb('dp').$type<{
+    secure_url: string;
+    public_id: string;
+  }>(),
   nin: varchar('nin', { length: 12 }).notNull().unique(),
   state: varchar('state', { length: 50 }).notNull(),
   lga: varchar('lga', { length: 50 }).notNull(),

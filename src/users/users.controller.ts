@@ -33,6 +33,7 @@ import { InitializeDriverCreationDto } from '@src/users/dto/initialize-driver-cr
 import { CreateDriverDto } from '@src/users/dto/create-driver.dto';
 import { EarningService } from '@src/earning/earning.service';
 import { VerifyBankDetailsDto } from '@src/earning/dto/verify-bank-details.dto';
+import { UpdateDriverDpDto } from '@src/users/dto/update-driver-dp.dto';
 
 @Controller('users')
 export class UserController {
@@ -423,10 +424,31 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
-  async updateBankInformation(@Body() body: VerifyBankDetailsDto, @Req() req: Request) {
-    const {id: userId} = req.user;
-    const updateBankInfo = await this.earningService.saveUserBankInformation(body, userId);
+  @Patch('update/driver/bank-information')
+  async updateBankInformation(
+    @Body() body: VerifyBankDetailsDto,
+    @Req() req: Request,
+  ) {
+    const { id: userId } = req.user;
+    const updateBankInfo = await this.earningService.saveUserBankInformation(
+      body,
+      userId,
+    );
 
     return updateBankInfo;
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('driver')
+  @Patch('update/driver/dp')
+  async updateDriverdp(
+    @Body() body: UpdateDriverDpDto,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const { id: userId } = req.user;
+    const driver = await this.userService.updateDriverDp(body.dp, userId);
+
+    res.status(200).json({ message: 'success', data: driver });
   }
 }

@@ -9,6 +9,7 @@ import {
   Max,
   IsEnum,
   ValidateNested,
+  IsUrl,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -18,7 +19,7 @@ class ImageProofDto {
     example:
       'https://res.cloudinary.com/demo/image/upload/v1234567890/sample.jpg',
   })
-  @IsString()
+  @IsUrl()
   @IsNotEmpty()
   secure_url: string;
 

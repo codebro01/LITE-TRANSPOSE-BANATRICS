@@ -281,15 +281,12 @@ export class UserService {
         await this.sixDigitCodeGenerator();
 
       if (emailVerificationRecord)
-         if (emailVerificationRecord.used === true)
-           throw new BadRequestException(
-             'This email has been used, please try another email',
-           );
+        if (emailVerificationRecord.used === true)
+          throw new BadRequestException(
+            'This email has been used, please try another email',
+          );
 
-      if (
-        (emailVerificationRecord && emailVerificationRecord.used) ===
-        false
-      ) {
+      if ((emailVerificationRecord && emailVerificationRecord.used) === false) {
         const saveCodeRecord =
           await this.emailVerificationRepository.updateEmailVerification(
             {
@@ -306,8 +303,8 @@ export class UserService {
             email: email,
             emailVerificationCode: hashRandomSixDigitCode,
             used: false,
-            phone, 
-            nin, 
+            phone,
+            nin,
             expiresAt: new Date(Date.now() + 30 * 60 * 1000),
           });
 
@@ -344,8 +341,11 @@ export class UserService {
       email,
     });
 
-    console.log('user', user)
-    if (!user) throw new NotFoundException(`An error has occured while trying to verify the code, please try again`);
+    console.log('user', user);
+    if (!user)
+      throw new NotFoundException(
+        `An error has occured while trying to verify the code, please try again`,
+      );
     if (!user.emailVerificationCode)
       throw new Error('Code not initially  saved, ');
 
@@ -382,7 +382,6 @@ export class UserService {
       email,
     );
 
-
     if (!verifyHashedCode)
       throw new BadRequestException('Invalid code inserted, please try again');
 
@@ -406,7 +405,7 @@ export class UserService {
           phone: user.phone,
           password: hashedPwd,
           role: ['driver'],
-          emailVerified: true, 
+          emailVerified: true,
         },
         trx,
       );
@@ -416,7 +415,7 @@ export class UserService {
           'Could not create user, please try again',
         );
       }
-      if(!user.nin) throw new BadRequestException('could not get nin')
+      if (!user.nin) throw new BadRequestException('could not get nin');
       // Second insert - business owner profile
       const addUserProfile = await this.userRepository.addDriverToDriverTable(
         { ...data, nin: user.nin },
@@ -456,8 +455,6 @@ export class UserService {
       hashedRefreshToken,
       savedUser.id,
     );
-
-
 
     if (!updateUserToken) throw new InternalServerErrorException();
     return { savedUser, accessToken, refreshToken };
@@ -662,7 +659,10 @@ export class UserService {
 
     const user = await this.passwordResetRepository.findUserByEmail({ email });
 
-    if (!user) throw new NotFoundException(`An error has occured while trying to verify the code, please try again`);
+    if (!user)
+      throw new NotFoundException(
+        `An error has occured while trying to verify the code, please try again`,
+      );
     if (!user.passwordResetCode) throw new Error('Code not initially  saved, ');
 
     if (user.used) {
@@ -795,5 +795,15 @@ export class UserService {
       userId,
     );
     return addRole;
+  }
+
+  async updateDriverDp(
+    dp: { secure_url: string; public_id: string },
+    userId: string,
+  ) {
+    const isDriverExist = await this.userRepository.findDriverByUserId(userId);
+    if (!isDriverExist) throw new BadRequestException('User not provided');
+    const user = await this.userRepository.updateDriverDp(dp, userId);
+    return user; 
   }
 }

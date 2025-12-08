@@ -28,6 +28,7 @@ import { ConfigService } from '@nestjs/config';
 import { EarningModule } from './earning/earning.module';
 import { BankDetailsModule } from './bank-details/bank-details.module';
 import { WeeklyProofsModule } from './weekly-proofs/weekly-proofs.module';
+import { VehicleDetailsModule } from './vehicle-details/vehicle-details.module';
 
 @Module({
   imports: [
@@ -78,6 +79,7 @@ import { WeeklyProofsModule } from './weekly-proofs/weekly-proofs.module';
     EarningModule,
     BankDetailsModule,
     WeeklyProofsModule,
+    VehicleDetailsModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService, NeonProvider, MulterService],

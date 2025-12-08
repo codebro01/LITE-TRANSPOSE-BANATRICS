@@ -16,11 +16,11 @@ export class UpdatePasswordDto {
       'New password (must be at least 8 characters with uppercase, lowercase, number, and special character)',
     example: 'NewPass123!',
     type: String,
-    minLength: 8,
+    minLength: 6,
   })
   @IsString()
   @IsNotEmpty({ message: 'New password is required' })
-  @MinLength(8, { message: 'New password must be at least 8 characters long' })
+  @MinLength(6, { message: 'New password must be at least 6 characters long' })
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
     message:
       'New password must contain uppercase, lowercase, number, and special character',

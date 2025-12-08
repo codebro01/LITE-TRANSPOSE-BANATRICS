@@ -20,12 +20,22 @@ export class UserRepository {
     @Inject('DB') private DbProvider: NodePgDatabase<typeof import('@src/db')>,
   ) {}
   async createUser(
-    data: Pick<userInsertType, 'email' | 'password' | 'phone' | 'role' | 'emailVerified'>,
+    data: Pick<
+      userInsertType,
+      'email' | 'password' | 'phone' | 'role' | 'emailVerified'
+    >,
     trx?: any,
   ) {
     const Trx = trx || this.DbProvider;
     const [user] = await Trx.insert(userTable).values(data).returning();
 
+    return user;
+  }
+
+  async findUserById(userId: string) {
+    const user = await this.DbProvider.select()
+      .from(userTable)
+      .where(eq(userTable.id, userId));
     return user;
   }
 
@@ -44,12 +54,16 @@ export class UserRepository {
 
     return addUserProfile;
   }
-  async addDriverToDriverTable(data: CreateDriverDto, userId: string,  trx?: any) {
+  async addDriverToDriverTable(
+    data: CreateDriverDto,
+    userId: string,
+    trx?: any,
+  ) {
     const Trx = trx || this.DbProvider;
 
     const [addUserProfile] = await Trx.insert(driverTable)
       .values({
-        userId: userId, // Use the actual user.id 
+        userId: userId, // Use the actual user.id
 
         ...data,
       })
@@ -149,8 +163,7 @@ export class UserRepository {
   }
 
   async resetPassword(email: string, hashedPassword: string): Promise<void> {
-    await this.DbProvider
-      .update(userTable)
+    await this.DbProvider.update(userTable)
       .set({
         password: hashedPassword,
         updatedAt: new Date(),
@@ -158,4 +171,20 @@ export class UserRepository {
       .where(eq(userTable.email, email));
   }
 
+  async findDriverByUserId(userId: string) {
+    const user = await this.DbProvider.select()
+      .from(driverTable)
+      .where(eq(driverTable.userId, userId));
+    return user;
+  }
+
+  async updateDriverDp(
+    dp: { secure_url: string; public_id: string },
+    userId: string,
+  ) {
+    const [driver] = await this.DbProvider.update(driverTable)
+      .set({ dp: dp })
+      .where(eq(driverTable.userId, userId)).returning({db: driverTable.dp});
+    return driver;
+  }
 }

@@ -69,14 +69,24 @@ export class CreateDriverDto {
 
   // Driver fields
   @ApiProperty({
-    description: 'Driver full name',
+    description: 'Driver firstname',
     example: 'John Doe',
     maxLength: 255,
   })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  fullName: string;
+  firstname: string;
+
+  @ApiProperty({
+    description: 'Driver lastname',
+    example: 'John Doe',
+    maxLength: 255,
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  lastname: string;
 
   @ApiPropertyOptional({
     description: 'Driver profile picture URL',
