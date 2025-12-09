@@ -36,6 +36,34 @@
       "when": 1765180846843,
       "tag": "0004_military_roulette",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1765231802409,
+      "tag": "0005_condemned_adam_destine",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1765231899626,
+      "tag": "0006_early_vance_astro",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1765232423364,
+      "tag": "0007_bright_captain_cross",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1765236548806,
+      "tag": "0008_polite_nomad",
+      "breakpoints": true
     }
   ]
 }

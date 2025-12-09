@@ -184,7 +184,7 @@ export class UserRepository {
   ) {
     const [driver] = await this.DbProvider.update(driverTable)
       .set({ dp: dp })
-      .where(eq(driverTable.userId, userId)).returning({db: driverTable.dp});
+      .where(eq(driverTable.userId, userId)).returning({dp: driverTable.dp});
     return driver;
   }
 }

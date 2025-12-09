@@ -1,0 +1,1 @@
+ALTER TABLE "bank_details" ADD CONSTRAINT "bank_details_transfer_recipient_code_unique" UNIQUE("transfer_recipient_code");

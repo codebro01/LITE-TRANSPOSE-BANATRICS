@@ -42,7 +42,7 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
     if (errorCode === 'ETIMEDOUT') {
       return response.status(HttpStatus.GATEWAY_TIMEOUT).json({
         statusCode: HttpStatus.GATEWAY_TIMEOUT,
-        message: 'Database connection timed out',
+        message: 'Unstable network connection!!!',
         error: 'TIMEOUT',
         timestamp: new Date().toISOString(),
         path: request.url,
@@ -74,7 +74,9 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
       return response.status(HttpStatus.BAD_REQUEST).json({
         statusCode: HttpStatus.BAD_REQUEST,
         message:
-          exception?.response?.message || 'Bad request was sent to the server',
+          exception?.response?.message ||
+          exception?.response?.data?.message ||
+          'Bad request was sent to the server',
         error: 'Bad Request',
         timestamp: new Date().toISOString(),
         path: request.url,

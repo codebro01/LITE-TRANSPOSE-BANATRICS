@@ -1,0 +1,1 @@
+ALTER TABLE "bank_details" ALTER COLUMN "bank_code" SET DATA TYPE varchar(10);

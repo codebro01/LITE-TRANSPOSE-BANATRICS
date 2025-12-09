@@ -28,6 +28,7 @@ export class UpdateDriverDpDto {
         description: "a url of the profile picture", 
         type: DpDto, 
     })
+    @IsNotEmpty({message: 'db object should not be empty'})
     @ValidateNested()
     @Type(() => DpDto)
     dp: DpDto

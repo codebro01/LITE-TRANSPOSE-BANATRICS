@@ -1,0 +1,1 @@
+ALTER TABLE "bank_details" ADD CONSTRAINT "bank_details_userId_unique" UNIQUE("userId");

@@ -1,0 +1,1 @@
+ALTER TABLE "bank_details" ADD COLUMN "bank_name" varchar(255);

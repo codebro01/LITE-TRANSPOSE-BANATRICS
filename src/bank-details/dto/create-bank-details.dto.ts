@@ -25,7 +25,7 @@ export class CreateBankDetailsDto {
     })
     @IsNotEmpty() 
     @IsString()
-    bankId: number;
+    bankId?: number;
 
     @ApiProperty({
         example: "056", 

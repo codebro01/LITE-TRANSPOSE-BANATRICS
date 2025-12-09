@@ -83,7 +83,7 @@ export class UploadController {
       file.buffer,
       'my-folder',
     );
-    return { uploaded: result };
+    return { secure_url: result.secure_url, public_id: result.public_id };
   }
 
   @Post('images')

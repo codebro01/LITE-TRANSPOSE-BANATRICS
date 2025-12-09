@@ -10,7 +10,7 @@ export class VerifyBankDetailsDto {
   @ApiProperty({
     description: 'Account Number of the user',
     example: '0001234567',
-    maxLength: 200,
+    maxLength: 10,
     type: String,
   })
   @IsNotEmpty()
@@ -26,6 +26,6 @@ export class VerifyBankDetailsDto {
   })
   @IsNotEmpty()
   @IsString({ message: 'Bank code must be a string' })
-  @MaxLength(3, { message: 'Bank code cannot exceed 10 characters' })
+  @MaxLength(10, { message: 'Bank code cannot exceed 10 characters' })
   bankCode: string;
 }

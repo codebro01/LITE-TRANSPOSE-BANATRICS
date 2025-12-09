@@ -13,7 +13,7 @@ export class VehicleDetailsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
-  @Patch(':id')
+  @Patch('update')
   async update(
     @Body() body: CreateVehicleDetailDto,
     @Req() req: Request, 

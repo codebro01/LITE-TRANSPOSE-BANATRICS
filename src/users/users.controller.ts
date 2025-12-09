@@ -32,7 +32,6 @@ import { createBusinessOwnerDto } from '@src/users/dto/create-business-owner.dto
 import { InitializeDriverCreationDto } from '@src/users/dto/initialize-driver-creation.dto';
 import { CreateDriverDto } from '@src/users/dto/create-driver.dto';
 import { EarningService } from '@src/earning/earning.service';
-import { VerifyBankDetailsDto } from '@src/earning/dto/verify-bank-details.dto';
 import { UpdateDriverDpDto } from '@src/users/dto/update-driver-dp.dto';
 
 @Controller('users')
@@ -420,22 +419,6 @@ export class UserController {
       message: 'success',
       data: safeUser,
     });
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('driver')
-  @Patch('update/driver/bank-information')
-  async updateBankInformation(
-    @Body() body: VerifyBankDetailsDto,
-    @Req() req: Request,
-  ) {
-    const { id: userId } = req.user;
-    const updateBankInfo = await this.earningService.saveUserBankInformation(
-      body,
-      userId,
-    );
-
-    return updateBankInfo;
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

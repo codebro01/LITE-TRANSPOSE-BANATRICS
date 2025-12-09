@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { BankDetailsRepository } from '@src/bank-details/repository/create-bank-details-repository';
 import { CreateTransferRecipientDto } from '@src/earning/dto/create-transfer-recipients.dto';
 import { InitializeEarningDto } from '@src/earning/dto/initialize-earning.dto';
-import { VerifyBankDetailsDto } from '@src/earning/dto/verify-bank-details.dto';
+import { VerifyBankDetailsDto } from '@src/bank-details/dto/verify-bank-details.dto';
 import { generateSecureRef } from '@src/payment/repository/payment.repository';
 import { firstValueFrom } from 'rxjs';
 
