@@ -4,11 +4,11 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 // import { UpdateEarningDto } from './dto/update-earning.dto';
 import { ConfigService } from '@nestjs/config';
 import { BankDetailsRepository } from '@src/bank-details/repository/create-bank-details-repository';
-import { CreateTransferRecipientDto } from '@src/earning/dto/create-transfer-recipients.dto';
 import { InitializeEarningDto } from '@src/earning/dto/initialize-earning.dto';
-import { VerifyBankDetailsDto } from '@src/bank-details/dto/verify-bank-details.dto';
 import { generateSecureRef } from '@src/payment/repository/payment.repository';
 import { firstValueFrom } from 'rxjs';
+import { CreateEarningDto } from '@src/earning/dto/create-earning.dto';
+import { EarningRepository } from '@src/earning/repository/earning.repository';
 
 @Injectable()
 export class EarningService {
@@ -18,6 +18,7 @@ export class EarningService {
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     private readonly bankDetailsRepository: BankDetailsRepository,
+    private readonly earningRepository: EarningRepository,
   ) {
     const key = this.configService.get<string>('PAYSTACK_SECRET_KEY');
     if (!key) {
@@ -33,7 +34,8 @@ export class EarningService {
     };
   }
 
-  async initializeWithdrawal(data: InitializeEarningDto) {
+  // * admin section
+  async initializePayout(data: InitializeEarningDto) {
     const response = await firstValueFrom(
       this.httpService.post(
         `${this.baseUrl}/transfer`,
@@ -51,75 +53,67 @@ export class EarningService {
     return response.data;
   }
 
-  // * admin section
-
-  async verifyBankDetails(data: VerifyBankDetailsDto) {
-    const response = await firstValueFrom(
-      this.httpService.get(
-        `${this.baseUrl}/bank/resolve?accountNumber=${data.accountNumber}&bank_code=${data.bankCode}`,
-        { headers: this.getHeaders() },
-      ),
-    );
-
-    return response;
-  }
-
-  async createTransferRecipients(data: CreateTransferRecipientDto) {
-    const response = await firstValueFrom(
-      this.httpService.post(
-        `${this.baseUrl}/transferrecipient`,
-        {
-          type: 'nuban',
-          name: data.accountName,
-          account_number: data.accountNumber,
-          bank_code: data.bankCode,
-          currency: 'NGN',
-        },
-        {
-          headers: this.getHeaders(),
-        },
-      ),
-    );
-
-    return response;
-  }
-
-  async saveUserBankInformation(data: VerifyBankDetailsDto, userId: string) {
-    const getVerifiedBankDetails = await this.verifyBankDetails({
-      accountNumber: data.accountNumber,
-      bankCode: data.bankCode,
-    });
-    if (!getVerifiedBankDetails)
+  async requestPayouts(data: CreateEarningDto, userId: string) {
+    const isPendingPayout =
+      await this.earningRepository.findEarningsByApproved(userId);
+    if (isPendingPayout.length > 0)
       throw new BadRequestException(
-        'Could not pull account information using data provided',
+        'You already have a pending payout, please kindly wait while we clear that one before applying for another payout!!!',
       );
-    const { account_number, account_name, bank_id } =
-      getVerifiedBankDetails.data;
-    const createTransferRecipients = await this.createTransferRecipients({
-      accountName: account_name,
-      accountNumber: account_number,
-      bankCode: data.bankCode,
-    });
+    const balance = await this.earningRepository.availableBalance(userId);
 
-    const {
-      account_number: accNumber,
-      name: accountName,
-      bank_code: bnkCode,
-    } = createTransferRecipients.data.details;
+    if (data.amount < balance)
+      throw new BadRequestException('Insufficient fund');
 
-    const saveBankRecords =
-      await this.bankDetailsRepository.createBankDetailsRecord(
-        {
-          userId,
-          accountName: accountName,
-          accountNumber: accNumber,
-          bankCode: bnkCode,
-          bankId: bank_id,
-          recipientCode: createTransferRecipients.data.recipient_code,
-        },
-        userId,
-      );
+    const earnings = await this.earningRepository.requestPayouts(data, userId);
 
-    return saveBankRecords;
+    return earnings;
+  }
+
+  async updateEarningApprovedStatus(approved: boolean, userId: string) {
+    const earning = await this.earningRepository.updateEarningApprovedStatus(
+      approved,
+      userId,
+    );
+
+    return earning;
+  }
+
+  async listAllUnapprovedEarnings(userId: string) {
+    const earning =
+      await this.earningRepository.getAllUnapprovedEarnings(userId);
+
+    return earning;
+  }
+  async listAllTransactions(userId: string) {
+    const earning = await this.earningRepository.listAllTransactions(userId);
+
+    return earning;
+  }
+
+  async earningDashboard(userId: string) {
+    const [
+      getTotalEarnings,
+      availableBalance,
+      pendingBalance,
+      amountMadeThisMonth,
+    ] = await Promise.all([
+      this.earningRepository.getTotalEarnings(userId),
+      this.earningRepository.availableBalance(userId),
+      this.earningRepository.pendingBalance(userId),
+      this.earningRepository.amountMadeThisMonth(userId),
+    ]);
+
+    return {
+      getTotalEarnings,
+      availableBalance,
+      pendingBalance,
+      amountMadeThisMonth,
+    };
+  }
+
+  async monthlyEarningBreakdown(userId: string) {
+    const earnings = await this.earningRepository.monthlyEarningBreakdown(userId);
+    return earnings;
   }
 }

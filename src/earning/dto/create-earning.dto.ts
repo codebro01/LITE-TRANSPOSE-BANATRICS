@@ -18,6 +18,12 @@ export enum PaymentMethodType {
   WALLET = 'wallet',
 }
 
+export enum ApprovalStatusType {
+  REJECTED = 'REJECTED',
+  APPROVED = 'APPROVED',
+  UNAPPROVED = 'UNAPPROVED',
+}
+
 export enum PaymentStatus {
   PENDING = 'pending',
   PAID = 'paid',
@@ -64,6 +70,23 @@ export class CreateEarningDto {
   @IsString()
   @IsOptional()
   reference?: string;
+
+
+  @ApiPropertyOptional({
+    description: 'That is the paystack recipient code for this user',
+    example: 'ly_skef3fjg3',
+  })
+  @IsString()
+  @IsNotEmpty()
+  recipientCode: string;
+
+  @ApiPropertyOptional({
+    description: 'if',
+    example: 'ly_skef3fjg3',
+  })
+  @IsString()
+  @IsOptional()
+  rejectionReason?: string;
 
   @ApiPropertyOptional({
     description: 'Date when payment was initiated',

@@ -40,7 +40,7 @@ export class InitializeEarningDto {
     type: String,
   })
   @IsOptional()
-  @IsString({ message: 'Reference must be a string' })
+  @IsString({ message: 'Reason must be a string' })
   @MaxLength(200, { message: 'Reference cannot exceed 200 characters' })
   reason?: string;
 

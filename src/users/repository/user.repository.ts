@@ -182,7 +182,6 @@ export class UserRepository {
     dp: { secure_url: string; public_id: string },
     userId: string,
   ) {
-    console.log(userId)
     const [driver] = await this.DbProvider.update(driverTable)
       .set({ dp: dp })
       .where(eq(driverTable.userId, userId)).returning({dp: driverTable.dp});
