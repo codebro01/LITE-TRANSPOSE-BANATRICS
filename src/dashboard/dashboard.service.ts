@@ -11,4 +11,9 @@ export class HomeDashboardService {
       const result = await this.homeDashboardsRepository.businessOwnerHomeDashboard(userId);
       return result;
   }
+
+  async driverHomeDashboard(userId: string) {
+      const result = await this.homeDashboardsRepository.driverHomeDashboard(userId);
+      return result;
+  }
 }

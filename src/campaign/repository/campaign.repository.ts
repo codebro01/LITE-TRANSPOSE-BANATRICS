@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { and, eq, sql, ne } from 'drizzle-orm';
+import { and, eq, sql, ne, lt } from 'drizzle-orm';
 import { campaignTable } from '@src/db/campaigns';
 import { MaintenanceType, StatusType } from '../dto/publishCampaignDto';
 import { driverCampaignTable } from '@src/db';
@@ -262,13 +262,20 @@ export class CampaignRepository {
   //!===================================drivers db calls ===========================================//
 
   async findDriverCampaignById(campaignId: string, userId: string) {
-const campaign = await this.DbProvider.select().from(driverCampaignTable).where(and(eq(driverCampaignTable.campaignId, campaignId), eq(driverCampaignTable.userId, userId)))
-  return campaign;
-}
+    const campaign = await this.DbProvider.select()
+      .from(driverCampaignTable)
+      .where(
+        and(
+          eq(driverCampaignTable.campaignId, campaignId),
+          eq(driverCampaignTable.userId, userId),
+        ),
+      );
+    return campaign;
+  }
 
   async getAllAvailableCampaigns() {
     const campaigns = await this.DbProvider.select({
-      id: campaignTable.id, 
+      id: campaignTable.id,
       title: campaignTable.campaignName,
       state: campaignTable.state,
       duration: campaignTable.duration,
@@ -366,7 +373,7 @@ const campaign = await this.DbProvider.select().from(driverCampaignTable).where(
       activeStatus: driverCampaignTable.active,
       title: campaignTable.campaignName,
       state: campaignTable.state,
-      driverCampaignStatus: driverCampaignTable.campaignStatus, 
+      driverCampaignStatus: driverCampaignTable.campaignStatus,
       startDate: campaignTable.startDate,
       duration: campaignTable.duration,
       availability: campaignTable.availability,
@@ -398,7 +405,10 @@ const campaign = await this.DbProvider.select().from(driverCampaignTable).where(
       .where(
         and(
           eq(driverCampaignTable.userId, userId),
-          eq(driverCampaignTable.campaignStatus, DriverCampaignStatusType.COMPLETED),
+          eq(
+            driverCampaignTable.campaignStatus,
+            DriverCampaignStatusType.COMPLETED,
+          ),
         ),
       )
       .leftJoin(
@@ -410,13 +420,71 @@ const campaign = await this.DbProvider.select().from(driverCampaignTable).where(
   }
 
   async driverApplyForCampaign(data: CreateDriverCampaignDto, userId: string) {
-    const alreadyApplied = await this.findDriverCampaignById(data.campaignId, userId);
+    const alreadyApplied = await this.findDriverCampaignById(
+      data.campaignId,
+      userId,
+    );
 
-    if(alreadyApplied.length > 0) throw  new BadRequestException('You have already applied for this  campaign!!!')
-     await this.DbProvider.insert(driverCampaignTable).values({
+    if (alreadyApplied.length > 0)
+      throw new BadRequestException(
+        'You have already applied for this  campaign!!!',
+      );
+    await this.DbProvider.insert(driverCampaignTable).values({
       ...data,
       userId,
     });
-  
+  }
+
+  // ! ============================ admin section ===============================
+  async handleCampaignStatusUpdate() {
+
+      const now = new Date();
+
+      const result = await this.DbProvider.update(campaignTable)
+        .set({
+          statusType: 'completed',
+          updatedAt: now,
+        })
+        .where(
+          and(
+            lt(campaignTable.endDate, now),
+            ne(campaignTable.statusType, 'completed'),
+          ),
+        )
+        .returning({
+          id: campaignTable.id,
+          campaignName: campaignTable.campaignName,
+        });
+
+        return result;
+    
+  }
+
+  async updateCampaignStatusManually() {
+
+   
+      const now = new Date();
+
+      const result = await this.DbProvider.update(campaignTable)
+        .set({
+          statusType: 'completed',
+          updatedAt: now,
+        })
+        .where(
+          and(
+            lt(campaignTable.endDate, now),
+            ne(campaignTable.statusType, 'completed'),
+          ),
+        )
+        .returning({
+          id: campaignTable.id,
+          campaignName: campaignTable.campaignName,
+        });
+
+      return {
+        success: true,
+        updatedCount: result.length,
+        campaigns: result,
+      };
   }
 }

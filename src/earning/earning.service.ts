@@ -79,9 +79,9 @@ export class EarningService {
     return earning;
   }
 
-  async listAllUnapprovedEarnings(userId: string) {
+async listAllUnapprovedEarnings() {
     const earning =
-      await this.earningRepository.getAllUnapprovedEarnings(userId);
+      await this.earningRepository.getAllUnapprovedEarnings();
 
     return earning;
   }

@@ -106,7 +106,7 @@ async monthlyEarningBreakdown(userId: string) {
     return earnings;
   }
 
-  async getAllUnapprovedEarnings(userId: string, trx?: any) {
+  async getAllUnapprovedEarnings( trx?: any) {
     const Trx = trx || this.DbProvider;
 
     const earnings = await Trx.select()
@@ -114,7 +114,6 @@ async monthlyEarningBreakdown(userId: string) {
       .where(
         and(
           eq(earningsTable.approved, ApprovalStatusType.UNAPPROVED),
-          eq(earningsTable.userId, userId),
         ),
       );
 

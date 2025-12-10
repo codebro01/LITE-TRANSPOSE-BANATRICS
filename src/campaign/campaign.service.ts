@@ -20,7 +20,12 @@ import {
 } from '@src/notification/dto/createNotificationDto';
 import { PackageRepository } from '@src/package/repository/package.repository';
 import { campaignSelectType } from '@src/db';
-import { CreateDriverCampaignDto, DriverCampaignStatusType } from '@src/campaign/dto/create-driver-campaign.dto';
+import {
+  CreateDriverCampaignDto,
+  DriverCampaignStatusType,
+} from '@src/campaign/dto/create-driver-campaign.dto';
+import { CronExpression, Cron } from '@nestjs/schedule';
+
 
 @Injectable()
 export class CampaignService {
@@ -454,7 +459,8 @@ export class CampaignService {
   }
 
   async driverCampaignDashboard(userId: string) {
-    const result =   await this.campaignRepository.driverCampaignDashboard(userId);
+    const result =
+      await this.campaignRepository.driverCampaignDashboard(userId);
 
     const { campaignCounts, eligibleCampaignsCount } = result;
 
@@ -465,7 +471,7 @@ export class CampaignService {
         ? ((totalCompletedCampaigns / eligibleCampaigns) * 100).toFixed(2)
         : 0;
 
-      return {totalActiveCampaigns, totalCompletedCampaigns, successRate}
+    return { totalActiveCampaigns, totalCompletedCampaigns, successRate };
   }
 
   async getDriverCampaignsById(userId: string) {
@@ -511,21 +517,37 @@ export class CampaignService {
     return calc;
   }
 
-  async filterDriverCampaigns(filter: DriverCampaignStatusType, userId: string) {
-   return  await this.campaignRepository.filterDriverCampaigns(filter, userId);
+  async filterDriverCampaigns(
+    filter: DriverCampaignStatusType,
+    userId: string,
+  ) {
+    return await this.campaignRepository.filterDriverCampaigns(filter, userId);
   }
   async getAllActiveCampaigns(userId: string) {
-   return  await this.campaignRepository.getAllActiveCampaigns(userId);
+    return await this.campaignRepository.getAllActiveCampaigns(userId);
   }
   async getAllCompletedCampaigns(userId: string) {
-   return  await this.campaignRepository.getAllCompletedCampaigns(userId);
+    return await this.campaignRepository.getAllCompletedCampaigns(userId);
   }
 
   async driverApplyForCampaign(data: CreateDriverCampaignDto, userId: string) {
-     await this.campaignRepository.driverApplyForCampaign(data, userId);
+    await this.campaignRepository.driverApplyForCampaign(data, userId);
   }
 
-  
+  // !====================== admin section ===================================================
 
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async handleCampaignStatusUpdate() {
+    console.log('Running campaign status update job...');
 
+    const result = await this.campaignRepository.handleCampaignStatusUpdate();
+
+    return result;
+  }
+
+  async updateCampaignStatusManually() {
+    const result = await this.campaignRepository.updateCampaignStatusManually();
+
+    return result;
+  }
 }

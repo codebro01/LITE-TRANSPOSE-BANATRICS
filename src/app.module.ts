@@ -29,6 +29,8 @@ import { EarningModule } from './earning/earning.module';
 import { BankDetailsModule } from './bank-details/bank-details.module';
 import { WeeklyProofsModule } from './weekly-proofs/weekly-proofs.module';
 import { VehicleDetailsModule } from './vehicle-details/vehicle-details.module';
+import { ScheduleModule } from '@nestjs/schedule';
+
 
 @Module({
   imports: [
@@ -58,6 +60,7 @@ import { VehicleDetailsModule } from './vehicle-details/vehicle-details.module';
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(), 
     UserModule,
     AuthModule,
     SupabaseModule,
