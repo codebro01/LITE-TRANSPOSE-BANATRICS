@@ -71,6 +71,13 @@
       "when": 1765339353773,
       "tag": "0009_shallow_johnny_storm",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1765344433815,
+      "tag": "0010_sour_rick_jones",
+      "breakpoints": true
     }
   ]
 }

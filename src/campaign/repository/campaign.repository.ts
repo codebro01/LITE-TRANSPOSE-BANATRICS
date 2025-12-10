@@ -309,8 +309,8 @@ export class CampaignRepository {
   async driverCampaignDashboard(userId: string) {
     const [calc, campaignsExcludingPendingApproval] = await Promise.all([
       this.DbProvider.select({
-        totalActiveCampaigns: sql<number>`COUNT(CASE WHEN active = true THEN 1 END) `,
-        totalCompletedCampaigns: sql<number>`COUNT(CASE WHEN campaignStatus = 'completed' THEN 1 END)`,
+        totalActiveCampaigns: sql<number>`COUNT(CASE WHEN active_status = true THEN 1 END) `,
+        totalCompletedCampaigns: sql<number>`COUNT(CASE WHEN campaign_status = 'completed' THEN 1 END)`,
       })
         .from(driverCampaignTable)
         .where(eq(driverCampaignTable.userId, userId)),
