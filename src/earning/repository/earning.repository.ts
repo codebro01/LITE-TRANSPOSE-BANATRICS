@@ -191,7 +191,7 @@ async monthlyEarningBreakdown(userId: string) {
     const Trx = trx || this.DbProvider;
 
     const earnings = await Trx.update(earningsTable)
-      .set({ approved: ApprovalStatusType.APPROVED, updatedAt: new Date() })
+      .set({ approved: ApprovalStatusType.APPROVED, paymentStatus: "PAID",  updatedAt: new Date() })
       .where(
         and(
           eq(earningsTable.approved, ApprovalStatusType.UNAPPROVED),

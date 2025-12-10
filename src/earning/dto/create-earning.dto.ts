@@ -5,8 +5,6 @@ import {
   IsNumber,
   IsString,
   IsUUID,
-  IsEnum,
-  IsOptional,
   Min,
 } from 'class-validator';
 
@@ -63,14 +61,6 @@ export class CreateEarningDto {
   amount: number;
 
 
-  @ApiPropertyOptional({
-    description: 'Payment reference number',
-    example: 'REF-ABC123XYZ',
-  })
-  @IsString()
-  @IsOptional()
-  reference?: string;
-
 
   @ApiPropertyOptional({
     description: 'That is the paystack recipient code for this user',
@@ -79,38 +69,4 @@ export class CreateEarningDto {
   @IsString()
   @IsNotEmpty()
   recipientCode: string;
-
-  @ApiPropertyOptional({
-    description: 'if',
-    example: 'ly_skef3fjg3',
-  })
-  @IsString()
-  @IsOptional()
-  rejectionReason?: string;
-
-  @ApiPropertyOptional({
-    description: 'Date when payment was initiated',
-    example: '2025-12-05T10:30:00Z',
-  })
-  @IsString()
-  @IsOptional()
-  dateInitiated?: string;
-
-  @ApiProperty({
-    description: 'Payment method used',
-    example: PaymentMethodType.BANK_TRANSFER,
-    enum: PaymentMethodType,
-  })
-  @IsEnum(PaymentMethodType)
-  @IsNotEmpty()
-  paymentMethod: PaymentMethodType;
-
-  @ApiProperty({
-    description: 'Current payment status',
-    example: PaymentStatus.PENDING,
-    enum: PaymentStatus,
-  })
-  @IsEnum(PaymentStatus)
-  @IsNotEmpty()
-  paymentStatus: PaymentStatus;
 }

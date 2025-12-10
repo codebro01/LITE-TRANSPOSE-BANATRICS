@@ -2,7 +2,7 @@ import { campaignTable } from "@src/db/campaigns";
 import { userTable } from "@src/db/users";
 import { pgTable, boolean,  timestamp,  pgEnum,  uuid } from "drizzle-orm/pg-core";
 
-export const driverCampaignStatusType = pgEnum('driver_campaign_status_type', [ 'completed', 'pending_approval', 'due_soon', 'approved'])
+export const driverCampaignStatusType = pgEnum('driver_campaign_status_type', [ 'completed', 'pending_approval', 'due_soon', 'approved', 'rejected'])
 
 export const driverCampaignTable = pgTable('driver_campaigns', {
     id: uuid('id').defaultRandom().primaryKey().notNull(), 

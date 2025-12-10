@@ -11,6 +11,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 export const approvalStatusType = pgEnum('approval_status_type', ['REJECTED', 'APPROVED', 'UNAPPROVED'])
+export const earningPaymentStatusType = pgEnum('earning_payment_status_type', ['PAID', 'UNPAID'])
 
 export const earningsTable = pgTable('earnings', {
   campaignId: uuid('campaignId').references(() => campaignTable.id, {
@@ -21,11 +22,11 @@ export const earningsTable = pgTable('earnings', {
   }),
   amount: doublePrecision('amount').notNull(),
   reference: text('reference'),
-  dateInitiated: text('date_initiated'),
-  paymentMethod: text('payment_method').notNull(),
+  dateInitiated: timestamp('date_initiated').defaultNow().notNull(),
+  paymentMethod: text('payment_method').notNull().default('transfer'),
   recipientCode: varchar('recipient_code', { length: 255 }).notNull(),
   rejectionReason: varchar('rejection_reason', { length: 255 }),
-  paymentStatus: text('payment_status').notNull(),
+  paymentStatus: text('payment_status').notNull().default('UNPAID'),
   approved: approvalStatusType('approved').default('UNAPPROVED'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

@@ -6,10 +6,10 @@ import {
   Patch,
   Param,
   Req,
-  Res, 
+  Res,
   UseGuards,
   HttpStatus,
-  Query
+  Query,
 } from '@nestjs/common';
 import { EarningService } from './earning.service';
 import { CreateEarningDto } from './dto/create-earning.dto';
@@ -19,6 +19,7 @@ import { Roles } from '@src/auth/decorators/roles.decorators';
 import { InitializeEarningDto } from '@src/earning/dto/initialize-earning.dto';
 import type { Response } from 'express';
 import type { Request } from '@src/types';
+import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @Controller('earning')
 export class EarningController {
@@ -28,6 +29,15 @@ export class EarningController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
   @Post('request')
+  @ApiBearerAuth()
+  @ApiOperation({
+    description: 'Request payout',
+    summary: 'Driver requests payout whick will be approved by the admin',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Request submitted successfully',
+  })
   async requestPayouts(
     @Body() body: CreateEarningDto,
     @Req() req: Request,
@@ -35,29 +45,40 @@ export class EarningController {
   ) {
     const { id: userId } = req.user;
     const earning = await this.earningService.requestPayouts(body, userId);
-    res.status(HttpStatus.OK).json({ message: 'success', data: earning });
+    res.status(HttpStatus.CREATED).json({ message: 'success', data: earning });
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
   @Get('list/all')
-  async listAllTransactions(
-    @Req() req: Request,
-    @Res() res: Response,
-  ) {
+  @ApiBearerAuth()
+  @ApiOperation({
+    description: 'List all transactions',
+    summary: 'List all drivers transactions',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Fetched all transaction  successfully',
+  })
+  async listAllTransactions(@Req() req: Request, @Res() res: Response) {
     const { id: userId } = req.user;
     const earning = await this.earningService.listAllTransactions(userId);
     res.status(HttpStatus.OK).json({ message: 'success', data: earning });
   }
 
-
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
   @Get('dashboard')
-  async earningDashboard(
-    @Req() req: Request,
-    @Res() res: Response,
-  ) {
+  @ApiBearerAuth()
+  @ApiOperation({
+    description: 'Earning Dashboard',
+    summary: 'Dashboard that contains infomation about drivers earnings',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Dasboard Data fetched successfully',
+  })
+  async earningDashboard(@Req() req: Request, @Res() res: Response) {
     const { id: userId } = req.user;
     const earning = await this.earningService.earningDashboard(userId);
     res.status(HttpStatus.OK).json({ message: 'success', data: earning });
@@ -65,23 +86,36 @@ export class EarningController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
-  @Get('dashboard')
-  async monthlyEarningBreakdown(
-    @Req() req: Request,
-    @Res() res: Response,
-  ) {
+  @Get('monthly-earnings')
+  @ApiBearerAuth()
+  @ApiOperation({
+    description: 'Breakdown of monthly earnings',
+    summary: 'Monthly earning information',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Fetched monthly earning successfully',
+  })
+  async monthlyEarningBreakdown(@Req() req: Request, @Res() res: Response) {
     const { id: userId } = req.user;
     const earning = await this.earningService.monthlyEarningBreakdown(userId);
     res.status(HttpStatus.OK).json({ message: 'success', data: earning });
   }
-
- 
 
   // ! ===================================  admin section   ==============================
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Post('/initialize')
+  @ApiBearerAuth()
+  @ApiOperation({
+    description: 'Initialize withdrawal',
+    summary: 'Admin initialize withdrawal',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Withdrawal initialized',
+  })
   async initializeEarnings(
     @Body() body: InitializeEarningDto,
     @Res() res: Response,
@@ -93,9 +127,18 @@ export class EarningController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Patch('status/update/:userId')
+  @ApiBearerAuth()
+  @ApiOperation({
+    description: 'Update earning approved status',
+    summary: 'Update earning approved status',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Earning  approved status updated successfully',
+  })
   async updateEarningApprovedStatus(
     @Query('approved') approved: boolean,
-    @Param('userId') userId: string, 
+    @Param('userId') userId: string,
     @Req() req: Request,
     @Res() res: Response,
   ) {
@@ -110,6 +153,15 @@ export class EarningController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Get('list/unapproved')
+  @ApiBearerAuth()
+  @ApiOperation({
+    description: 'Admin lists and see all unapproved payouts',
+    summary: 'list all unapproved payouts',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Data fetched successfully',
+  })
   async listAllUnapprovedEarnings(
     @Query('approved') approved: boolean,
     // @Req() req: Request,

@@ -8,6 +8,7 @@ import {
   CreateDriverCampaignDto,
   DriverCampaignStatusType,
 } from '@src/campaign/dto/create-driver-campaign.dto';
+import { updatePricePerDriverPerCampaign } from '@src/campaign/dto/update-price-per-driver-per-campaign.dto';
 
 export type CampaignStatus = 'draft' | 'pending' | 'active' | 'completed';
 export type packageType = 'starter' | 'basic' | 'premium' | 'custom';
@@ -486,5 +487,12 @@ export class CampaignRepository {
         updatedCount: result.length,
         campaigns: result,
       };
+  }
+
+  async updatePricePerDriverPerCampaign(data: updatePricePerDriverPerCampaign) {
+      const campaign = await this.DbProvider.update(campaignTable)
+        .set({ earningPerDriver: data.earningPerDriver })
+        .where(eq(campaignTable.id, data.campaignId));
+        return campaign;
   }
 }

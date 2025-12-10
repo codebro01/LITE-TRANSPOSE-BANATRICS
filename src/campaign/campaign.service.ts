@@ -25,6 +25,7 @@ import {
   DriverCampaignStatusType,
 } from '@src/campaign/dto/create-driver-campaign.dto';
 import { CronExpression, Cron } from '@nestjs/schedule';
+import { updatePricePerDriverPerCampaign } from '@src/campaign/dto/update-price-per-driver-per-campaign.dto';
 
 
 @Injectable()
@@ -547,6 +548,12 @@ export class CampaignService {
 
   async updateCampaignStatusManually() {
     const result = await this.campaignRepository.updateCampaignStatusManually();
+
+    return result;
+  }
+  async updatePricePerDriverPerCampaign(data:updatePricePerDriverPerCampaign) {
+    const result =
+      await this.campaignRepository.updatePricePerDriverPerCampaign(data);
 
     return result;
   }

@@ -33,6 +33,7 @@ import {
 import type { Response } from 'express';
 import type { Request } from '@src/types';
 import { CreateDriverCampaignDto, DriverCampaignStatusType } from '@src/campaign/dto/create-driver-campaign.dto';
+import { updatePricePerDriverPerCampaign } from '@src/campaign/dto/update-price-per-driver-per-campaign.dto';
 
 @ApiTags('Campaign')
 @Controller('campaign')
@@ -478,6 +479,17 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
   @Get('list')
+  @ApiBearerAuth()
+  @ApiOperation({
+    description:
+      'lists all the available campaign in the db that is available for application',
+    summary:
+      'lists all the available campaign in the db that is available for application',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Listed all available campaigns succesfully',
+  })
   async getAllAVailableCampaigns() {
     const campaigns = await this.campaignService.getAllAvailableCampaigns();
     return { message: 'success', data: campaigns };
@@ -486,6 +498,15 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
   @Post('driver/appy')
+  @ApiBearerAuth()
+  @ApiOperation({
+    description: 'Apply for campaign',
+    summary: 'Apply for campaign',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Application successful',
+  })
   async driverApplyForCampaign(
     @Req() req: Request,
     @Res() res: Response,
@@ -507,6 +528,17 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
   @Get('driver/dashboard')
+  @ApiBearerAuth()
+  @ApiOperation({
+    description:
+      "Driver campaign's page dashboard. Dashboard contains information about driver campaigns",
+    summary:
+      "Driver campaign's page dashboard. Dashboard contains information about driver campaigns",
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Fetched Dashboard data successfully!',
+  })
   async driverCamapaignDashboard(@Req() req: Request, @Res() res: Response) {
     const { id: userId } = req.user;
     const campaign = await this.campaignService.driverCampaignDashboard(userId);
@@ -519,6 +551,17 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
   @Get('driver/filter')
+  @ApiBearerAuth()
+  @ApiOperation({
+    description:
+      'Filter campaign by ones of this types pending_approval, completed, approved',
+    summary:
+      'Filter campaign by ones of this types pending_approval, completed, approved',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Listed all campaigns by filter succesfully',
+  })
   async filterDriverCampaign(
     @Req() req: Request,
     @Res() res: Response,
@@ -530,22 +573,40 @@ export class CampaignController {
       userId,
     );
 
-    res.status(HttpStatus.CREATED).json({ message: 'success', data: campaign });
+    res.status(HttpStatus.OK).json({ message: 'success', data: campaign });
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
   @Get('driver/active')
+  @ApiBearerAuth()
+  @ApiOperation({
+    description: 'Fetch all drivers active campaigns',
+    summary: 'Fetch all drivers active campaigns',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Active campaigns fetched successfully',
+  })
   async getallActiveCampaigns(@Req() req: Request, @Res() res: Response) {
     const { id: userId } = req.user;
     const campaign = await this.campaignService.getAllActiveCampaigns(userId);
 
-    res.status(HttpStatus.CREATED).json({ message: 'success', data: campaign });
+    res.status(HttpStatus.OK).json({ message: 'success', data: campaign });
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
   @Get('driver/completed')
+  @ApiBearerAuth()
+  @ApiOperation({
+    description: 'Fetch all drivers completed campaigns',
+    summary: 'Fetch all drivers completed campaigns',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'completed campaigns fetched successfully',
+  })
   async getallCompletedCampaigns(@Req() req: Request, @Res() res: Response) {
     const { id: userId } = req.user;
     const campaign =
@@ -559,13 +620,41 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Patch('update/campaign-status')
-  async updateCampaignStatusManually(
+  @ApiBearerAuth()
+  @ApiOperation({
+    description: 'Admin update campaign status to completed manually',
+    summary: 'Admin update campaign status to completed manually',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Update successful',
+  })
+  async updateCampaignStatusManually(@Res() res: Response) {
+    const campaign = await this.campaignService.updateCampaignStatusManually();
+
+    res.status(HttpStatus.OK).json({ message: 'success', data: campaign });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Patch('update/campaign-status')
+  @ApiBearerAuth()
+  @ApiOperation({
+    description: 'update earning-per-driver for a campaign',
+    summary: 'update earning-per-driver for a campaign',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Update successful',
+  })
+  async updatePricePerDriverPerCampaign(
     // @Req() req: Request,
+    @Body() body: updatePricePerDriverPerCampaign,
     @Res() res: Response,
   ) {
     const campaign =
-      await this.campaignService.updateCampaignStatusManually();
+      await this.campaignService.updatePricePerDriverPerCampaign(body);
 
-    res.status(HttpStatus.CREATED).json({ message: 'success', data: campaign });
+    res.status(HttpStatus.OK).json({ message: 'success', data: campaign });
   }
 }

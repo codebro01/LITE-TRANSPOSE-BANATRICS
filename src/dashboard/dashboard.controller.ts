@@ -53,7 +53,7 @@ export class DashboardController {
     const userId = req.user.id;
 
     const campaign =
-      await this.homeDashboardService.businessOwnerHomeDashboard(userId);
+      await this.homeDashboardService.driverHomeDashboard(userId);
     res.status(HttpStatus.CREATED).json({
       message: 'success',
       data: campaign,
