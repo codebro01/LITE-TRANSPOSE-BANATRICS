@@ -62,7 +62,6 @@ export class PublishCampaignDto {
     message: 'Maintenance type must be one of: basic, standard, premium',
   })
   @IsNotAllowedWithPackageType()
-  @IsRequiredForCustomPackage()
   maintenanceType?: MaintenanceType;
 
   @ApiProperty({
@@ -76,7 +75,6 @@ export class PublishCampaignDto {
   )
   @IsNumber()
   @IsNotAllowedWithPackageType()
-  @IsRequiredForCustomPackage()
   duration?: number;
 
   @ApiProperty({
@@ -91,7 +89,6 @@ export class PublishCampaignDto {
   @IsString()
   @Transform(({ value }) => (value ? value?.trim() : value))
   @IsNotAllowedWithPackageType()
-  @IsRequiredForCustomPackage()
   revisions?: string;
 
   @ApiProperty({
@@ -147,7 +144,6 @@ export class PublishCampaignDto {
   )
   @IsString()
   @IsNotAllowedWithPackageType()
-  @IsRequiredForCustomPackage()
   lgaCoverage?: string;
 
   @ApiProperty({

@@ -6,7 +6,7 @@ export const vehicleDetailsTable = pgTable('vehicle_details', {
   id: uuid().defaultRandom().primaryKey().notNull(),
   userId: uuid('userId')
     .notNull()
-    .references(() => driverTable.userId).unique().notNull(),
+    .references(() => driverTable.userId, {onDelete: "cascade"}).unique().notNull(),
   plateNumber: varchar('plate_number', { length: 255 }),
   color: varchar('color', { length: 50 }).notNull(),
   state: varchar('state', { length: 50 }).notNull(),

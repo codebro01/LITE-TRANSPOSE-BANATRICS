@@ -78,6 +78,20 @@
       "when": 1765344433815,
       "tag": "0010_sour_rick_jones",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1765510796762,
+      "tag": "0011_shiny_thanos",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1765510909072,
+      "tag": "0012_wonderful_mentallo",
+      "breakpoints": true
     }
   ]
 }
