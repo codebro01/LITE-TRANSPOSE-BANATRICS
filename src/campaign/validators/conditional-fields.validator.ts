@@ -60,12 +60,10 @@ export class IsRequiredForCustomPackageConstraint
     const object = args.object as any;
     const packageType = object.packageType;
 
-    // If package type is custom, field must be provided
     if (packageType === PackageType.CUSTOM) {
       return value !== null && value !== undefined && value !== '';
     }
 
-    // For non-custom package types, field is optional (other validator handles rejection)
     return true;
   }
 

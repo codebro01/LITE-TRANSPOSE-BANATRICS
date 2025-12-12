@@ -804,6 +804,6 @@ export class UserService {
     const isDriverExist = await this.userRepository.findDriverByUserId(userId);
     if (!isDriverExist) throw new BadRequestException('User not provided');
     const user = await this.userRepository.updateDriverDp(dp, userId);
-    return user; 
+    return user;
   }
 }

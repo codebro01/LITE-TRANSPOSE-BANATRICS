@@ -107,8 +107,18 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
       });
     }
 
-    console.log(exception?.cause);
-
+     if (
+       exception.message.includes('already in use') ||
+       exception.message.includes('already exists')
+     ) {
+       return response.status(HttpStatus.CONFLICT).json({
+         statusCode: HttpStatus.CONFLICT,
+         message: exception.message,
+         error: 'Conflict',
+         timestamp: new Date().toISOString(),
+         path: request.url,
+       });
+     }
     //! Default fallback (true 500s only) - sanitized
     return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
