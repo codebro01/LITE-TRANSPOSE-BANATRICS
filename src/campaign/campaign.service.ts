@@ -125,7 +125,7 @@ export class CampaignService {
       campaign = await this.campaignRepository.create(
         {
           packageType: data.packageType,
-          duration: data.duration || null,
+          duration: data.duration || undefined,
           revisions: data.revisions,
           price: data.price,
           noOfDrivers: data.noOfDrivers,
