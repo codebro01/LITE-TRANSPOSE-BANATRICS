@@ -15,7 +15,6 @@ import {
 import { Transform, Type } from 'class-transformer';
 import {
   IsNotAllowedWithPackageType,
-  IsRequiredForCustomPackage,
 } from '@src/campaign/validators/conditional-fields.validator';
 
 export enum MaintenanceType {
@@ -57,6 +56,7 @@ export class PublishCampaignDto {
       'Maintenance Type of the package, it could be either of premium, basic or standard. Required when packageType is custom.',
     required: false,
   })
+  @IsOptional()
   @ValidateIf((o) => o.maintenanceType !== undefined)
   @IsEnum(MaintenanceType, {
     message: 'Maintenance type must be one of: basic, standard, premium',
@@ -73,6 +73,7 @@ export class PublishCampaignDto {
   @ValidateIf(
     (o) => o.packageType === PackageType.CUSTOM || o.duration !== undefined,
   )
+  @IsOptional()
   @IsNumber()
   @IsNotAllowedWithPackageType()
   duration?: number;
@@ -88,6 +89,7 @@ export class PublishCampaignDto {
   )
   @IsString()
   @Transform(({ value }) => (value ? value?.trim() : value))
+  @IsOptional()
   @IsNotAllowedWithPackageType()
   revisions?: string;
 
@@ -102,9 +104,9 @@ export class PublishCampaignDto {
   )
   @Type(() => Number)
   @IsNumber()
+  @IsOptional()
   @Min(0, { message: 'Price must be a positive number' })
   @IsNotAllowedWithPackageType()
-  @IsRequiredForCustomPackage()
   price?: number;
 
   @ApiProperty({
@@ -120,7 +122,6 @@ export class PublishCampaignDto {
   @IsNumber()
   @Min(1, { message: 'At least 1 driver is required' })
   @IsNotAllowedWithPackageType()
-  @IsRequiredForCustomPackage()
   noOfDrivers?: number;
 
   @ApiProperty({
@@ -143,6 +144,7 @@ export class PublishCampaignDto {
     (o) => o.packageType === PackageType.CUSTOM || o.lgaCoverage !== undefined,
   )
   @IsString()
+  @IsOptional()
   @IsNotAllowedWithPackageType()
   lgaCoverage?: string;
 
@@ -175,7 +177,6 @@ export class PublishCampaignDto {
   )
   @IsDateString()
   @IsNotAllowedWithPackageType()
-  @IsRequiredForCustomPackage()
   endDate?: string;
 
   @ApiProperty({
