@@ -111,10 +111,10 @@ export class CampaignService {
         );
     } else {
       const calculateEndDate = new Date(startDate);
-      if (!data.duration)
-        throw new BadRequestException(
-          'duration is required if package type is custom',
-        );
+      // if (!data.duration)
+      //   throw new BadRequestException(
+      //     'duration is required if package type is custom',
+      //   );
       calculateEndDate.setDate(calculateEndDate.getDate() + data.duration);
 
       console.log(calculateEndDate.getDate() + data.duration);
