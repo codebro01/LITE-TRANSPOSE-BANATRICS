@@ -114,14 +114,18 @@ export class CampaignService {
       // if (!data.duration)
       //   throw new BadRequestException(
       //     'duration is required if package type is custom',
-      //   );
-      calculateEndDate.setDate(calculateEndDate.getDate() + data.duration);
 
-      console.log(calculateEndDate.getDate() + data.duration);
+
+      //   );
+
+      const duration  = data.duration || 0
+      calculateEndDate.setDate(calculateEndDate.getDate() + duration);
+
+      // console.log(calculateEndDate.getDate() + data.duration);
       campaign = await this.campaignRepository.create(
         {
           packageType: data.packageType,
-          duration: data.duration,
+          duration: data.duration || null,
           revisions: data.revisions,
           price: data.price,
           noOfDrivers: data.noOfDrivers,
