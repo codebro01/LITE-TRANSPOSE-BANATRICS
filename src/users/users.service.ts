@@ -65,9 +65,9 @@ export class UserService {
           throw new Error('Email and phone number already in use');
         } else if (existingUser.email === email) {
           // if (existingUser.role.includes(role))
-          throw new Error('Email is already in use');
+          throw new ConflictException('Email is already in use');
         } else {
-          throw new Error('Phone number is already in use');
+          throw new ConflictException('Phone number is already in use');
         }
       }
 
@@ -268,9 +268,9 @@ export class UserService {
           throw new Error('Email and phone number already in use');
         } else if (existingUser.email === email) {
           // if (existingUser.role.includes(role))
-          throw new Error('Email is already in use');
+          throw new ConflictException('Email is already in use');
         } else {
-          throw new Error('Phone number is already in use');
+          throw new ConflictException('Phone number is already in use');
         }
       }
 
