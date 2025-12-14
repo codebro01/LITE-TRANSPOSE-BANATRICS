@@ -263,10 +263,15 @@ export class CampaignService {
   //*---------------- update camapaign draft------------------------------------------------------
 
   async updateDraft(id: string, userId: string, data: DraftCampaignDto) {
+    // console.log(id, userId)
     const existing = await this.campaignRepository.findDraftByIdAndUserId(
       id,
       userId,
     );
+
+    console.log('existing', existing)
+
+
 
     if (!existing) {
       throw new NotFoundException('Draft not found or already published');
@@ -288,6 +293,7 @@ export class CampaignService {
       updated = await this.campaignRepository.updateById(
         id,
         {
+          ...data, 
           packageType: isNotCustomPackageType[0].packageType,
           duration: isNotCustomPackageType[0].duration,
           revisions: isNotCustomPackageType[0].revisions,

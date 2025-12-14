@@ -17,7 +17,6 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiBody,
-  ApiQuery,
   ApiParam,
 } from '@nestjs/swagger';
 import { PublishCampaignDto } from './dto/publishCampaignDto';
@@ -136,7 +135,7 @@ export class CampaignController {
     description:
       'Updates an existing campaign draft. Can update campaign details, images, and company logo.',
   })
-  @ApiQuery({
+  @ApiParam({
     name: 'id',
     required: true,
     type: String,
@@ -169,10 +168,10 @@ export class CampaignController {
     @Req() req: Request,
     @Res() res: Response,
     @Body() body: DraftCampaignDto,
-    @Param() param: { id: string },
+    @Param('id') id: string,
   ) {
     const userId = req.user.id;
-    const id = param.id;
+    console.log('param', id);
     const campaign = await this.campaignService.updateDraft(id, userId, body);
     res.status(HttpStatus.CREATED).json({
       message: 'Campaign updated successfully',
@@ -189,31 +188,14 @@ export class CampaignController {
     description:
       'Publishes an existing draft campaign for approval. Updates draft with final details before publishing.',
   })
-  @ApiQuery({
+  @ApiParam({
     name: 'id',
     required: true,
     type: String,
     description: 'Campaign draft ID to publish',
   })
   @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        files: {
-          type: 'array',
-          items: {
-            type: 'string',
-            format: 'binary',
-          },
-          description: 'Campaign images (max 5, optional)',
-        },
-        companyLogo: {
-          type: 'string',
-          format: 'binary',
-          description: 'Company logo (optional)',
-        },
-      },
-    },
+    type: DraftCampaignDto,
   })
   @ApiResponse({
     status: 201,
