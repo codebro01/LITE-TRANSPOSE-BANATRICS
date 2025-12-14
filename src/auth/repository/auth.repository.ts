@@ -12,7 +12,7 @@ import { eq, or } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import { jwtConstants } from '../jwtContants';
 import { JwtService } from '@nestjs/jwt';
-import { driverTable } from '@src/db';
+// import { driverTable } from '@src/db';
 import { Response, Request } from 'express';
 
 
@@ -63,7 +63,7 @@ export class AuthRepository {
 // if(user.role.includes('driver')){
 // const [approvedStatus] = await this.DbProvider.select({status: driverTable.approvedStatus}).from(driverTable).where(eq(driverTable.userId, user.id));
 // if(approvedStatus.status === false) throw new UnauthorizedException('Driver in not yet approved!!! Please wait for approval')
-}
+// }
 
     const payload = { id: user.id, email: user.email, role: user.role };
 
