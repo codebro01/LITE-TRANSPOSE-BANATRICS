@@ -45,7 +45,7 @@ export class PaymentRepository {
   ) {}
 
   // ! Transaction wrapper
-  async executeInTransaction<T>(
+   async executeInTransaction<T>(
     callback: (trx: any) => Promise<T>,
   ): Promise<T> {
     return await this.DbProvider.transaction(async (trx) => {

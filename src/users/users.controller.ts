@@ -33,6 +33,8 @@ import { InitializeDriverCreationDto } from '@src/users/dto/initialize-driver-cr
 import { CreateDriverDto } from '@src/users/dto/create-driver.dto';
 import { EarningService } from '@src/earning/earning.service';
 import { UpdateDriverDpDto } from '@src/users/dto/update-driver-dp.dto';
+import { addBusinessOwnerRoleDto } from '@src/users/dto/add-business-owner-role.dto';
+import { AddDriverRoleDto } from '@src/users/dto/add-driver-role.dto';
 
 @Controller('users')
 export class UserController {
@@ -83,7 +85,11 @@ export class UserController {
       maxAge: 1000 * 60 * 60 * 24 * 30, // 30d
     });
 
-    const safeUser = omit(user, ['password', 'refreshToken']);
+    const safeUser = omit(user, [
+      'password',
+      'refreshToken',
+      'emailVerificationCode',
+    ]);
 
     res.status(HttpStatus.ACCEPTED).json({ user: safeUser, accessToken });
   }
@@ -129,7 +135,11 @@ export class UserController {
       maxAge: 1000 * 60 * 60 * 24 * 30, // 30d
     });
 
-    const safeUser = omit(savedUser, ['password', 'refreshToken']);
+    const safeUser = omit(savedUser, [
+      'password',
+      'refreshToken',
+      'emailVerificationCode',
+    ]);
 
     res.status(HttpStatus.ACCEPTED).json({ user: safeUser, accessToken });
   }
@@ -367,9 +377,9 @@ export class UserController {
     status: 403,
     description: 'Forbidden - User is not a business owner',
   })
-  async addDriverRole(@Req() req: Request, @Res() res: Response) {
+  async addDriverRole(@Req() req: Request, @Res() res: Response, @Body() body: AddDriverRoleDto) {
     const { id: userId } = req.user;
-    const result = await this.userService.addDriverRole(userId);
+    const result = await this.userService.addDriverRole(body, userId);
     const safeUser = omit(result, ['password', 'refreshToken']);
 
     res.status(HttpStatus.OK).json({
@@ -410,9 +420,9 @@ export class UserController {
     status: 403,
     description: 'Forbidden - User is not a driver',
   })
-  async addBusinessOwnerRole(@Req() req: Request, @Res() res: Response) {
+  async addBusinessOwnerRole(@Req() req: Request, @Res() res: Response, @Body() body: addBusinessOwnerRoleDto) {
     const { id: userId } = req.user;
-    const result = await this.userService.addBusinessOwnerRole(userId);
+    const result = await this.userService.addBusinessOwnerRole(body, userId);
     const safeUser = omit(result, ['password', 'refreshToken']);
 
     res.status(HttpStatus.OK).json({

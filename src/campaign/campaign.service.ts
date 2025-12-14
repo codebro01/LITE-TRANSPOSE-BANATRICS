@@ -70,6 +70,8 @@ export class CampaignService {
     let campaign: campaignSelectType;
     const isNotCustomPackageType =
       await this.packageRepository.findByPackageType(data.packageType);
+
+      console.log(isNotCustomPackageType)
     if (isNotCustomPackageType.length > 0) {
       // Calculate end date by adding days to start date
       const calculateEndDate = new Date(startDate);

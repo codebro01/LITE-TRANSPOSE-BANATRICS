@@ -83,6 +83,19 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
       });
     }
 
+    if (exception?.response?.statusCode === 403 || exception.status === 403) {
+      return response.status(HttpStatus.BAD_REQUEST).json({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message:
+          exception?.response?.message ||
+          exception?.response?.data?.message ||
+          'Unauthorized request',
+        error: 'Unauthorized',
+        timestamp: new Date().toISOString(),
+        path: request.url,
+      });
+    }
+
     if (exception?.response?.statusCode === 401 || exception.status === 401) {
       return response.status(HttpStatus.UNAUTHORIZED).json({
         statusCode: HttpStatus.UNAUTHORIZED,

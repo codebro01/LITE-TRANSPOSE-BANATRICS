@@ -13,9 +13,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import {
-  IsNotAllowedWithPackageType,
-} from '@src/campaign/validators/conditional-fields.validator';
+import { IsNotAllowedWithPackageType } from '@src/campaign/validators/conditional-fields.validator';
 
 export enum MaintenanceType {
   BASIC = 'basic',

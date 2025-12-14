@@ -10,9 +10,12 @@ import {
   userSelectType,
   driverTable,
 } from '@src/db/users';
+import { addBusinessOwnerRoleDto } from '@src/users/dto/add-business-owner-role.dto';
+import { AddDriverRoleDto } from '@src/users/dto/add-driver-role.dto';
 import { CreateDriverDto } from '@src/users/dto/create-driver.dto';
 import { eq, or } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+
 
 @Injectable()
 export class UserRepository {
@@ -109,8 +112,13 @@ export class UserRepository {
     return user;
   }
 
-  async updateByUserId(data: Partial<userInsertType>, userId: string) {
-    const [user] = await this.DbProvider.update(userTable)
+  async updateByUserId(
+    data: Partial<userInsertType>,
+    userId: string,
+    trx?: any,
+  ) {
+    const Trx = trx || this.DbProvider;
+    const [user] = await Trx.update(userTable)
       .set(data)
       .where(eq(userTable.id, userId))
       .returning({
@@ -184,9 +192,33 @@ export class UserRepository {
   ) {
     const [driver] = await this.DbProvider.update(driverTable)
       .set({ dp: dp })
-      .where(eq(driverTable.userId, userId)).returning({dp: driverTable.dp});
+      .where(eq(driverTable.userId, userId))
+      .returning({ dp: driverTable.dp });
     return driver;
   }
 
+  async addDriverRole(data: AddDriverRoleDto, userId: string) {
+    await this.DbProvider.transaction(async (trx) => {
+      await this.updateByUserId(
+        { role: ['businessOwner', 'driver'] },
+        userId,
+        trx,
+      );
+      await trx.insert(driverTable).values({...data, userId});
+    });
 
+    return { success: true };
+  }
+  async addBusinessOwnerRole(data: addBusinessOwnerRoleDto, userId: string) {
+    await this.DbProvider.transaction(async (trx) => {
+      await this.updateByUserId(
+        { role: ['driver', 'businessOwner'] },
+        userId,
+        trx,
+      );
+      await this.addBusinessOwnerToBusinessOwnerTable({businessName: data.businessName, userId}, trx);
+    });
+
+    return { success: true };
+  }
 }

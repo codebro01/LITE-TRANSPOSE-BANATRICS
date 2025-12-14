@@ -13,6 +13,7 @@ import { PasswordResetModule } from '@src/password-reset/password-reset.module';
 import { EmailVerificationModule } from '@src/email-verification/email-verification.module';
 import { EarningModule } from '@src/earning/earning.module';
 
+
 @Module({
   imports: [
     EmailVerificationModule, 

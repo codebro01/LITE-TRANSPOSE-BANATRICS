@@ -1,9 +1,7 @@
 import {
   IsString,
-  IsEmail,
   IsOptional,
   IsNotEmpty,
-  MinLength,
   MaxLength,
   Matches,
   ValidateNested,
@@ -11,6 +9,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
 
 
 
@@ -33,40 +32,7 @@ class ImageUploadDto {
   public_id: string;
 }
 
-export class CreateDriverDto {
-  // User fields
-  @ApiProperty({
-    description: 'User phone number',
-    example: '+2348012345678',
-    maxLength: 50,
-  })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(50)
-  phone: string;
-
-  @ApiProperty({
-    description: 'User email address',
-    example: 'user@example.com',
-    maxLength: 255,
-  })
-  @IsEmail()
-  @IsNotEmpty()
-  @MaxLength(255)
-  email: string;
-
-  @ApiProperty({
-    description: 'User password (minimum 8 characters)',
-    example: 'SecurePass123!',
-    minLength: 8,
-    maxLength: 255,
-  })
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(8)
-  @MaxLength(255)
-  password: string;
-
+export class AddDriverRoleDto {
   // Driver fields
   @ApiProperty({
     description: 'Driver firstname',
@@ -183,12 +149,4 @@ export class CreateDriverDto {
   @IsObject()
   @IsOptional()
   owershipDocument?: ImageUploadDto;
-
-  @ApiProperty({
-    example: 547389,
-    description: 'The registered email of the user',
-  })
-  @IsNotEmpty()
-  @IsString()
-  emailVerificationCode?: string;
 }

@@ -25,6 +25,8 @@ import { EmailVerificationRepository } from '@src/email-verification/repository/
 import { InitializeBusinessOwnerCreationDto } from '@src/users/dto/initialize-business-owner-creation.dto';
 import { CreateDriverDto } from '@src/users/dto/create-driver.dto';
 import { InitializeDriverCreationDto } from '@src/users/dto/initialize-driver-creation.dto';
+import { AddDriverRoleDto } from '@src/users/dto/add-driver-role.dto';
+import { addBusinessOwnerRoleDto } from '@src/users/dto/add-business-owner-role.dto';
 @Injectable()
 export class UserService {
   constructor(
@@ -782,16 +784,13 @@ export class UserService {
     }
   }
 
-  async addDriverRole(userId: string) {
-    const addRole = await this.userRepository.updateByUserId(
-      { role: ['businessOwner', 'driver'] },
-      userId,
-    );
+  async addDriverRole(data: AddDriverRoleDto, userId: string) {
+    const addRole = await this.userRepository.addDriverRole(data, userId)
     return addRole;
   }
-  async addBusinessOwnerRole(userId: string) {
-    const addRole = await this.userRepository.updateByUserId(
-      { role: ['driver', 'businessOwner'] },
+  async addBusinessOwnerRole(data: addBusinessOwnerRoleDto, userId: string) {
+    const addRole = await this.userRepository.addBusinessOwnerRole(
+      data,
       userId,
     );
     return addRole;
