@@ -60,9 +60,9 @@ export class AuthRepository {
   'Invalid credentials, Please check email and password',
 );
 
-if(user.role.includes('driver')){
-const [approvedStatus] = await this.DbProvider.select({status: driverTable.approvedStatus}).from(driverTable).where(eq(driverTable.userId, user.id));
-if(approvedStatus.status === false) throw new UnauthorizedException('Driver in not yet approved!!! Please wait for approval')
+// if(user.role.includes('driver')){
+// const [approvedStatus] = await this.DbProvider.select({status: driverTable.approvedStatus}).from(driverTable).where(eq(driverTable.userId, user.id));
+// if(approvedStatus.status === false) throw new UnauthorizedException('Driver in not yet approved!!! Please wait for approval')
 }
 
     const payload = { id: user.id, email: user.email, role: user.role };
