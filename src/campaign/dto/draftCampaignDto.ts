@@ -244,7 +244,6 @@ export class DraftCampaignDto {
       'Existing media files that were uploaded initially when saving the draft',
   })
   @IsArray()
-  @IsString({ each: true })
   @IsOptional()
   existingMediaFiles?: Array<{
     secure_url: string;
