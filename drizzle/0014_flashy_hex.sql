@@ -1,0 +1,1 @@
+ALTER TABLE "driver_campaigns" ADD COLUMN "payment_status" boolean DEFAULT false;

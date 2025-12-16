@@ -1,7 +1,7 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { earningsTable, earningTableInsertType } from '@src/db/earnings';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { and, eq, sql, gte, } from 'drizzle-orm';
+import { and, eq, sql, gte } from 'drizzle-orm';
 import { startOfMonth } from 'date-fns';
 import { campaignTable, driverTable } from '@src/db';
 import { ApprovalStatusType } from '@src/earning/dto/create-earning.dto';
@@ -45,33 +45,31 @@ export class EarningRepository {
 
   //     return driver.balance;
 
-
-async monthlyEarningBreakdown(userId: string) {
-  const earnings = await this.DbProvider
-    .select({
+  async monthlyEarningBreakdown(userId: string) {
+    const earnings = await this.DbProvider.select({
       year: sql<number>`YEAR(${campaignTable.updatedAt})`,
       month: sql<number>`MONTH(${campaignTable.updatedAt})`,
       totalEarning: sql<number>`SUM(${campaignTable.earningPerDriver})`,
       numCampaigns: sql<number>`COUNT(${campaignTable.id})`,
     })
-    .from(campaignTable)
-    .where(
-      and(
-        eq(campaignTable.userId, userId),
-        eq(campaignTable.statusType, StatusType.COMPLETED),
-      ),
-    )
-    .groupBy(
-      sql`YEAR(${campaignTable.updatedAt})`,
-      sql`MONTH(${campaignTable.updatedAt})`,
-    )
-    .orderBy(
-      sql`YEAR(${campaignTable.updatedAt})`,
-      sql`MONTH(${campaignTable.updatedAt})`,
-    )
-    .execute();
-  return earnings;
-}
+      .from(campaignTable)
+      .where(
+        and(
+          eq(campaignTable.userId, userId),
+          eq(campaignTable.statusType, StatusType.COMPLETED),
+        ),
+      )
+      .groupBy(
+        sql`YEAR(${campaignTable.updatedAt})`,
+        sql`MONTH(${campaignTable.updatedAt})`,
+      )
+      .orderBy(
+        sql`YEAR(${campaignTable.updatedAt})`,
+        sql`MONTH(${campaignTable.updatedAt})`,
+      )
+      .execute();
+    return earnings;
+  }
 
   async requestPayouts(
     data: earningTableInsertType,
@@ -83,7 +81,7 @@ async monthlyEarningBreakdown(userId: string) {
     const earnings = await Trx.insert(earningsTable).values({
       ...data,
       userId,
-    });
+    }).returning();
 
     return earnings;
   }
@@ -106,16 +104,12 @@ async monthlyEarningBreakdown(userId: string) {
     return earnings;
   }
 
-  async getAllUnapprovedEarnings( trx?: any) {
+  async getAllUnapprovedEarnings(trx?: any) {
     const Trx = trx || this.DbProvider;
 
     const earnings = await Trx.select()
       .from(earningsTable)
-      .where(
-        and(
-          eq(earningsTable.approved, ApprovalStatusType.UNAPPROVED),
-        ),
-      );
+      .where(and(eq(earningsTable.approved, ApprovalStatusType.UNAPPROVED)));
 
     return earnings;
   }
@@ -191,7 +185,11 @@ async monthlyEarningBreakdown(userId: string) {
     const Trx = trx || this.DbProvider;
 
     const earnings = await Trx.update(earningsTable)
-      .set({ approved: ApprovalStatusType.APPROVED, paymentStatus: "PAID",  updatedAt: new Date() })
+      .set({
+        approved: ApprovalStatusType.APPROVED,
+        paymentStatus: 'PAID',
+        updatedAt: new Date(),
+      })
       .where(
         and(
           eq(earningsTable.approved, ApprovalStatusType.UNAPPROVED),

@@ -19,7 +19,7 @@ import { Roles } from '@src/auth/decorators/roles.decorators';
 import { InitializeEarningDto } from '@src/earning/dto/initialize-earning.dto';
 import type { Response } from 'express';
 import type { Request } from '@src/types';
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {  ApiOperation, ApiResponse, ApiCookieAuth } from '@nestjs/swagger';
 
 @Controller('earning')
 export class EarningController {
@@ -29,7 +29,7 @@ export class EarningController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
   @Post('request')
-  @ApiBearerAuth()
+ @ApiCookieAuth('access_token')
   @ApiOperation({
     description: 'Request payout',
     summary: 'Driver requests payout whick will be approved by the admin',
@@ -51,7 +51,7 @@ export class EarningController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
   @Get('list/all')
-  @ApiBearerAuth()
+ @ApiCookieAuth('access_token')
   @ApiOperation({
     description: 'List all transactions',
     summary: 'List all drivers transactions',
@@ -69,7 +69,7 @@ export class EarningController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
   @Get('dashboard')
-  @ApiBearerAuth()
+ @ApiCookieAuth('access_token')
   @ApiOperation({
     description: 'Earning Dashboard',
     summary: 'Dashboard that contains infomation about drivers earnings',
@@ -87,7 +87,7 @@ export class EarningController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
   @Get('monthly-earnings')
-  @ApiBearerAuth()
+ @ApiCookieAuth('access_token')
   @ApiOperation({
     description: 'Breakdown of monthly earnings',
     summary: 'Monthly earning information',
@@ -107,7 +107,7 @@ export class EarningController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Post('/initialize')
-  @ApiBearerAuth()
+ @ApiCookieAuth('access_token')
   @ApiOperation({
     description: 'Initialize withdrawal',
     summary: 'Admin initialize withdrawal',
@@ -127,7 +127,7 @@ export class EarningController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Patch('status/update/:userId')
-  @ApiBearerAuth()
+ @ApiCookieAuth('access_token')
   @ApiOperation({
     description: 'Update earning approved status',
     summary: 'Update earning approved status',
@@ -153,7 +153,7 @@ export class EarningController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Get('list/unapproved')
-  @ApiBearerAuth()
+ @ApiCookieAuth('access_token')
   @ApiOperation({
     description: 'Admin lists and see all unapproved payouts',
     summary: 'list all unapproved payouts',

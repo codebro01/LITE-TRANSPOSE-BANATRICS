@@ -7,7 +7,6 @@ import {
   IsInt,
   Min,
   Max,
-  IsEnum,
   ValidateNested,
   IsUrl,
 } from 'class-validator';
@@ -32,7 +31,7 @@ class ImageProofDto {
   public_id: string;
 }
 
-enum WeeklyProofStatus {
+export enum WeeklyProofStatus {
   APPROVED = 'approved',
   PENDING_REVIEW = 'pending_review',
   REJECTED = 'rejected',
@@ -46,7 +45,6 @@ export class CreateWeeklyProofDto {
   @IsUUID()
   @IsNotEmpty()
   campaignId: string;
-
 
   @ApiProperty({
     description: 'Front view image proof of the vehicle wrap',
@@ -95,22 +93,4 @@ export class CreateWeeklyProofDto {
   @Max(12)
   @IsOptional()
   month?: number;
-
-  @ApiPropertyOptional({
-    description: 'Status of the weekly proof submission',
-    enum: WeeklyProofStatus,
-    default: 'pending_review',
-    example: 'pending_review',
-  })
-  @IsEnum(WeeklyProofStatus)
-  @IsOptional()
-  statusType?: WeeklyProofStatus;
-
-  @ApiPropertyOptional({
-    description: 'Reason for rejection if the weekly proof was rejected',
-    example: 'Images are unclear, please resubmit with better quality photos',
-  })
-  @IsString()
-  @IsOptional()
-  rejectionReason?: string;
 }

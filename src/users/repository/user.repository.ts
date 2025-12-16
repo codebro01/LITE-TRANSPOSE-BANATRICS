@@ -221,4 +221,8 @@ export class UserRepository {
 
     return { success: true };
   }
+
+  async findDriverById(userId: string) {
+    return await this.DbProvider.select().from(driverTable).where(eq(driverTable.userId, userId))
+  }
 }

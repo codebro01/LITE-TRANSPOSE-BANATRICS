@@ -397,7 +397,6 @@ export class PaymentRepository {
     try {
       const transactions = await this.DbProvider.select({
         invoiceId: paymentTable.invoiceId,
-        campaign: paymentTable.campaignName,
         amount: paymentTable.amount,
         paymentMethod: paymentTable.paymentMethod,
         status: paymentTable.paymentStatus,

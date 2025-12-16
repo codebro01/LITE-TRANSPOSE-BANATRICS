@@ -1,5 +1,11 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 // import { CreateEarningDto } from './dto/create-earning.dto';
 // import { UpdateEarningDto } from './dto/update-earning.dto';
 import { ConfigService } from '@nestjs/config';
@@ -9,7 +15,7 @@ import { generateSecureRef } from '@src/payment/repository/payment.repository';
 import { firstValueFrom } from 'rxjs';
 import { CreateEarningDto } from '@src/earning/dto/create-earning.dto';
 import { EarningRepository } from '@src/earning/repository/earning.repository';
-
+import { CampaignRepository } from '@src/campaign/repository/campaign.repository';
 @Injectable()
 export class EarningService {
   private readonly baseUrl: string = 'https://api.paystack.co';
@@ -19,6 +25,7 @@ export class EarningService {
     private readonly httpService: HttpService,
     private readonly bankDetailsRepository: BankDetailsRepository,
     private readonly earningRepository: EarningRepository,
+    private readonly campaignRepository: CampaignRepository,
   ) {
     const key = this.configService.get<string>('PAYSTACK_SECRET_KEY');
     if (!key) {
@@ -58,14 +65,42 @@ export class EarningService {
       await this.earningRepository.findEarningsByApproved(userId);
     if (isPendingPayout.length > 0)
       throw new BadRequestException(
-        'You already have a pending payout, please kindly wait while we clear that one before applying for another payout!!!',
+        'You already have a pending payout, please kindly wait while we clear pending payout!!!',
       );
     const balance = await this.earningRepository.availableBalance(userId);
+    const campaign = await this.campaignRepository.findDriverCampaignById(
+      data.campaignId,
+      userId,
+    );
+    console.log(campaign);
+    if (!campaign)
+      throw new NotFoundException(
+        'Cannot request payout for non-existing campaign',
+      );
+    if (campaign.paid)
+      throw new ConflictException(
+        'You have already been paid for this campaign!!!',
+      );
 
-    if (data.amount < balance)
+    if (!campaign.earningPerDriver)
+      throw new InternalServerErrorException('Could not get campaign price');
+    if (campaign.earningPerDriver > balance)
       throw new BadRequestException('Insufficient fund');
 
-    const earnings = await this.earningRepository.requestPayouts(data, userId);
+    const bankDetails = await this.bankDetailsRepository.findOneById(userId);
+    if (!bankDetails)
+      throw new BadRequestException(
+        'Please, add bank information from your profile',
+      );
+
+    const earnings = await this.earningRepository.requestPayouts(
+      {
+        ...data,
+        recipientCode: bankDetails.recipientCode,
+        amount: campaign.earningPerDriver,
+      },
+      userId,
+    );
 
     return earnings;
   }
@@ -79,9 +114,8 @@ export class EarningService {
     return earning;
   }
 
-async listAllUnapprovedEarnings() {
-    const earning =
-      await this.earningRepository.getAllUnapprovedEarnings();
+  async listAllUnapprovedEarnings() {
+    const earning = await this.earningRepository.getAllUnapprovedEarnings();
 
     return earning;
   }
@@ -113,7 +147,8 @@ async listAllUnapprovedEarnings() {
   }
 
   async monthlyEarningBreakdown(userId: string) {
-    const earnings = await this.earningRepository.monthlyEarningBreakdown(userId);
+    const earnings =
+      await this.earningRepository.monthlyEarningBreakdown(userId);
     return earnings;
   }
 }

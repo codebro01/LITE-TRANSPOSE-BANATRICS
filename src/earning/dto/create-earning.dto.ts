@@ -1,11 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
-  IsNumber,
-  IsString,
   IsUUID,
-  Min,
 } from 'class-validator';
 
 // Enums for better type safety
@@ -49,24 +46,5 @@ export class CreateEarningDto {
   @IsNotEmpty()
   email: string;
 
-  @ApiProperty({
-    description: 'Amount earned',
-    example: 5000.5,
-    minimum: 0,
-    type: 'number',
-  })
-  @IsNumber()
-  @Min(0)
-  @IsNotEmpty()
-  amount: number;
 
-
-
-  @ApiPropertyOptional({
-    description: 'That is the paystack recipient code for this user',
-    example: 'ly_skef3fjg3',
-  })
-  @IsString()
-  @IsNotEmpty()
-  recipientCode: string;
 }

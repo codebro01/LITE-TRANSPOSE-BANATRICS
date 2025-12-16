@@ -1,24 +1,14 @@
 // dto/initialize-payment.dto.ts
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsEmail,
   IsNumber,
   IsOptional,
-  IsObject,
   IsUrl,
   Min,
   IsNotEmpty,
 } from 'class-validator';
 
 export class InitializePaymentDto {
-  @ApiProperty({
-    description: 'Customer email address',
-    example: 'customer@example.com',
-    type: String,
-  })
-  @IsEmail({}, { message: 'Please provide a valid email address' })
-  @IsNotEmpty({ message: 'Email is required' })
-  email: string;
 
   @ApiProperty({
     description:
@@ -32,7 +22,6 @@ export class InitializePaymentDto {
   @IsNotEmpty({ message: 'Amount is required' })
   amount: number;
 
-
   @ApiPropertyOptional({
     description: 'URL to redirect to after payment',
     example: 'https://yourapp.com/payment/callback',
@@ -42,15 +31,4 @@ export class InitializePaymentDto {
   @IsUrl({}, { message: 'Callback URL must be a valid URL' })
   callback_url?: string;
 
-  @ApiPropertyOptional({
-    description: 'Additional data to attach to the transaction',
-    example: {
-      userId: '123',
-      planName: 'Premium Monthly',
-      orderId: 'ORD-001',
-    }
-  })
-  @IsOptional()
-  @IsObject({ message: 'Metadata must be an object' })
-  metadata?: Record<string, any>;
 }

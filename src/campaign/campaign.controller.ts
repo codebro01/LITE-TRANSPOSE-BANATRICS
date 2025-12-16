@@ -8,14 +8,14 @@ import {
   Get,
   Post,
   HttpStatus,
-  Param, 
-  Query
+  Param,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiBearerAuth,
+  ApiCookieAuth,
   ApiBody,
   ApiParam,
 } from '@nestjs/swagger';
@@ -31,7 +31,10 @@ import {
 } from '@src/campaign/dto/draftCampaignDto';
 import type { Response } from 'express';
 import type { Request } from '@src/types';
-import { CreateDriverCampaignDto, DriverCampaignStatusType } from '@src/campaign/dto/create-driver-campaign.dto';
+import {
+  CreateDriverCampaignDto,
+  DriverCampaignStatusType,
+} from '@src/campaign/dto/create-driver-campaign.dto';
 import { updatePricePerDriverPerCampaign } from '@src/campaign/dto/update-price-per-driver-per-campaign.dto';
 
 @ApiTags('Campaign')
@@ -45,7 +48,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Post('create/publish')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Create and publish campaign',
     description:
@@ -91,7 +94,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Post('create/draft')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Create campaign draft',
     description:
@@ -129,7 +132,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Patch('update/draft/:id')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Update campaign draft',
     description:
@@ -182,7 +185,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Patch('publish/draft/:id')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Publish draft campaign',
     description:
@@ -241,7 +244,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('get-campaigns')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Get all campaigns',
     description:
@@ -273,7 +276,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('get-drafts')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Get all draft campaigns',
     description:
@@ -305,7 +308,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('get-published')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Get all published campaigns',
     description:
@@ -337,7 +340,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('get-completed')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Get all completed campaigns',
     description:
@@ -369,7 +372,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('get-campaign/:id')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Get single campaign',
     description:
@@ -415,7 +418,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('get-campaigns-by-status')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Get campaigns by status',
     description:
@@ -461,7 +464,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
   @Get('list')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     description:
       'lists all the available campaign in the db that is available for application',
@@ -480,7 +483,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
   @Post('driver/appy')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     description: 'Apply for campaign',
     summary: 'Apply for campaign',
@@ -510,7 +513,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
   @Get('driver/dashboard')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     description:
       "Driver campaign's page dashboard. Dashboard contains information about driver campaigns",
@@ -532,8 +535,28 @@ export class CampaignController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
+  @Get('driver/all-campaigns')
+  @ApiCookieAuth('access_token')
+  @ApiOperation({
+    description: 'Fetch all drivers  campaigns',
+    summary: 'Fetch all drivers  campaigns',
+  })
+  @ApiResponse({
+    status: 200,
+    description: ' campaigns fetched successfully',
+  })
+  async getAllDriverCampaigns(@Req() req: Request, @Res() res: Response) {
+    const { id: userId } = req.user;
+    const campaign =
+      await this.campaignService.getDriverCampaignsById(userId);
+
+    res.status(HttpStatus.CREATED).json({ message: 'success', data: campaign });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('driver')
   @Get('driver/filter')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     description:
       'Filter campaign by ones of this types pending_approval, completed, approved',
@@ -558,51 +581,49 @@ export class CampaignController {
     res.status(HttpStatus.OK).json({ message: 'success', data: campaign });
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('driver')
-  @Get('driver/active')
-  @ApiBearerAuth()
-  @ApiOperation({
-    description: 'Fetch all drivers active campaigns',
-    summary: 'Fetch all drivers active campaigns',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Active campaigns fetched successfully',
-  })
-  async getallActiveCampaigns(@Req() req: Request, @Res() res: Response) {
-    const { id: userId } = req.user;
-    const campaign = await this.campaignService.getAllActiveCampaigns(userId);
+  //   @UseGuards(JwtAuthGuard, RolesGuard)
+  //   @Roles('driver')
+  //   @Get('driver/active')
+  // @ApiCookieAuth('access_token')  @ApiOperation({
+  //     description: 'Fetch all drivers active campaigns',
+  //     summary: 'Fetch all drivers active campaigns',
+  //   })
+  //   @ApiResponse({
+  //     status: 200,
+  //     description: 'Active campaigns fetched successfully',
+  //   })
+  //   async getallActiveCampaigns(@Req() req: Request, @Res() res: Response) {
+  //     const { id: userId } = req.user;
+  //     const campaign = await this.campaignService.getAllActiveCampaigns(userId);
 
-    res.status(HttpStatus.OK).json({ message: 'success', data: campaign });
-  }
+  //     res.status(HttpStatus.OK).json({ message: 'success', data: campaign });
+  //   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('driver')
-  @Get('driver/completed')
-  @ApiBearerAuth()
-  @ApiOperation({
-    description: 'Fetch all drivers completed campaigns',
-    summary: 'Fetch all drivers completed campaigns',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'completed campaigns fetched successfully',
-  })
-  async getallCompletedCampaigns(@Req() req: Request, @Res() res: Response) {
-    const { id: userId } = req.user;
-    const campaign =
-      await this.campaignService.getAllCompletedCampaigns(userId);
+  //   @UseGuards(JwtAuthGuard, RolesGuard)
+  //   @Roles('driver')
+  //   @Get('driver/completed')
+  // @ApiCookieAuth('access_token')  @ApiOperation({
+  //     description: 'Fetch all drivers completed campaigns',
+  //     summary: 'Fetch all drivers completed campaigns',
+  //   })
+  //   @ApiResponse({
+  //     status: 200,
+  //     description: 'completed campaigns fetched successfully',
+  //   })
+  //   async getallCompletedCampaigns(@Req() req: Request, @Res() res: Response) {
+  //     const { id: userId } = req.user;
+  //     const campaign =
+  //       await this.campaignService.getAllCompletedCampaigns(userId);
 
-    res.status(HttpStatus.CREATED).json({ message: 'success', data: campaign });
-  }
+  //     res.status(HttpStatus.CREATED).json({ message: 'success', data: campaign });
+  //   }
 
   // ! ========================           admin section     ================================================
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Patch('update/campaign-status')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     description: 'Admin update campaign status to completed manually',
     summary: 'Admin update campaign status to completed manually',
@@ -620,7 +641,7 @@ export class CampaignController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Patch('update/campaign-status')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     description: 'update earning-per-driver for a campaign',
     summary: 'update earning-per-driver for a campaign',

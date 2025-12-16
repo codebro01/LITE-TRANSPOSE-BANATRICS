@@ -14,6 +14,7 @@ export const approvalStatusType = pgEnum('approval_status_type', ['REJECTED', 'A
 export const earningPaymentStatusType = pgEnum('earning_payment_status_type', ['PAID', 'UNPAID'])
 
 export const earningsTable = pgTable('earnings', {
+  id: uuid('id').primaryKey().defaultRandom().notNull(), 
   campaignId: uuid('campaignId').references(() => campaignTable.id, {
     onDelete: 'cascade',
   }),

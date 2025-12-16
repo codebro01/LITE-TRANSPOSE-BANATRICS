@@ -263,14 +263,21 @@ export class CampaignRepository {
   //!===================================drivers db calls ===========================================//
 
   async findDriverCampaignById(campaignId: string, userId: string) {
-    const campaign = await this.DbProvider.select()
+    const [campaign] = await this.DbProvider.select({
+      campaignId: campaignTable.id,
+      paid: driverCampaignTable.paid, 
+      earningPerDriver: campaignTable.earningPerDriver
+
+    })
       .from(driverCampaignTable)
       .where(
         and(
           eq(driverCampaignTable.campaignId, campaignId),
           eq(driverCampaignTable.userId, userId),
         ),
-      );
+      )
+      .leftJoin(campaignTable, eq(campaignTable.id, campaignId))
+      .limit(1);
     return campaign;
   }
 
@@ -333,12 +340,36 @@ export class CampaignRepository {
     };
   }
 
+  // async getGetAllDriverCampaigns(userId: string) {
+  //   const campaigns = await this.DbProvider.select({
+  //     driverCampaignStatus: driverCampaignTable.campaignStatus,
+  //     title: campaignTable.campaignName,
+  //     state: campaignTable.state,
+  //     startDate: campaignTable.startDate,
+  //     duration: campaignTable.duration,
+  //     availability: campaignTable.availability,
+  //     requirements: campaignTable.requirements,
+  //     description: campaignTable.campaignDescriptions,
+  //     totalEarning: campaignTable.earningPerDriver,
+  //     endDate: campaignTable.endDate,
+  //   })
+  //     .from(driverCampaignTable)
+  //     .where(eq(driverCampaignTable.userId, userId))
+  //     .leftJoin(
+  //       campaignTable,
+  //       eq(campaignTable.id, driverCampaignTable.campaignId),
+  //     );
+  //   return campaigns;
+  // }
+
   async getDriverCampaignsById(userId: string) {
     const campaigns = await this.DbProvider.select({
       driverCampaignStatus: driverCampaignTable.campaignStatus,
       title: campaignTable.campaignName,
+      campaignId: campaignTable.id,
       state: campaignTable.state,
       startDate: campaignTable.startDate,
+      endDate: campaignTable.endDate,
       duration: campaignTable.duration,
       availability: campaignTable.availability,
       requirements: campaignTable.requirements,
@@ -426,7 +457,7 @@ export class CampaignRepository {
       userId,
     );
 
-    if (alreadyApplied.length > 0)
+    if (alreadyApplied)
       throw new BadRequestException(
         'You have already applied for this  campaign!!!',
       );

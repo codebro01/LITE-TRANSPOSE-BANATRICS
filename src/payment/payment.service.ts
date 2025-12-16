@@ -67,7 +67,7 @@ export class PaymentService {
     };
   }
 
-  async initializePayment(data: InitializePaymentDto) {
+  async initializePayment(data: InitializePaymentDto & {email: string, userId: string}) {
     try {
       const response = await firstValueFrom(
         this.httpService.post(
@@ -78,7 +78,8 @@ export class PaymentService {
             reference: generateSecureRef(),
             callback_url: data.callback_url,
             metadata: {
-              ...data.metadata,
+              amountInNaira: data.amount/100, 
+              userId: data.userId,
               invoiceId: generateSecureInvoiceId(),
               dateInitiated: new Date().toISOString(),
             },
@@ -134,7 +135,7 @@ export class PaymentService {
     try {
       const { reference, createdAt, amount } = event.data;
       const { channel } = event.data.authorization || {};
-      const { campaignName, userId, amountInNaira, invoiceId, dateInitiated } =
+      const { userId, amountInNaira, invoiceId, dateInitiated } =
         event.data.metadata || {};
       const { recipient_code } = event.data.recipient;
       // const {account_number, account_name, bank_name, bank_code} = event.data.recipient.details
@@ -151,7 +152,6 @@ export class PaymentService {
           await this.paymentRepository.executeInTransaction(async (trx) => {
             await this.paymentRepository.savePayment(
               {
-                campaignName,
                 amount: amountInNaira,
                 invoiceId,
                 dateInitiated,
@@ -189,7 +189,6 @@ export class PaymentService {
           await this.paymentRepository.executeInTransaction(async (trx) => {
             await this.paymentRepository.savePayment(
               {
-                campaignName,
                 amount: amountInNaira,
                 invoiceId,
                 dateInitiated,
@@ -221,7 +220,6 @@ export class PaymentService {
           await this.paymentRepository.executeInTransaction(async (trx) => {
             await this.paymentRepository.savePayment(
               {
-                campaignName,
                 amount: amountInNaira,
                 invoiceId,
                 dateInitiated,
@@ -308,58 +306,57 @@ export class PaymentService {
           break;
         }
         case 'transfer.failed': {
-
-             await this.paymentRepository.executeInTransaction(async (trx) => {
-               await this.earningRepository.createEarnings(
-                 {
-                   amount: amount,
-                   reference,
-                   dateInitiated: createdAt,
-                   recipientCode: recipient_code,
-                   paymentStatus: 'failed',
-                   paymentMethod: 'transfer',
-                 },
-                 trx,
-               );
-             });
-             await this.notificationService.createNotification(
-               {
-                 title: `Your withdrawal of ${amount} is processing!!!`,
-                 message: `Kindly wait some minutes while we proccess the withdrawal of your funds`,
-                 variant: VariantType.SUCCESS,
-                 category: CategoryType.PAYMENT,
-                 priority: '',
-                 status: StatusType.UNREAD,
-               },
-               userId,
-             );
+          await this.paymentRepository.executeInTransaction(async (trx) => {
+            await this.earningRepository.createEarnings(
+              {
+                amount: amount,
+                reference,
+                dateInitiated: createdAt,
+                recipientCode: recipient_code,
+                paymentStatus: 'failed',
+                paymentMethod: 'transfer',
+              },
+              trx,
+            );
+          });
+          await this.notificationService.createNotification(
+            {
+              title: `Your withdrawal of ${amount} is processing!!!`,
+              message: `Kindly wait some minutes while we proccess the withdrawal of your funds`,
+              variant: VariantType.SUCCESS,
+              category: CategoryType.PAYMENT,
+              priority: '',
+              status: StatusType.UNREAD,
+            },
+            userId,
+          );
           break;
         }
         case 'transfer.reversed': {
-             await this.paymentRepository.executeInTransaction(async (trx) => {
-               await this.earningRepository.createEarnings(
-                 {
-                   amount: amount,
-                   reference,
-                   dateInitiated: createdAt,
-                   recipientCode: recipient_code,
-                   paymentStatus: 'reversed',
-                   paymentMethod: 'transfer',
-                 },
-                 trx,
-               );
-             });
-             await this.notificationService.createNotification(
-               {
-                 title: `Your withdrawal of ${amount} is been processed`,
-                 message: `Kindly wait some minutes while  we process the withdrawal of your funds`,
-                 variant: VariantType.INFO,
-                 category: CategoryType.PAYMENT,
-                 priority: '',
-                 status: StatusType.UNREAD,
-               },
-               userId,
-             );
+          await this.paymentRepository.executeInTransaction(async (trx) => {
+            await this.earningRepository.createEarnings(
+              {
+                amount: amount,
+                reference,
+                dateInitiated: createdAt,
+                recipientCode: recipient_code,
+                paymentStatus: 'reversed',
+                paymentMethod: 'transfer',
+              },
+              trx,
+            );
+          });
+          await this.notificationService.createNotification(
+            {
+              title: `Your withdrawal of ${amount} is been processed`,
+              message: `Kindly wait some minutes while  we process the withdrawal of your funds`,
+              variant: VariantType.INFO,
+              category: CategoryType.PAYMENT,
+              priority: '',
+              status: StatusType.UNREAD,
+            },
+            userId,
+          );
           break;
         }
 

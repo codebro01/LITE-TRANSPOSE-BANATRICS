@@ -22,10 +22,10 @@ import {
   ApiParam,
   ApiHeader,
   ApiExcludeEndpoint,
+  ApiCookieAuth,
 } from '@nestjs/swagger';
 import { PaymentService } from '@src/payment/payment.service';
 import type { RawBodyRequest } from '@nestjs/common';
-import { PaystackMetedataDto } from './dto/paystackMetadataDto';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@src/auth/guards/roles.guard';
 import { Roles } from '@src/auth/decorators/roles.decorators';
@@ -34,6 +34,7 @@ import { MakePaymentForCampaignDto } from '@src/payment/dto/makePaymentForCampai
 import type { Request } from '@src/types';
 import type { Response } from 'express';
 import { NotificationService } from '@src/notification/notification.service';
+import { InitializePaymentDto } from '@src/payment/dto/initializePaymentDto';
 
 
 @ApiTags('Payments')
@@ -54,39 +55,10 @@ export class PaymentController {
     description:
       'Initializes a payment transaction with Paystack. Returns a payment authorization URL and reference that can be used to complete the payment. Only accessible by business owners.',
   })
+  @ApiCookieAuth('access_token')
   @ApiBody({
     description: 'Payment initialization data',
-    schema: {
-      type: 'object',
-      required: ['amount', 'metadata'],
-      properties: {
-        amount: {
-          type: 'number',
-          description: 'Amount in kobo (NGN minor unit, multiply naira by 100)',
-          example: 50000,
-          minimum: 100,
-        },
-        metadata: {
-          type: 'object',
-          description: 'Additional payment metadata',
-          properties: {
-            campaignName: {
-              type: 'string',
-              example: 'Christmas Campaign 2024',
-            },
-            invoiceId: {
-              type: 'string',
-              example: 'INV-2024-001',
-            },
-            dateInitiated: {
-              type: 'string',
-              format: 'date-time',
-              example: '2024-11-16T10:30:00Z',
-            },
-          },
-        },
-      },
-    },
+    type: InitializePaymentDto,
   })
   @ApiResponse({
     status: 200,
@@ -123,21 +95,16 @@ export class PaymentController {
   })
   async initializePayment(
     @Body()
-    body: { amount: number; metadata: PaystackMetedataDto },
+    body: InitializePaymentDto,
     @Req() req: Request,
     @Res() res: Response,
   ) {
     const { email, id: userId } = req.user;
 
     const result = await this.paymentService.initializePayment({
-      email: email,
-      amount: body.amount,
-      metadata: {
-        ...body.metadata,
-        userId,
-        amount: body.amount,
-        amountInNaira: body.amount / 100,
-      },
+      ...body,
+      email,
+      userId,
     });
 
     res.status(HttpStatus.OK).json({
@@ -149,6 +116,7 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('verify/:reference')
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Verify a payment transaction',
     description:
@@ -318,9 +286,9 @@ export class PaymentController {
     }
 
     const event = req.body;
-    const payment = await this.paymentService.postVerifyWebhookSignatures(event);
+    const payment =
+      await this.paymentService.postVerifyWebhookSignatures(event);
     return payment;
-
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -373,6 +341,7 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Patch('make-payment-for-campaign')
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Make payment for a campaign',
     description:
@@ -448,6 +417,7 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Patch('finalize-payment-for-campaign')
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Finalize campaign payment',
     description:
@@ -525,6 +495,7 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('list-transactions')
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Get user transactions from database',
     description:
@@ -588,6 +559,7 @@ export class PaymentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('dashboard-data')
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Get payment dashboard analytics',
     description:

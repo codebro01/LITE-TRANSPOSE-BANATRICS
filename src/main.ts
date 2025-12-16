@@ -39,12 +39,21 @@ async function bootstrap() {
     .addBearerAuth()
     .addServer('http://localhost:3000', 'Local Dev')
     .addServer('https://lite-transpose-banatrics.onrender.com', 'Production')
+    .addCookieAuth('access_token', {
+      type: 'apiKey',
+      in: 'cookie',
+      name: 'access_token', 
+    })
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/v1/api-docs', app, document); // localhost:3000/api-docs
+  SwaggerModule.setup('api/v1/api-docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+      withCredentials: true, 
+    },
+  }); 
 
-  // Root health check
   app.getHttpAdapter().get('/', (req, res) => {
     res.send({ status: 'ok', message: 'Banatrics Project API' });
   });

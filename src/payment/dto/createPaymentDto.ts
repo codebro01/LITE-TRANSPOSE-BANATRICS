@@ -8,14 +8,6 @@ export class CreatePaymentDto {
     example: 'Advertisement of Cocoa Export',
     description: 'Insert campaign name or title here',
   })
-  @IsString()
-  @IsNotEmpty()
-  campaignName: string;
-
-  @ApiProperty({
-    example: 'Advertisement of Cocoa Export',
-    description: 'Insert campaign name or title here',
-  })
   @IsNumber()
   @IsNotEmpty()
   amount: number;

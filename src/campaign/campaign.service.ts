@@ -71,7 +71,7 @@ export class CampaignService {
     const isNotCustomPackageType =
       await this.packageRepository.findByPackageType(data.packageType);
 
-      console.log(isNotCustomPackageType)
+    console.log(isNotCustomPackageType);
     if (isNotCustomPackageType.length > 0) {
       // Calculate end date by adding days to start date
       const calculateEndDate = new Date(startDate);
@@ -117,10 +117,9 @@ export class CampaignService {
       //   throw new BadRequestException(
       //     'duration is required if package type is custom',
 
-
       //   );
 
-      const duration  = data.duration || 0
+      const duration = data.duration || 0;
       calculateEndDate.setDate(calculateEndDate.getDate() + duration);
 
       // console.log(calculateEndDate.getDate() + data.duration);
@@ -269,9 +268,7 @@ export class CampaignService {
       userId,
     );
 
-    console.log('existing', existing)
-
-
+    console.log('existing', existing);
 
     if (!existing) {
       throw new NotFoundException('Draft not found or already published');
@@ -293,7 +290,7 @@ export class CampaignService {
       updated = await this.campaignRepository.updateById(
         id,
         {
-          ...data, 
+          ...data,
           packageType: isNotCustomPackageType[0].packageType,
           duration: isNotCustomPackageType[0].duration,
           revisions: isNotCustomPackageType[0].revisions,
@@ -499,9 +496,11 @@ export class CampaignService {
 
       if (!campaign.startDate) {
         return {
+          ...campaign,
           monthlyEarning,
-          daysRemaining: duration, // Full duration remains if not started
-          daysPassed: 0,
+          daysRemaining: duration,
+          daysCompleted: 0,
+          campaignProgress: 0,
           isExpired: false,
           notStarted: true,
         };
@@ -510,20 +509,41 @@ export class CampaignService {
       const startDate = new Date(campaign.startDate);
       const today = new Date();
 
+      // Campaign hasn't started yet
+      if (today < startDate) {
+        const daysUntilStart = Math.ceil(
+          (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+        );
+
+        return {
+          ...campaign,
+          monthlyEarning: Math.round(monthlyEarning * 100) / 100,
+          daysRemaining: duration, // Full duration remains
+          daysCompleted: 0,
+          campaignProgress: 0,
+          daysUntilStart, // New field showing when it starts
+          notStarted: true,
+          isExpired: false,
+        };
+      }
+
+      // Campaign has started
       const daysCompleted = Math.floor(
         (today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
       );
 
       const daysRemaining = Math.max(0, duration - daysCompleted);
-
-      const campaignProgress = (daysCompleted / duration) * 100;
+      const campaignProgress = Math.min(100, (daysCompleted / duration) * 100);
+      const isExpired = daysCompleted >= duration;
 
       return {
         ...campaign,
         monthlyEarning: Math.round(monthlyEarning * 100) / 100,
         daysRemaining,
         daysCompleted,
-        campaignProgress,
+        campaignProgress: Math.round(campaignProgress * 100) / 100,
+        notStarted: false,
+        isExpired,
       };
     });
 
@@ -563,7 +583,7 @@ export class CampaignService {
 
     return result;
   }
-  async updatePricePerDriverPerCampaign(data:updatePricePerDriverPerCampaign) {
+  async updatePricePerDriverPerCampaign(data: updatePricePerDriverPerCampaign) {
     const result =
       await this.campaignRepository.updatePricePerDriverPerCampaign(data);
 
