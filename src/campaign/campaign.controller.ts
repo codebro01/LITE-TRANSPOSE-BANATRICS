@@ -304,69 +304,69 @@ export class CampaignController {
     });
   }
 
-  // !  get all campaign published owned by business owners
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('businessOwner')
-  @Get('get-published')
-  @ApiCookieAuth('access_token')
-  @ApiOperation({
-    summary: 'Get all published campaigns',
-    description:
-      'Retrieves all published campaigns owned by the authenticated business owner.',
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'Successfully retrieved all published campaigns',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - Invalid or missing token',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - Not a business owner',
-  })
-  async getAllCampaignsPublished(@Req() req: Request, @Res() res: Response) {
-    const userId = req.user.id;
+  // // !  get all campaign published owned by business owners
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles('businessOwner')
+  // @Get('get-published')
+  // @ApiCookieAuth('access_token')
+  // @ApiOperation({
+  //   summary: 'Get all published campaigns',
+  //   description:
+  //     'Retrieves all published campaigns owned by the authenticated business owner.',
+  // })
+  // @ApiResponse({
+  //   status: 201,
+  //   description: 'Successfully retrieved all published campaigns',
+  // })
+  // @ApiResponse({
+  //   status: 401,
+  //   description: 'Unauthorized - Invalid or missing token',
+  // })
+  // @ApiResponse({
+  //   status: 403,
+  //   description: 'Forbidden - Not a business owner',
+  // })
+  // async getAllCampaignsPublished(@Req() req: Request, @Res() res: Response) {
+  //   const userId = req.user.id;
 
-    const campaign = await this.campaignService.getPublished(userId);
-    res.status(HttpStatus.CREATED).json({
-      message: 'Success',
-      data: campaign,
-    });
-  }
+  //   const campaign = await this.campaignService.getPublished(userId);
+  //   res.status(HttpStatus.CREATED).json({
+  //     message: 'Success',
+  //     data: campaign,
+  //   });
+  // }
 
-  // !  get all campaign completed by business owners
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('businessOwner')
-  @Get('get-completed')
-  @ApiCookieAuth('access_token')
-  @ApiOperation({
-    summary: 'Get all completed campaigns',
-    description:
-      'Retrieves all completed campaigns owned by the authenticated business owner.',
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'Successfully retrieved all completed campaigns',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - Invalid or missing token',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - Not a business owner',
-  })
-  async getAllCampaignsCompleted(@Req() req: Request, @Res() res: Response) {
-    const userId = req.user.id;
+  // // !  get all campaign completed by business owners
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles('businessOwner')
+  // @Get('get-completed')
+  // @ApiCookieAuth('access_token')
+  // @ApiOperation({
+  //   summary: 'Get all completed campaigns',
+  //   description:
+  //     'Retrieves all completed campaigns owned by the authenticated business owner.',
+  // })
+  // @ApiResponse({
+  //   status: 201,
+  //   description: 'Successfully retrieved all completed campaigns',
+  // })
+  // @ApiResponse({
+  //   status: 401,
+  //   description: 'Unauthorized - Invalid or missing token',
+  // })
+  // @ApiResponse({
+  //   status: 403,
+  //   description: 'Forbidden - Not a business owner',
+  // })
+  // async getAllCampaignsCompleted(@Req() req: Request, @Res() res: Response) {
+  //   const userId = req.user.id;
 
-    const campaign = await this.campaignService.getCompleted(userId);
-    res.status(HttpStatus.CREATED).json({
-      message: 'success',
-      data: campaign,
-    });
-  }
+  //   const campaign = await this.campaignService.getCompleted(userId);
+  //   res.status(HttpStatus.CREATED).json({
+  //     message: 'success',
+  //     data: campaign,
+  //   });
+  // }
 
   // !  get single campaign owned by business owners
   @UseGuards(JwtAuthGuard, RolesGuard)
