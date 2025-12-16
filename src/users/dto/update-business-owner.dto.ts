@@ -2,7 +2,6 @@ import {  ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsOptional,
   IsString,
-  IsEmail,
   MinLength,
   MaxLength,
   Matches,
@@ -21,14 +20,14 @@ export class UpdatebusinessOwnerDto {
   @MaxLength(100, { message: 'Business name must not exceed 100 characters' })
   businessName?: string;
 
-  @ApiPropertyOptional({
-    description: 'Business email address',
-    example: 'contact@acmecorp.com',
-    format: 'email',
-  })
-  @IsOptional()
-  @IsEmail({}, { message: 'Please provide a valid business email address' })
-  email?: string;
+  // @ApiPropertyOptional({
+  //   description: 'Business email address',
+  //   example: 'contact@acmecorp.com',
+  //   format: 'email',
+  // })
+  // @IsOptional()
+  // @IsEmail({}, { message: 'Please provide a valid business email address' })
+  // email?: string;
 
   @ApiPropertyOptional({
     description: 'Phone number (international format)',

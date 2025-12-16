@@ -532,22 +532,22 @@ export class UserService {
   }
 
   async updateUserInSettings(data: UpdatebusinessOwnerDto, userId: string) {
-    if (data.email) {
-      const emailExist = await this.userRepository.findByEmailOrPhone({
-        email: data.email,
-      });
-      console.log(emailExist);
-      if (emailExist)
-        throw new ConflictException(
-          `User with email ${data.email} already exist, please select another email`,
-        );
+    // if (data.email) {
+    //   const emailExist = await this.userRepository.findByEmailOrPhone({
+    //     email: data.email,
+    //   });
+    //   console.log(emailExist);
+    //   if (emailExist)
+    //     throw new ConflictException(
+    //       `User with email ${data.email} already exist, please select another email`,
+    //     );
 
-      // reset email verification
-      await this.userRepository.updateByUserId(
-        { ...data, emailVerified: false },
-        userId,
-      );
-    }
+    //   // reset email verification
+    //   await this.userRepository.updateByUserId(
+    //     { ...data, emailVerified: false },
+    //     userId,
+    //   );
+    // }
 
     const [updateUserTableFields, updateBusinessOwnerTableFields] =
       await Promise.all([
