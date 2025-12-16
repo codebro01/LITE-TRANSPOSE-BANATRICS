@@ -17,7 +17,7 @@ import { UpdatebusinessOwnerDto } from '@src/users/dto/update-business-owner.dto
 import {
   ApiOperation,
   ApiResponse,
-  ApiBearerAuth,
+  ApiCookieAuth,
   ApiBody,
 } from '@nestjs/swagger';
 
@@ -144,11 +144,60 @@ export class UserController {
     res.status(HttpStatus.ACCEPTED).json({ user: safeUser, accessToken });
   }
 
+  // ! get driver profile
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('driver')
+  @Get('driver/profile')
+  @ApiCookieAuth('access_token')
+  @ApiOperation({
+    summary: 'Driver profile info',
+    description:
+      'Retrieves profile of driver',
+  })
+  @ApiResponse({ status: 200, description: 'Successfully retrieved all users' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Insufficient permissions',
+  })
+  getDriverProfile(@Req() req: Request) {
+    const { id: userId } = req.user;
+    return this.userService.getDriverProfile(userId);
+  }
+  // ! get businessOnwer profile
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('businessOwner')
+  @Get('business-owner/profile')
+  @ApiCookieAuth('access_token')
+  @ApiOperation({
+    summary: 'businessOwner profile info',
+    description:
+      'Retrieves profile of businessOwner',
+  })
+  @ApiResponse({ status: 200, description: 'Successfully retrieved all users' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Insufficient permissions',
+  })
+  getBusinessOwnerProfile(@Req() req: Request) {
+    const { id: userId } = req.user;
+    return this.userService.getBusinessOwnerProfile(userId);
+  }
+
   //! get all users in db
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Get('get-all-users')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Get all users',
     description:
@@ -170,7 +219,7 @@ export class UserController {
   // ! update user basic information
   @UseGuards(JwtAuthGuard)
   @Patch('business/update')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Update business owner information',
     description:
@@ -202,7 +251,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'driver', 'businessOwner')
   @Patch('update/password')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Update user password',
     description:
@@ -348,7 +397,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Patch('update/become-a-driver')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Add driver role',
     description:
@@ -377,7 +426,11 @@ export class UserController {
     status: 403,
     description: 'Forbidden - User is not a business owner',
   })
-  async addDriverRole(@Req() req: Request, @Res() res: Response, @Body() body: AddDriverRoleDto) {
+  async addDriverRole(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() body: AddDriverRoleDto,
+  ) {
     const { id: userId } = req.user;
     const result = await this.userService.addDriverRole(body, userId);
     const safeUser = omit(result, ['password', 'refreshToken']);
@@ -391,7 +444,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
   @Patch('update/become-a-business-owner')
-  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Add business owner role',
     description:
@@ -420,7 +473,11 @@ export class UserController {
     status: 403,
     description: 'Forbidden - User is not a driver',
   })
-  async addBusinessOwnerRole(@Req() req: Request, @Res() res: Response, @Body() body: addBusinessOwnerRoleDto) {
+  async addBusinessOwnerRole(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() body: addBusinessOwnerRoleDto,
+  ) {
     const { id: userId } = req.user;
     const result = await this.userService.addBusinessOwnerRole(body, userId);
     const safeUser = omit(result, ['password', 'refreshToken']);

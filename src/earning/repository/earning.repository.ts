@@ -1,7 +1,7 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { earningsTable, earningTableInsertType } from '@src/db/earnings';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { and, eq, sql, gte } from 'drizzle-orm';
+import { and, eq, sql, gte, sum,  count } from 'drizzle-orm';
 import { startOfMonth } from 'date-fns';
 import { campaignTable, driverTable } from '@src/db';
 import { ApprovalStatusType } from '@src/earning/dto/create-earning.dto';
@@ -47,10 +47,10 @@ export class EarningRepository {
 
   async monthlyEarningBreakdown(userId: string) {
     const earnings = await this.DbProvider.select({
-      year: sql<number>`YEAR(${campaignTable.updatedAt})`,
-      month: sql<number>`MONTH(${campaignTable.updatedAt})`,
-      totalEarning: sql<number>`SUM(${campaignTable.earningPerDriver})`,
-      numCampaigns: sql<number>`COUNT(${campaignTable.id})`,
+      year: sql<number>`EXTRACT(YEAR FROM ${campaignTable.updatedAt})`,
+      month: sql<number>`EXTRACT(MONTH FROM ${campaignTable.updatedAt})`,
+      totalEarning: sum(campaignTable.earningPerDriver),
+      numCampaigns: count(campaignTable.id),
     })
       .from(campaignTable)
       .where(
@@ -60,14 +60,15 @@ export class EarningRepository {
         ),
       )
       .groupBy(
-        sql`YEAR(${campaignTable.updatedAt})`,
-        sql`MONTH(${campaignTable.updatedAt})`,
+        sql`EXTRACT(YEAR FROM ${campaignTable.updatedAt})`,
+        sql`EXTRACT(MONTH FROM ${campaignTable.updatedAt})`,
       )
       .orderBy(
-        sql`YEAR(${campaignTable.updatedAt})`,
-        sql`MONTH(${campaignTable.updatedAt})`,
+        sql`EXTRACT(YEAR FROM ${campaignTable.updatedAt})`,
+        sql`EXTRACT(MONTH FROM ${campaignTable.updatedAt})`,
       )
       .execute();
+
     return earnings;
   }
 
@@ -78,10 +79,12 @@ export class EarningRepository {
   ) {
     const Trx = trx || this.DbProvider;
 
-    const earnings = await Trx.insert(earningsTable).values({
-      ...data,
-      userId,
-    }).returning();
+    const earnings = await Trx.insert(earningsTable)
+      .values({
+        ...data,
+        userId,
+      })
+      .returning();
 
     return earnings;
   }
@@ -127,7 +130,7 @@ export class EarningRepository {
     const Trx = trx || this.DbProvider;
 
     const earnings = await Trx.select({
-      total: sql<number>`SUM(${earningsTable.amount}) THEN NULL`,
+      total: sql<number>`COALESCE(SUM(${earningsTable.amount}), 0)`,
     })
       .from(earningsTable)
       .where(
@@ -150,12 +153,12 @@ export class EarningRepository {
   }
 
   async pendingBalance(userId: string) {
-    const balance = await this.DbProvider.select({
+    const [balance] = await this.DbProvider.select({
       pending: driverTable.pending,
     })
       .from(driverTable)
       .where(eq(driverTable.userId, userId));
-    return balance;
+    return balance.pending;
   }
 
   async amountMadeThisMonth(userId: string) {

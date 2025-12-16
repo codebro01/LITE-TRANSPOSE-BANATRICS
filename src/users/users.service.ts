@@ -805,4 +805,11 @@ export class UserService {
     const user = await this.userRepository.updateDriverDp(dp, userId);
     return user;
   }
+
+  async getDriverProfile(userId: string) {
+    return await this.userRepository.getDriverProfile(userId);
+  }
+  async getBusinessOwnerProfile(userId: string) {
+    return await this.userRepository.getBusinessOwnerProfile(userId);
+  }
 }

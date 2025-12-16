@@ -225,4 +225,27 @@ export class UserRepository {
   async findDriverById(userId: string) {
     return await this.DbProvider.select().from(driverTable).where(eq(driverTable.userId, userId))
   }
+
+  async getDriverProfile(userId: string) {
+    return await this.DbProvider.select({
+      id: userTable.id, 
+      email: userTable.email, 
+      phone: userTable.phone, 
+      state: driverTable.state, 
+      createdAt: userTable.createdAt, 
+      firstname: driverTable.firstname, 
+      lastname: driverTable.lastname, 
+      dp: driverTable.dp, 
+
+    }).from(driverTable).where(eq(driverTable.userId, userId)).leftJoin(userTable, eq(userTable.id, userId));
+  }
+  async getBusinessOwnerProfile(userId: string) {
+    return await this.DbProvider.select({
+      id: userTable.id, 
+      email: userTable.email, 
+      phone: userTable.phone, 
+      businessName: businessOwnerTable.businessName, 
+
+    }).from(businessOwnerTable).where(eq(businessOwnerTable.userId, userId)).leftJoin(userTable, eq(userTable.id, userId));
+  }
 }
