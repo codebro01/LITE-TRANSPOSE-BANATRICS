@@ -291,52 +291,52 @@ export class PaymentController {
     return payment;
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('businessOwner')
-  @Get('list-all-transactions')
-  @ApiOperation({
-    summary: 'List all transactions from Paystack',
-    description:
-      'Retrieves all transactions from Paystack API. Returns a comprehensive list of all payment transactions across the platform.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Transactions retrieved successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        status: { type: 'boolean', example: true },
-        message: { type: 'string', example: 'Transactions retrieved' },
-        data: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              id: { type: 'number', example: 123456 },
-              reference: { type: 'string', example: 'ref_1234567890' },
-              amount: { type: 'number', example: 50000 },
-              status: { type: 'string', example: 'success' },
-              currency: { type: 'string', example: 'NGN' },
-              created_at: { type: 'string', format: 'date-time' },
-              channel: { type: 'string', example: 'card' },
-            },
-          },
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - Invalid or missing JWT token',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - User is not a business owner',
-  })
-  async listTransactions() {
-    const result = await this.paymentService.listAllTransactions();
-    return result;
-  }
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles('admin')
+  // @Get('list-all-transactions')
+  // @ApiOperation({
+  //   summary: 'List all transactions from Paystack',
+  //   description:
+  //     'Retrieves all transactions from Paystack API. Returns a comprehensive list of all payment transactions across the platform.',
+  // })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Transactions retrieved successfully',
+  //   schema: {
+  //     type: 'object',
+  //     properties: {
+  //       status: { type: 'boolean', example: true },
+  //       message: { type: 'string', example: 'Transactions retrieved' },
+  //       data: {
+  //         type: 'array',
+  //         items: {
+  //           type: 'object',
+  //           properties: {
+  //             id: { type: 'number', example: 123456 },
+  //             reference: { type: 'string', example: 'ref_1234567890' },
+  //             amount: { type: 'number', example: 50000 },
+  //             status: { type: 'string', example: 'success' },
+  //             currency: { type: 'string', example: 'NGN' },
+  //             created_at: { type: 'string', format: 'date-time' },
+  //             channel: { type: 'string', example: 'card' },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   },
+  // })
+  // @ApiResponse({
+  //   status: 401,
+  //   description: 'Unauthorized - Invalid or missing JWT token',
+  // })
+  // @ApiResponse({
+  //   status: 403,
+  //   description: 'Forbidden - User is not a business owner',
+  // })
+  // async listTransactions() {
+  //   const result = await this.paymentService.listAllTransactions();
+  //   return result;
+  // }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
