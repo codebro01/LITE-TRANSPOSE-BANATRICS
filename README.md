@@ -55,7 +55,6 @@ CLOUDINARY_API_KEY="your-cloudinary-api-key"
 CLOUDINARY_API_SECRET="your-cloudinary-api-secret"
 
 # JWT Secrets for Authentication
-JWT_SECRET="your-jwt-secret"
 JWT_ACCESS_TOKEN_SECRET="your-jwt-access-token-secret"
 JWT_REFRESH_TOKEN_SECRET="your-jwt-refresh-token-secret"
 PASSWORD_RESET_TOKEN_SECRET="your-password-reset-secret"
