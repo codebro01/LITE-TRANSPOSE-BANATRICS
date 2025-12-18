@@ -1,98 +1,183 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# BANATRICS API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A RESTful API built with NestJS for the Banatrics platform. It manages drivers, advertising campaigns, earnings, and user data. The application uses a PostgreSQL database with Drizzle ORM for database interactions.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Features
 
-## Description
+-   User Authentication (JWT-based)
+-   User, Vehicle, and Bank Details Management
+-   Advertising Campaign Management
+-   Driver Earnings and Payment Tracking
+-   Image and File Uploads via Cloudinary
+-   Email Notifications
+-   Background Job Processing with Bull
+-   Dashboard for analytics
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Prerequisites
 
-## Project setup
+-   Node.js (v22.x or later recommended)
+-   PostgreSQL
+-   NPM
 
-```bash
-$ npm install
+## Installation
+
+1.  Clone the repository:
+    ```bash
+    git clone <repository-url>
+    ```
+2.  Navigate to the project directory:
+    ```bash
+    cd lite-transpose-banatrics
+    ```
+3.  Install the dependencies:
+    ```bash
+    npm install
+    ```
+
+## Configuration
+
+The application requires the following environment variables. Create a `.env` file in the root of the project and add the following variables:
+
+```
+# Application Port
+PORT=3000
+
+# PostgreSQL Database Connection URL
+DATABASE_URL="postgresql://user:password@host:port/database"
+
+# Resend API for sending emails
+RESEND_API_KEY="your-resend-api-key"
+EMAIL_FROM="you@yourdomain.com"
+
+# Cloudinary for file storage
+CLOUDINARY_CLOUD_NAME="your-cloudinary-name"
+CLOUDINARY_API_KEY="your-cloudinary-api-key"
+CLOUDINARY_API_SECRET="your-cloudinary-api-secret"
+
+# JWT Secrets for Authentication
+JWT_SECRET="your-jwt-secret"
+JWT_ACCESS_TOKEN_SECRET="your-jwt-access-token-secret"
+JWT_REFRESH_TOKEN_SECRET="your-jwt-refresh-token-secret"
+PASSWORD_RESET_TOKEN_SECRET="your-password-reset-secret"
 ```
 
-## Compile and run the project
+## Database Setup
 
-```bash
-# development
-$ npm run start
+This project uses Drizzle ORM to manage the database schema.
 
-# watch mode
-$ npm run start:dev
+1.  **Generate Migrations:**
+    After changing the schema in `src/db/`, you can generate a new migration file:
+    ```bash
+    npx drizzle-kit generate
+    ```
 
-# production mode
-$ npm run start:prod
+2.  **Apply Migrations:**
+    To apply the migrations to your database:
+    ```bash
+    npx drizzle-kit migrate
+    ```
+
+## Running the Application
+
+You can run the application in different modes using the npm scripts defined in `package.json`.
+
+-   **Development Mode:**
+    The application will watch for file changes and automatically restart.
+    ```bash
+    npm run start:dev
+    ```
+
+-   **Production Mode:**
+    First, build the application, then run the compiled JavaScript.
+    ```bash
+    npm run build
+    npm run start:prod
+    ```
+-   **Debug Mode:**
+    ```bash
+    npm run start:debug
+    ```
+
+## API Documentation
+
+API documentation is available through Swagger UI. Once the application is running, you can access it at:
+
+-   **URL:** `/api/v1/api-docs`
+-   **Base URL:** `/api/v1`
+
+The documentation provides details on all available endpoints, required parameters, and response models. Authentication is handled via JWT Bearer tokens.
+
+## Testing
+
+The project includes unit and end-to-end (E2E) tests.
+
+-   **Run all unit tests:**
+    ```bash
+    npm run test
+    ```
+-   **Run unit tests with coverage report:**
+    ```bash
+    npm run test:cov
+    ```
+-   **Run E2E tests:**
+    ```bash
+    npm run test:e2e
+    ```
+
+## Project Structure
+
+The source code is organized into modules, with each module representing a major feature of the application.
+
+```
+src/
+├── auth/            # Authentication and authorization
+├── bank-details/    # User bank account management
+├── campaign/        # Advertising campaign management
+├── dashboard/       # Endpoints for dashboard analytics
+├── db/              # Drizzle ORM schema and configuration
+├── earning/         # Driver earnings tracking
+├── email/           # Email sending service
+├── notification/    # User notifications
+├── package/         # Package/subscription management
+├── payment/         # Payment processing
+├── users/           # User management
+├── vehicle-details/ # User vehicle management
+├── weekly-proofs/   # Weekly proof submissions
+├── main.ts          # Application entry point
+└── app.module.ts    # Root application module
 ```
 
-## Run tests
+## Scripts
 
-```bash
-# unit tests
-$ npm run test
+The following scripts are available in `package.json`:
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
+-   `npm run build`: Compiles the TypeScript source code.
+-   `npm run format`: Formats the code using Prettier.
+-   `npm run start`: Runs the application from the `dist` directory.
+-   `npm run start:dev`: Runs the application in development watch mode.
+-   `npm run start:prod`: Runs the application in production mode.
+-   `npm run lint`: Lints the codebase.
+<!-- -   `npm run test`: Runs unit tests.
+-   `npm run test:watch`: Runs unit tests in watch mode.
+-   `npm run test:cov`: Generates a test coverage report.
+-   `npm run test:e2e`: Runs end-to-end tests. -->
 
 ## Deployment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+To deploy the application, first build the project:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run build
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Then, run the main file from the `dist` directory:
 
-## Resources
+```bash
+npm run start:prod
+```
 
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Ensure that all required environment variables are set in the production environment.
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is UNLICENSED.
