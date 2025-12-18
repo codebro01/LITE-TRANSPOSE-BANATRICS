@@ -64,6 +64,7 @@ export const driverTable = pgTable('drivers', {
   nin: varchar('nin', { length: 12 }).notNull().unique(),
   state: varchar('state', { length: 50 }).notNull(),
   lga: varchar('lga', { length: 50 }).notNull(),
+  address: varchar('address', { length: 255 }),
   frontview: jsonb('frontview')
     .$type<{
       secure_url: string;

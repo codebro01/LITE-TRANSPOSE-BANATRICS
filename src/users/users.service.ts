@@ -13,7 +13,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { jwtConstants } from '@src/auth/jwtContants';
 import { createBusinessOwnerDto } from '@src/users/dto/create-business-owner.dto';
-import { UpdatebusinessOwnerDto } from '@src/users/dto/update-business-owner.dto';
+import { UpdateBusinessOwnerProfileDto } from '@src/users/dto/update-business-profile.dto';
 import { UpdatePasswordDto } from '@src/users/dto/updatePasswordDto';
 import { UserRepository } from '@src/users/repository/user.repository';
 import { EmailService } from '@src/email/email.service';
@@ -27,6 +27,7 @@ import { CreateDriverDto } from '@src/users/dto/create-driver.dto';
 import { InitializeDriverCreationDto } from '@src/users/dto/initialize-driver-creation.dto';
 import { AddDriverRoleDto } from '@src/users/dto/add-driver-role.dto';
 import { addBusinessOwnerRoleDto } from '@src/users/dto/add-business-owner-role.dto';
+import { UpdateDriverProfileDto } from '@src/users/dto/update-driver-profile.dto';
 @Injectable()
 export class UserService {
   constructor(
@@ -531,35 +532,35 @@ export class UserService {
     return user;
   }
 
-  async updateUserInSettings(data: UpdatebusinessOwnerDto, userId: string) {
-    // if (data.email) {
-    //   const emailExist = await this.userRepository.findByEmailOrPhone({
-    //     email: data.email,
-    //   });
-    //   console.log(emailExist);
-    //   if (emailExist)
-    //     throw new ConflictException(
-    //       `User with email ${data.email} already exist, please select another email`,
-    //     );
+  // async updateUserInSettings(data: UpdateBusinessOwnerProfileDto, userId: string) {
+  //   // if (data.email) {
+  //   //   const emailExist = await this.userRepository.findByEmailOrPhone({
+  //   //     email: data.email,
+  //   //   });
+  //   //   console.log(emailExist);
+  //   //   if (emailExist)
+  //   //     throw new ConflictException(
+  //   //       `User with email ${data.email} already exist, please select another email`,
+  //   //     );
 
-    //   // reset email verification
-    //   await this.userRepository.updateByUserId(
-    //     { ...data, emailVerified: false },
-    //     userId,
-    //   );
-    // }
+  //   //   // reset email verification
+  //   //   await this.userRepository.updateByUserId(
+  //   //     { ...data, emailVerified: false },
+  //   //     userId,
+  //   //   );
+  //   // }
 
-    const [updateUserTableFields, updateBusinessOwnerTableFields] =
-      await Promise.all([
-        this.userRepository.updateByUserId(data, userId),
-        this.userRepository.updateBusinessOwnerById(data, userId),
-      ]);
+  //   const [updateUserTableFields, updateBusinessOwnerTableFields] =
+  //     await Promise.all([
+  //       this.userRepository.updateByUserId(data, userId),
+  //       this.userRepository.updateBusinessOwnerById(data, userId),
+  //     ]);
 
-    return {
-      ...updateBusinessOwnerTableFields,
-      ...updateUserTableFields,
-    };
-  }
+  //   return {
+  //     ...updateBusinessOwnerTableFields,
+  //     ...updateUserTableFields,
+  //   };
+  // }
   // ! this update password is for updating the password from settings
   async updatePassword(data: UpdatePasswordDto, userId: string) {
     const { oldPassword, newPassword, repeatNewPassword } = data;
@@ -785,7 +786,7 @@ export class UserService {
   }
 
   async addDriverRole(data: AddDriverRoleDto, userId: string) {
-    const addRole = await this.userRepository.addDriverRole(data, userId)
+    const addRole = await this.userRepository.addDriverRole(data, userId);
     return addRole;
   }
   async addBusinessOwnerRole(data: addBusinessOwnerRoleDto, userId: string) {
@@ -811,5 +812,11 @@ export class UserService {
   }
   async getBusinessOwnerProfile(userId: string) {
     return await this.userRepository.getBusinessOwnerProfile(userId);
+  }
+  async updateBusinessOwnerById(data: UpdateBusinessOwnerProfileDto, userId: string) {
+    return await this.userRepository.updateBusinessOwnerById(data, userId);
+  }
+  async updateDriverById(data: UpdateDriverProfileDto, userId: string) {
+    return await this.userRepository.updateDriverById(data, userId);
   }
 }

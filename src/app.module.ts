@@ -19,7 +19,6 @@ import { CatchErrorModule } from './catch-error/catch-error.module';
 import { NotificationModule } from './notification/notification.module';
 import { EmailModule } from './email/email.module';
 import { DashboardModule } from './dashboard/dashboard.module';
-import { SettingsModule } from './settings/settings.module';
 import { PackageModule } from './package/package.module';
 import { BullModule } from '@nestjs/bull';
 import { PasswordResetModule } from './password-reset/password-reset.module';
@@ -75,7 +74,6 @@ import { ScheduleModule } from '@nestjs/schedule';
     NotificationModule,
     EmailModule,
     DashboardModule,
-    SettingsModule,
     PackageModule,
     PasswordResetModule,
     EmailVerificationModule,

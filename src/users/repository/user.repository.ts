@@ -9,6 +9,7 @@ import {
   userTable,
   userSelectType,
   driverTable,
+  driverInsertType,
 } from '@src/db/users';
 import { addBusinessOwnerRoleDto } from '@src/users/dto/add-business-owner-role.dto';
 import { AddDriverRoleDto } from '@src/users/dto/add-driver-role.dto';
@@ -142,6 +143,21 @@ export class UserRepository {
       });
 
     return businessOwner;
+  }
+  async updateDriverById(
+    data: Partial<driverInsertType>,
+    userId: string,
+  ) {
+    const [driver] = await this.DbProvider.update(driverTable)
+      .set(data)
+      .where(eq(driverTable.userId, userId))
+      .returning({
+        firstname: driverTable.firstname,
+        lastname: driverTable.lastname,
+        address: driverTable.address,
+      });
+
+    return driver;
   }
 
   async getStoredPassword(userId: string) {

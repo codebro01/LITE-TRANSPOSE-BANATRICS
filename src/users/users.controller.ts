@@ -13,7 +13,7 @@ import { UserService } from '@src/users/users.service';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@src/auth/guards/roles.guard';
 import { Roles } from '@src/auth/decorators/roles.decorators';
-import { UpdatebusinessOwnerDto } from '@src/users/dto/update-business-owner.dto';
+import { UpdateBusinessOwnerProfileDto } from '@src/users/dto/update-business-profile.dto';
 import {
   ApiOperation,
   ApiResponse,
@@ -35,6 +35,7 @@ import { EarningService } from '@src/earning/earning.service';
 import { UpdateDriverDpDto } from '@src/users/dto/update-driver-dp.dto';
 import { addBusinessOwnerRoleDto } from '@src/users/dto/add-business-owner-role.dto';
 import { AddDriverRoleDto } from '@src/users/dto/add-driver-role.dto';
+import { UpdateDriverProfileDto } from '@src/users/dto/update-driver-profile.dto';
 
 @Controller('users')
 export class UserController {
@@ -218,14 +219,14 @@ export class UserController {
 
   // ! update user basic information
   @UseGuards(JwtAuthGuard)
-  @Patch('business/update')
+  @Patch('business/update-profile')
   @ApiCookieAuth('access_token')
   @ApiOperation({
-    summary: 'Update business owner information',
+    summary: 'Update business owner profile',
     description:
       'Updates basic information for the authenticated business owner',
   })
-  @ApiBody({ type: UpdatebusinessOwnerDto })
+  @ApiBody({ type: UpdateBusinessOwnerProfileDto })
   @ApiResponse({
     status: 200,
     description: 'User information successfully updated',
@@ -235,13 +236,43 @@ export class UserController {
     status: 401,
     description: 'Unauthorized - Invalid or missing token',
   })
-  async updateUsers(
+  async updateBusinessOwnerProfile(
     @Req() req: Request,
     @Res() res: Response,
-    @Body() body: UpdatebusinessOwnerDto,
+    @Body() body: UpdateBusinessOwnerProfileDto,
   ) {
     const { id: userId } = req.user;
-    const result = await this.userService.updateUserInSettings(body, userId);
+    const result = await this.userService.updateBusinessOwnerById(body, userId);
+    res.status(HttpStatus.OK).json({
+      message: 'success',
+      data: result,
+    });
+  }
+  @UseGuards(JwtAuthGuard)
+  @Patch('driver/update-profile')
+  @ApiCookieAuth('access_token')
+  @ApiOperation({
+    summary: 'Update driver profile',
+    description:
+      'Updates basic information for the authenticated driver',
+  })
+  @ApiBody({ type: UpdateDriverProfileDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Driver information successfully updated',
+  })
+  @ApiResponse({ status: 400, description: 'Bad request - Invalid input data' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing token',
+  })
+  async updateDriverProfile(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() body: UpdateDriverProfileDto,
+  ) {
+    const { id: userId } = req.user;
+    const result = await this.userService.updateDriverById(body, userId);
     res.status(HttpStatus.OK).json({
       message: 'success',
       data: result,
