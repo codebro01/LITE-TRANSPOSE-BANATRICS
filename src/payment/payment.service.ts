@@ -137,8 +137,11 @@ export class PaymentService {
       const { channel } = event.data.authorization || {};
       const { userId, amountInNaira, invoiceId, dateInitiated } =
         event.data.metadata || {};
-      const { recipient_code } = event.data.recipient;
+        console.log('got in here', event);
+      const recipient_code = event.data?.recipient?.recipient_code || null;
       // const {account_number, account_name, bank_name, bank_code} = event.data.recipient.details
+
+
 
       switch (event.event) {
         case 'charge.success': {
@@ -148,6 +151,8 @@ export class PaymentService {
           if (existingPayment && existingPayment.paymentStatus === 'success') {
             return 'already processed';
           }
+
+          console.log('got in here')
 
           await this.paymentRepository.executeInTransaction(async (trx) => {
             await this.paymentRepository.savePayment(
