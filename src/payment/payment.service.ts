@@ -137,7 +137,7 @@ export class PaymentService {
       const { channel } = event.data.authorization || {};
       const { userId, amountInNaira, invoiceId, dateInitiated } =
         event.data.metadata || {};
-        console.log('got in here', event);
+        // console.log('got in here', event);
       const recipient_code = event.data?.recipient?.recipient_code || null;
       // const {account_number, account_name, bank_name, bank_code} = event.data.recipient.details
 
