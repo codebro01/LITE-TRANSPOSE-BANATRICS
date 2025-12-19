@@ -76,13 +76,13 @@ export class UserController {
     res.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: true,
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 1000 * 60 * 60, // 1h
     });
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 1000 * 60 * 60 * 24 * 30, // 30d
     });
 
@@ -126,13 +126,13 @@ export class UserController {
     res.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: true,
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 1000 * 60 * 60, // 1h
     });
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 1000 * 60 * 60 * 24 * 30, // 30d
     });
 

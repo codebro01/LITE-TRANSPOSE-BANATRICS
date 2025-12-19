@@ -28,6 +28,8 @@ export class JwtAuthGuard implements CanActivate {
     const access_token = request.cookies?.access_token; // for browser cookies // for mobile apps
     const refresh_token = request.cookies?.refresh_token; // for browser cookies // for mobile apps
 
+
+    console.log(access_token, refresh_token)
     if (!access_token && !refresh_token) {
       throw new UnauthorizedException('No token provided');
     }
