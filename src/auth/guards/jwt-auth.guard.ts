@@ -28,8 +28,7 @@ export class JwtAuthGuard implements CanActivate {
     const access_token = request.cookies?.access_token; // for browser cookies // for mobile apps
     const refresh_token = request.cookies?.refresh_token; // for browser cookies // for mobile apps
 
-
-    console.log(access_token, refresh_token)
+    console.log(access_token, refresh_token);
     if (!access_token && !refresh_token) {
       throw new UnauthorizedException('No token provided');
     }
@@ -46,7 +45,7 @@ export class JwtAuthGuard implements CanActivate {
           'Could not verify token, Unauthorization error',
         );
 
-        console.log(token)
+      console.log(token);
 
       // const payload = this.jwtService.verify(token); // verify with secret
       request['user'] = token; // attach user to request
@@ -55,9 +54,7 @@ export class JwtAuthGuard implements CanActivate {
       console.log(error);
       if (!refresh_token) {
         response.redirect('/signin');
-        throw new UnauthorizedException(
-          'You are not permitted to enter here',
-        );
+        throw new UnauthorizedException('You are not permitted to enter here');
       }
       // console.log('got to is not refresh token', refresh_token);
       const token = await this.jwtService.verifyAsync(refresh_token, {
@@ -88,13 +85,14 @@ export class JwtAuthGuard implements CanActivate {
 
       response.cookie('access_token', newAccessToken, {
         httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === 'development' ? false : true,
         sameSite: 'strict',
         maxAge: 1000 * 60 * 60, // 1h
       });
       response.cookie('refresh_token', newRefreshToken, {
         httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === 'development' ? false : true,
+
         sameSite: 'strict',
         maxAge: 1000 * 60 * 60 * 24 * 30, // 30d
       });
