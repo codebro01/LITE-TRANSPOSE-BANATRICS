@@ -56,7 +56,7 @@ export class HomeDashboardsRepository {
       totalSpent: totalSpent.totalSpent,
       totalCampaign: campaign.totalCampaigns,
       activeCampaign: campaign.activeCampaigns,
-      totalNoOfDriver: campaign.noOfDrivers,
+      totalNoOfActiveDrivers: campaign.noOfDrivers,
     };
   }
   async driverHomeDashboard(userId: string) {
