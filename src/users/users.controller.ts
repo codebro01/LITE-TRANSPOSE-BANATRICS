@@ -75,16 +75,15 @@ export class UserController {
 
     res.cookie('access_token', accessToken, {
       httpOnly: true,
-            secure: process.env.NODE_ENV === 'development' ? false : true,
-
-      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 1000 * 60 * 60, // 1h
     });
+
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
-            secure: process.env.NODE_ENV === 'development' ? false : true,
-
-      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 1000 * 60 * 60 * 24 * 30, // 30d
     });
 
@@ -124,19 +123,18 @@ export class UserController {
   ) {
     const { savedUser, accessToken, refreshToken } =
       await this.userService.finalizeDriverCreation(body);
-
+      
     res.cookie('access_token', accessToken, {
       httpOnly: true,
-            secure: process.env.NODE_ENV === 'development' ? false : true,
-
-      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 1000 * 60 * 60, // 1h
     });
+
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
-            secure: process.env.NODE_ENV === 'development' ? false : true,
-
-      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 1000 * 60 * 60 * 24 * 30, // 30d
     });
 
@@ -157,8 +155,7 @@ export class UserController {
   @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Driver profile info',
-    description:
-      'Retrieves profile of driver',
+    description: 'Retrieves profile of driver',
   })
   @ApiResponse({ status: 200, description: 'Successfully retrieved all users' })
   @ApiResponse({
@@ -181,8 +178,7 @@ export class UserController {
   @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'businessOwner profile info',
-    description:
-      'Retrieves profile of businessOwner',
+    description: 'Retrieves profile of businessOwner',
   })
   @ApiResponse({ status: 200, description: 'Successfully retrieved all users' })
   @ApiResponse({
@@ -257,8 +253,7 @@ export class UserController {
   @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Update driver profile',
-    description:
-      'Updates basic information for the authenticated driver',
+    description: 'Updates basic information for the authenticated driver',
   })
   @ApiBody({ type: UpdateDriverProfileDto })
   @ApiResponse({
