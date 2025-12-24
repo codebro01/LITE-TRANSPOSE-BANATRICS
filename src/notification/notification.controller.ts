@@ -3,7 +3,7 @@ import {
   Controller,
   HttpStatus,
   Post,
-  UseGuards,Body, Req, Res, Sse, Query, Param, Get
+  UseGuards,Body, Req, Res, Sse, Query, Param, Get, Patch
 } from '@nestjs/common';
 import { Roles } from '@src/auth/decorators/roles.decorators';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
@@ -30,6 +30,33 @@ import {
 @Controller('notification')
 export class NotificationController {
   constructor(private notificationService: NotificationService) {}
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('businessOwner', 'driver')
+  @Sse('stream')
+  @ApiOperation({
+    summary: 'Get all notifications',
+    description:
+      'This endpoints fetches all user notifications',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Notifications fetched successfully',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User does not have required role',
+  })
+  async getNotifications(@Req() req: Request) {
+    const userId = req.user.id; // Get from auth
+
+    const notifications = await this.notificationService.getNotifications(userId);
+    return {success: true, data: notifications}
+  }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner', 'driver')
@@ -155,7 +182,7 @@ export class NotificationController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @Post('update-notification/:id')
+  @Patch('update-notification/:id')
   @ApiOperation({
     summary: 'Update a specific notification',
     description:

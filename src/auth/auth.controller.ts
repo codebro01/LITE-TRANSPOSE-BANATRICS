@@ -85,7 +85,7 @@ export class AuthController {
 
     const safeUser = omit(user, ['password', 'refreshToken']);
 
-    res.status(HttpStatus.ACCEPTED).json({ user: safeUser, accessToken });
+    res.status(HttpStatus.ACCEPTED).json({ user: safeUser });
   }
 
   // ! logout route

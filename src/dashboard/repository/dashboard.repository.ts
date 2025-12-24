@@ -51,7 +51,10 @@ export class HomeDashboardsRepository {
           duration: campaignTable.duration,
           availability: campaignTable.availability,
           requirements: campaignTable.requirements,
+          startDate: campaignTable.startDate,
+          endDate: campaignTable.endDate,
           description: campaignTable.campaignDescriptions,
+        
         })
           .from(campaignTable)
           .where(eq(campaignTable.userId, userId)),

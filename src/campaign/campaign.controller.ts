@@ -482,7 +482,7 @@ export class CampaignController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
-  @Post('driver/appy')
+  @Post('driver/apply')
   @ApiCookieAuth('access_token')
   @ApiOperation({
     description: 'Apply for campaign',

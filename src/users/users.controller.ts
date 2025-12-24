@@ -93,7 +93,7 @@ export class UserController {
       'emailVerificationCode',
     ]);
 
-    res.status(HttpStatus.ACCEPTED).json({ user: safeUser, accessToken });
+    res.status(HttpStatus.ACCEPTED).json({ user: safeUser });
   }
   // ! initialize driver creation
   @Post('signup/driver/initialize')
@@ -144,7 +144,7 @@ export class UserController {
       'emailVerificationCode',
     ]);
 
-    res.status(HttpStatus.ACCEPTED).json({ user: safeUser, accessToken });
+    res.status(HttpStatus.ACCEPTED).json({ user: safeUser });
   }
 
   // ! get driver profile
