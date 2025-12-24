@@ -54,7 +54,6 @@ export class HomeDashboardsRepository {
           startDate: campaignTable.startDate,
           endDate: campaignTable.endDate,
           description: campaignTable.campaignDescriptions,
-        
         })
           .from(campaignTable)
           .where(eq(campaignTable.userId, userId)),
@@ -83,7 +82,7 @@ export class HomeDashboardsRepository {
       [activeCampaign],
       [pendingPayout],
       [totalCampaignDone],
-      yourCampaign,
+      yourCampaigns,
     ] = await Promise.all([
       this.DbProvider.select({
         total: sql<number>`COALESCE(SUM(${earningsTable.amount}), 0)`,
@@ -150,7 +149,7 @@ export class HomeDashboardsRepository {
       activeCampaign: activeCampaign.active,
       pendingPayout: String(pendingPayout.pendng),
       totalCampaignDone: totalCampaignDone.total,
-      yourCampaign,
+      yourCampaigns,
     };
   }
 }

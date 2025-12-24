@@ -33,7 +33,7 @@ export class NotificationController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner', 'driver')
-  @Sse('stream')
+  @Get('all')
   @ApiOperation({
     summary: 'Get all notifications',
     description:

@@ -1,0 +1,1 @@
+ALTER TABLE "users" ALTER COLUMN "refreshToken" SET DATA TYPE varchar;

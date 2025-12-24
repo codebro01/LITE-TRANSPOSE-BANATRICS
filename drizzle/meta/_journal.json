@@ -120,6 +120,13 @@
       "when": 1766022898023,
       "tag": "0016_luxuriant_omega_flight",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1766554046980,
+      "tag": "0017_spooky_jack_power",
+      "breakpoints": true
     }
   ]
 }

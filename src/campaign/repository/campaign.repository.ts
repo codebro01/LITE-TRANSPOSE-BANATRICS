@@ -319,8 +319,8 @@ async findActiveCampaignByCampaignId(campaignId:string) {
       requirements: campaignTable.requirements,
       description: campaignTable.campaignDescriptions,
       totalEarning: campaignTable.earningPerDriver,
-      numberOfDrivers: campaignTable.noOfDrivers,
-      totalDriversApplied: sql<number>`COUNT(${driverCampaignTable.id})`,
+      TotalNumberOfDrivers: campaignTable.noOfDrivers,
+      totalDriversApplied: sql<number>`COUNT(${driverCampaignTable.id})::int`,
     })
       .from(campaignTable)
       .leftJoin(
@@ -332,7 +332,7 @@ async findActiveCampaignByCampaignId(campaignId:string) {
           eq(campaignTable.statusType, 'active'),
           eq(campaignTable.paymentStatus, 'spent'),
         ),
-      ) 
+      )
       .groupBy(campaignTable.id)
       .having(
         sql`COUNT(${driverCampaignTable.id}) < ${campaignTable.noOfDrivers}`,
