@@ -77,7 +77,7 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
           exception?.response?.message ||
           exception?.response?.data?.message ||
           'Bad request was sent to the server',
-        error: 'Bad Request',
+        error: exception?.response?.error || 'Bad Request',
         timestamp: new Date().toISOString(),
         path: request.url,
       });
@@ -90,14 +90,18 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
           exception?.response?.message ||
           exception?.response?.data?.message ||
           'Unauthorized request',
-        error: 'Unauthorized',
+        error: exception?.response?.error || 'Unauthorized',
         timestamp: new Date().toISOString(),
         path: request.url,
       });
     }
 
-
-    if (exception?.response?.statusCode === 422 || exception?.status === 422 || exception.data?.status === 422 || exception?.status) {
+    if (
+      exception?.response?.statusCode === 422 ||
+      exception?.status === 422 ||
+      exception.data?.status === 422 ||
+      exception?.status
+    ) {
       return response.status(HttpStatus.BAD_REQUEST).json({
         statusCode: HttpStatus.BAD_REQUEST,
         message:
@@ -105,7 +109,7 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
           exception?.response?.data?.message ||
           exception?.data.message ||
           'Unauthorized request',
-        error: 'Unauthorized',
+        error: exception?.response?.error || 'Unauthorized',
         timestamp: new Date().toISOString(),
         path: request.url,
       });
@@ -117,7 +121,7 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
         message:
           exception?.response?.message ||
           'You are not authorized to access this place',
-        error: 'Unauthorized',
+        error: exception?.response?.error || 'Unauthorized',
         timestamp: new Date().toISOString(),
         path: request.url,
       });
@@ -129,28 +133,30 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
         message:
           exception?.response?.message ||
           'We could not find what you are looking for',
-        error: 'Resource not found',
+        error: exception?.response?.error || 'Resource not found',
         timestamp: new Date().toISOString(),
         path: request.url,
       });
     }
 
-     if (
-       exception.message.includes('already in use') ||
-       exception.message.includes('already exists')
-     ) {
-       return response.status(HttpStatus.CONFLICT).json({
-         statusCode: HttpStatus.CONFLICT,
-         message: exception.message,
-         error: 'Conflict',
-         timestamp: new Date().toISOString(),
-         path: request.url,
-       });
-     }
+    if (
+      exception.message.includes('already in use') ||
+      exception.message.includes('already exists')
+    ) {
+      return response.status(HttpStatus.CONFLICT).json({
+        statusCode: HttpStatus.CONFLICT,
+        message: exception.message,
+        error: exception?.response?.error || 'Conflict',
+        timestamp: new Date().toISOString(),
+        path: request.url,
+      });
+    }
     //! Default fallback (true 500s only) - sanitized
     return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      message: 'Unexpected internal server error',
+      message:
+        exception?.response?.message || 'Unexpected internal server error',
+      error: exception?.response?.error || 'Unexpected internal server error',
       timestamp: new Date().toISOString(),
       path: request.url,
     });
