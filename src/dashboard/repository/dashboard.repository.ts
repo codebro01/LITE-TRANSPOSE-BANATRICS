@@ -16,7 +16,7 @@ export class HomeDashboardsRepository {
     @Inject('DB') private DbProvider: NodePgDatabase<typeof import('@src/db')>,
   ) {}
   async businessOwnerHomeDashboard(userId: string) {
-    const [[campaign], [totalSpent], [balance], [myCampaigns]] =
+    const [[campaign], [totalSpent], [balance], myCampaigns] =
       await Promise.all([
         this.DbProvider.select({
           totalCampaigns: sql<number>`COUNT(DISTINCT ${campaignTable.id})`,
