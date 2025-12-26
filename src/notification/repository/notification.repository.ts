@@ -7,6 +7,7 @@ import { notificationTableSelectType } from '@src/db/notifications';
 import { CatchErrorService } from '@src/catch-error/catch-error.service';
 // import { UpdateNotificationDto } from '@src/notification/dto/updateNotificationDto';
 import { FilterNotificationsDto } from '@src/notification/dto/filterNotificationDto';
+import { StatusType } from '@src/notification/dto/updateNotificationDto';
 
 @Injectable()
 export class NotificationRepository {
@@ -79,11 +80,11 @@ export class NotificationRepository {
   }
 
   async updateNotifications(
-    data: Pick<CreateNotificationDto, 'status'>,
+    data: {status: StatusType},
     notificationId: string[],
     userId: string,
-  ): Promise<notificationTableSelectType> {
-    const [notifications] = await this.DbProvider.update(notificationTable)
+  ): Promise<notificationTableSelectType[]> {
+    const notifications = await this.DbProvider.update(notificationTable)
       .set(data)
       .where(
         and(
@@ -118,9 +119,12 @@ export class NotificationRepository {
 
   async filterNotifications(filters: FilterNotificationsDto, userId: string) {
     const conditions: SQL[] = [eq(notificationTable.userId, userId)];
-
+    console.log(filters)
     if (filters.unread) {
       conditions.push(eq(notificationTable.status, 'unread'));
+    }
+    if (filters.unread === false) {
+      conditions.push(eq(notificationTable.status, 'read'));
     }
     if (filters.campaign) {
       conditions.push(eq(notificationTable.category, 'campaign'));

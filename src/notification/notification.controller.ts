@@ -16,16 +16,15 @@ import type { Response } from 'express';
 import { NotificationService } from '@src/notification/notification.service';
 // import { notificationTableSelectType } from '@src/db/notifications';
 import { UpdateNotificationDto } from '@src/notification/dto/updateNotificationDto';
-import { UpdateNotificationsQueryDto } from '@src/notification/dto/updateNotificationQueryDto';
 import { FilterNotificationsDto } from '@src/notification/dto/filterNotificationDto';
 import {
   ApiOperation,
   ApiResponse,
   ApiBody,
   ApiParam,
-  ApiQuery,
   ApiProduces,
 } from '@nestjs/swagger';
+import { UpdateNotificationsDto } from '@src/notification/dto/updateNotificationsDto';
 
 @Controller('notification')
 export class NotificationController {
@@ -181,7 +180,7 @@ export class NotificationController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @Roles('businessOwner', 'driver')
   @Patch('update-notification/:id')
   @ApiOperation({
     summary: 'Update a specific notification',
@@ -197,21 +196,6 @@ export class NotificationController {
   @ApiBody({
     type: UpdateNotificationDto,
     description: 'Notification update data',
-    examples: {
-      example1: {
-        summary: 'Mark as read',
-        value: {
-          isRead: true,
-        },
-      },
-      example2: {
-        summary: 'Update message',
-        value: {
-          message: 'Updated notification message',
-          priority: 'medium',
-        },
-      },
-    },
   })
   @ApiResponse({
     status: 200,
@@ -260,54 +244,16 @@ export class NotificationController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin, businessOwner, driver')
+  @Roles('admin', 'businessOwner', 'driver')
   @Post('update-notifications')
   @ApiOperation({
     summary: 'Update multiple notifications',
     description:
       'Updates multiple notifications at once using an array of notification IDs. Accessible by admins, business owners, and drivers.',
   })
-  @ApiQuery({
-    name: 'ids',
-    type: String,
-    description: 'Comma-separated list of notification IDs',
-    example: 'notif-123,notif-456,notif-789',
-    required: true,
-  })
-  @ApiBody({
-    type: UpdateNotificationDto,
-    description: 'Update data to apply to all specified notifications',
-    examples: {
-      example1: {
-        summary: 'Mark multiple as read',
-        value: {
-          isRead: true,
-        },
-      },
-      example2: {
-        summary: 'Archive multiple notifications',
-        value: {
-          isArchived: true,
-        },
-      },
-    },
-  })
   @ApiResponse({
     status: 200,
     description: 'Notifications updated successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'array',
-          items: {
-            type: 'object',
-            description: 'Updated notification objects',
-          },
-        },
-      },
-    },
   })
   @ApiResponse({
     status: 400,
@@ -322,21 +268,30 @@ export class NotificationController {
     description: 'Forbidden - User does not have required role',
   })
   async updateNotifications(
-    @Body() body: UpdateNotificationDto,
+    @Body() body: UpdateNotificationsDto,
     @Req() req: Request,
     @Res() res: Response,
-    @Query('ids') query: UpdateNotificationsQueryDto,
   ) {
     const { id: userId } = req.user;
 
     const notification = await this.notificationService.updateNotifications(
       body,
-      query.ids,
       userId,
     );
 
     res.status(HttpStatus.OK).json({ message: 'success', data: notification });
   }
+
+
+
+
+
+
+
+
+
+
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'businessOwner', 'driver')
   @Get('dashboard-data')
@@ -348,39 +303,6 @@ export class NotificationController {
   @ApiResponse({
     status: 200,
     description: 'Dashboard data retrieved successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', example: 'success' },
-        data: {
-          type: 'object',
-          properties: {
-            totalNotifications: {
-              type: 'number',
-              example: 150,
-            },
-            unreadCount: {
-              type: 'number',
-              example: 12,
-            },
-            readCount: {
-              type: 'number',
-              example: 138,
-            },
-            byType: {
-              type: 'object',
-              description: 'Notifications grouped by type',
-            },
-            recentNotifications: {
-              type: 'array',
-              items: {
-                type: 'object',
-              },
-            },
-          },
-        },
-      },
-    },
   })
   @ApiResponse({
     status: 401,
@@ -398,6 +320,8 @@ export class NotificationController {
 
     res.status(HttpStatus.OK).json({ message: 'success', data: notification });
   }
+
+  
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'businessOwner', 'driver')
   @Get('filter')

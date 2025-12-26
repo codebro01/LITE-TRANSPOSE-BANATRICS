@@ -4,6 +4,7 @@ import {
   ExecutionContext,
   UnauthorizedException,
   Inject,
+  ForbiddenException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
@@ -53,8 +54,7 @@ export class JwtAuthGuard implements CanActivate {
     } catch (error) {
       console.log(error);
       if (!refresh_token) {
-        response.redirect('/signin');
-        throw new UnauthorizedException('You are not permitted to enter here');
+        throw new ForbiddenException('Forbidden');
       }
       // console.log('got to is not refresh token', refresh_token);
       const token = await this.jwtService.verifyAsync(refresh_token, {

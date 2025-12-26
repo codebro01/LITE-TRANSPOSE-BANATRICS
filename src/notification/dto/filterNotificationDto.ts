@@ -4,21 +4,21 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class FilterNotificationsDto {
   @ApiPropertyOptional({
-    example: 'https://banatrics.app/?unread=true',
+    example: true,
   })
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
   unread?: boolean;
 
   @ApiPropertyOptional({
-    example: 'https://banatrics.app/?campaign=true',
+    example: false,
   })
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
   campaign?: boolean;
 
   @ApiPropertyOptional({
-    example: 'https://banatrics.app/?payment=true',
+    example: true,
   })
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
