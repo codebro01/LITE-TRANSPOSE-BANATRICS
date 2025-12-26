@@ -338,6 +338,7 @@ export class PaymentRepository {
                 status: StatusType.UNREAD,
               },
               userId,
+              'businessOwner', 
               trx
             );
 

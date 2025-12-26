@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { notificationTable } from '@src/db/notifications';
-import { eq, and, inArray, sql, desc, SQL, } from 'drizzle-orm';
+import { eq, and, inArray, sql, desc, SQL } from 'drizzle-orm';
 import { CreateNotificationDto } from '@src/notification/dto/createNotificationDto';
 import { notificationTableSelectType } from '@src/db/notifications';
 import { CatchErrorService } from '@src/catch-error/catch-error.service';
@@ -19,12 +19,13 @@ export class NotificationRepository {
   async createNotification(
     data: CreateNotificationDto,
     userId: string,
+    role: string, 
     trx?: typeof this.DbProvider,
   ) {
     const Trx = trx || this.DbProvider;
     try {
       const [notification] = await Trx.insert(notificationTable)
-        .values({ ...data, userId })
+        .values({ ...data, userId, role })
         .returning();
 
       return notification;
@@ -35,11 +36,16 @@ export class NotificationRepository {
   }
 
   async getNotifications(
-    userId: string,
+    data: {userId: string, role: string}
   ): Promise<notificationTableSelectType[]> {
     const notifications = await this.DbProvider.select()
       .from(notificationTable)
-      .where(eq(notificationTable.userId, userId))
+      .where(
+        and(
+          eq(notificationTable.userId, data.userId),
+          eq(notificationTable.role, data.role),
+        ),
+      )
       .orderBy(desc(notificationTable.createdAt));
 
     return notifications;
@@ -80,7 +86,7 @@ export class NotificationRepository {
   }
 
   async updateNotifications(
-    data: {status: StatusType},
+    data: { status: StatusType },
     notificationId: string[],
     userId: string,
   ): Promise<notificationTableSelectType[]> {
@@ -119,7 +125,7 @@ export class NotificationRepository {
 
   async filterNotifications(filters: FilterNotificationsDto, userId: string) {
     const conditions: SQL[] = [eq(notificationTable.userId, userId)];
-    console.log(filters)
+    console.log(filters);
     if (filters.unread) {
       conditions.push(eq(notificationTable.status, 'unread'));
     }

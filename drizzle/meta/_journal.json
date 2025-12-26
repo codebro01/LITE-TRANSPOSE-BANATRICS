@@ -127,6 +127,13 @@
       "when": 1766554046980,
       "tag": "0017_spooky_jack_power",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1766725547647,
+      "tag": "0018_swift_mentor",
+      "breakpoints": true
     }
   ]
 }

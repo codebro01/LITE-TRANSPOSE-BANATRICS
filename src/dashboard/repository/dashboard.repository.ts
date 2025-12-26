@@ -127,6 +127,8 @@ export class HomeDashboardsRepository {
         title: campaignTable.campaignName,
         endDate: campaignTable.endDate,
         campaignStatus: driverCampaignTable.campaignStatus,
+        startDate: campaignTable.startDate, 
+        campaignDescription: campaignTable.campaignDescriptions, 
       })
         .from(driverCampaignTable)
         .where(eq(driverCampaignTable.userId, userId))

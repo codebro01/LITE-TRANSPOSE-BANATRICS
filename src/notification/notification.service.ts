@@ -15,11 +15,12 @@ export class NotificationService {
     private catchErrorService: CatchErrorService,
   ) {}
 
-  async createNotification(data: CreateNotificationDto, userId: string) {
+  async createNotification(data: CreateNotificationDto, userId: string, role: string) {
     try {
       const notification = await this.notificationRepository.createNotification(
         data,
         userId,
+        role
       );
 
       return notification;
@@ -31,10 +32,10 @@ export class NotificationService {
     }
   }
 
-  async getNotifications(userId: string) {
+  async getNotifications(data: {userId: string, role: string}) {
     try {
       const notification =
-        await this.notificationRepository.getNotifications(userId);
+        await this.notificationRepository.getNotifications({userId: data.userId, role: data.role});
 
       return notification;
     } catch (error) {

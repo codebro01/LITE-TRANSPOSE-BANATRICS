@@ -99,12 +99,13 @@ export class PaymentController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const { email, id: userId } = req.user;
+    const { email, id: userId, role } = req.user;
 
     const result = await this.paymentService.initializePayment({
       ...body,
       email,
       userId,
+      role, 
     });
 
     res.status(HttpStatus.OK).json({

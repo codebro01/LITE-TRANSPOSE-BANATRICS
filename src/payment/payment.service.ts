@@ -67,7 +67,9 @@ export class PaymentService {
     };
   }
 
-  async initializePayment(data: InitializePaymentDto & {email: string, userId: string}) {
+  async initializePayment(
+    data: InitializePaymentDto & { email: string; userId: string, role: string },
+  ) {
     try {
       const response = await firstValueFrom(
         this.httpService.post(
@@ -78,10 +80,11 @@ export class PaymentService {
             reference: generateSecureRef(),
             callback_url: data.callback_url,
             metadata: {
-              amountInNaira: data.amount/100, 
+              amountInNaira: data.amount / 100,
               userId: data.userId,
               invoiceId: generateSecureInvoiceId(),
               dateInitiated: new Date().toISOString(),
+              role: data.role, 
             },
           },
           { headers: this.getHeaders() },
@@ -137,11 +140,9 @@ export class PaymentService {
       const { channel } = event.data.authorization || {};
       const { userId, amountInNaira, invoiceId, dateInitiated } =
         event.data.metadata || {};
-        // console.log('got in here', event);
+      // console.log('got in here', event);
       const recipient_code = event.data?.recipient?.recipient_code || null;
       // const {account_number, account_name, bank_name, bank_code} = event.data.recipient.details
-
-
 
       switch (event.event) {
         case 'charge.success': {
@@ -152,7 +153,7 @@ export class PaymentService {
             return 'already processed';
           }
 
-          console.log('got in here')
+          console.log('got in here');
 
           await this.paymentRepository.executeInTransaction(async (trx) => {
             await this.paymentRepository.savePayment(
@@ -186,6 +187,7 @@ export class PaymentService {
               status: StatusType.UNREAD,
             },
             userId,
+            'businessOwner', 
           );
 
           break;
@@ -217,6 +219,7 @@ export class PaymentService {
               status: StatusType.UNREAD,
             },
             userId,
+            'businessOwner', 
           );
           break;
         }
@@ -248,6 +251,7 @@ export class PaymentService {
               status: StatusType.UNREAD,
             },
             userId,
+            'businessOwner', 
           );
           break;
         }
@@ -277,6 +281,7 @@ export class PaymentService {
               status: StatusType.UNREAD,
             },
             userId,
+            'businessOwner', 
           );
 
           break;
@@ -306,6 +311,7 @@ export class PaymentService {
               status: StatusType.UNREAD,
             },
             userId,
+            'driver', 
           );
 
           break;
@@ -334,6 +340,7 @@ export class PaymentService {
               status: StatusType.UNREAD,
             },
             userId,
+            'driver', 
           );
           break;
         }
@@ -361,6 +368,7 @@ export class PaymentService {
               status: StatusType.UNREAD,
             },
             userId,
+            'driver', 
           );
           break;
         }

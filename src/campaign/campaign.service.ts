@@ -164,6 +164,7 @@ export class CampaignService {
         status: StatusType.UNREAD,
       },
       userId,
+      'businessOwner', 
     );
 
     return {
@@ -467,6 +468,7 @@ export class CampaignService {
     const campaigns = await this.campaignRepository.getAllAvailableCampaigns();
     return campaigns;
   }
+
 
   async driverCampaignDashboard(userId: string) {
     const result =

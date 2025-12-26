@@ -191,7 +191,7 @@ export class UploadController {
     return { messgae: 'Image deleted successfully' };
   }
 
-  @Delete('delete/images')
+  @Delete('delete-many')
   @ApiOperation({
     summary: 'Delete many images from Cloudinary',
     description: 'Deletes multiple images from Cloudinary storage using their public IDs',

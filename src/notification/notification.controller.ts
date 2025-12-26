@@ -3,7 +3,7 @@ import {
   Controller,
   HttpStatus,
   Post,
-  UseGuards,Body, Req, Res, Sse, Query, Param, Get, Patch
+  UseGuards,Body, Req, Res, Sse, Query, Param, Get, Patch, Headers
 } from '@nestjs/common';
 import { Roles } from '@src/auth/decorators/roles.decorators';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
@@ -23,6 +23,7 @@ import {
   ApiBody,
   ApiParam,
   ApiProduces,
+  ApiHeader, 
 } from '@nestjs/swagger';
 import { UpdateNotificationsDto } from '@src/notification/dto/updateNotificationsDto';
 
@@ -35,8 +36,7 @@ export class NotificationController {
   @Get('all')
   @ApiOperation({
     summary: 'Get all notifications',
-    description:
-      'This endpoints fetches all user notifications',
+    description: 'This endpoints fetches all user notifications',
   })
   @ApiResponse({
     status: 200,
@@ -50,11 +50,31 @@ export class NotificationController {
     status: 403,
     description: 'Forbidden - User does not have required role',
   })
-  async getNotifications(@Req() req: Request) {
-    const userId = req.user.id; // Get from auth
+  @ApiHeader({
+    name: 'x-active-role',
+    description:
+      'The role context for this operation (e.g., businessOwner, driver)',
+    required: true,
+    schema: {
+      type: 'string',
+      enum: ['businessOwner', 'driver', 'admin'],
+      default: 'businessOwner',
+    },
+  })
+  async getNotifications(
+    @Req() req: Request,
+    @Headers('x-active-role') activeRole?: string,
+  ) {
+    const user = req.user;
 
-    const notifications = await this.notificationService.getNotifications(userId);
-    return {success: true, data: notifications}
+    const roleToUse =
+      activeRole && user.role.includes(activeRole) ? activeRole : user.role[0];
+
+    const notifications = await this.notificationService.getNotifications({
+      userId: user.id,
+      role: roleToUse,
+    });
+    return { success: true, data: notifications };
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -101,9 +121,12 @@ export class NotificationController {
   })
   streamNotifications(@Req() req: Request) {
     const userId = req.user.id; // Get from auth
+    const role = req.user.role;
 
     return interval(5000).pipe(
-      switchMap(() => this.notificationService.getNotifications(userId)),
+      switchMap(() =>
+        this.notificationService.getNotifications({ userId, role }),
+      ),
       map((notifications: any) => {
         return {
           data: {
@@ -170,10 +193,11 @@ export class NotificationController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const { id: userId } = req.user;
+    const { id: userId, role } = req.user;
     const notification = await this.notificationService.createNotification(
       body,
       userId,
+      role,
     );
 
     res.status(HttpStatus.OK).json({ message: 'success', data: notification });
@@ -282,16 +306,6 @@ export class NotificationController {
     res.status(HttpStatus.OK).json({ message: 'success', data: notification });
   }
 
-
-
-
-
-
-
-
-
-
-
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'businessOwner', 'driver')
   @Get('dashboard-data')
@@ -321,7 +335,6 @@ export class NotificationController {
     res.status(HttpStatus.OK).json({ message: 'success', data: notification });
   }
 
-  
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'businessOwner', 'driver')
   @Get('filter')
