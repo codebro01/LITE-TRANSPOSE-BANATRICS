@@ -52,7 +52,13 @@ export class CloudinaryService {
   /**
    * Delete image from Cloudinary
    */
-  async deleteImage(publicId: string): Promise<void> {
-    await cloudinary.uploader.destroy(publicId);
+  async deleteImage(public_id: string): Promise<void> {
+    console.log('got in here', public_id);
+    await cloudinary.uploader.destroy(public_id);
+  }
+  async deleteManyImages(public_ids: string[]): Promise<void> {
+    for (const id of public_ids) {
+      await cloudinary.uploader.destroy(id);
+    }
   }
 }

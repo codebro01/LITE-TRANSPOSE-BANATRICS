@@ -7,6 +7,8 @@ import {
   UseInterceptors,
   BadRequestException,
   Param,
+  Delete,
+  Body,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import multer from 'multer';
@@ -19,6 +21,8 @@ import {
   ApiBody,
   ApiParam
 } from '@nestjs/swagger';
+import { DeleteImagesDto } from '@src/upload/dto/delete-images.dto';
+import { DeleteImageDto } from '@src/upload/dto/delete-image.dto';
 
 @ApiTags('upload')
 @Controller('upload')
@@ -145,17 +149,23 @@ export class UploadController {
       'my-folder',
     );
 
-    return { uploaded: results };
+    const mappedResult = results.map((result) => ({
+      secure_url: result.secure_url,
+      public_id: result.public_id,
+    }));
+
+    return { uploaded: mappedResult };
   }
 
+  @Delete('delete/:public_id')
   @ApiOperation({
     summary: 'Delete image from Cloudinary',
     description: 'Deletes an image from Cloudinary storage using its public ID',
   })
   @ApiParam({
-    name: 'publicId',
+    name: 'public_id',
     description: 'The Cloudinary public ID of the image to delete',
-    example: 'driver_frontview_001',
+    example: 'my-folder/gzgm58lm0waafed6idxa',
     type: String,
   })
   @ApiResponse({
@@ -175,10 +185,38 @@ export class UploadController {
     status: 500,
     description: 'Internal server error',
   })
-  @Post('delete')
-  async deleteImage(@Param('publicId') publicId: string) {
-    await this.cloudinaryService.deleteImage(publicId);
+  async deleteImage(@Param() param: DeleteImageDto) {
+    await this.cloudinaryService.deleteImage(param.public_id);
 
     return { messgae: 'Image deleted successfully' };
+  }
+
+  @Delete('delete/images')
+  @ApiOperation({
+    summary: 'Delete many images from Cloudinary',
+    description: 'Deletes multiple images from Cloudinary storage using their public IDs',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Image deleted successfully',
+    schema: {
+      example: {
+        message: 'Image deleted successfully',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Image not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  async deleteManyImages(@Body() body: DeleteImagesDto) {
+    console.log('body', body);
+    await this.cloudinaryService.deleteManyImages(body.public_ids);
+
+    return { messgae: 'Images deleted successfully' };
   }
 }
