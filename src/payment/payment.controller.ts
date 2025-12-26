@@ -416,7 +416,7 @@ export class PaymentController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('businessOwner')
+  @Roles('admin')
   @Patch('finalize-payment-for-campaign')
   @ApiCookieAuth('access_token')
   @ApiOperation({
