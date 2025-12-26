@@ -1,4 +1,12 @@
-import { Controller, UseGuards, Patch, Body, Req, Query, Get } from '@nestjs/common';
+import {
+  Controller,
+  UseGuards,
+  Patch,
+  Body,
+  Req,
+  Query,
+  Get,
+} from '@nestjs/common';
 import { BankDetailsService } from './bank-details.service';
 import { RolesGuard } from '@src/auth/guards/roles.guard';
 import { Roles } from '@src/auth/decorators/roles.decorators';
@@ -12,14 +20,28 @@ export class BankDetailsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
-  @Get()
-  async getBankInformation(
-    @Query() query: VerifyBankDetailsDto
-  ) {
-    const getBankInfo =
-      await this.bankDetailsService.verifyBankDetails(query);
+  @Get('verify')
+  async verifyBankInformation(@Query() query: VerifyBankDetailsDto) {
+    const getBankInfo = await this.bankDetailsService.verifyBankDetails(query);
 
-    return {message: 'success', data: getBankInfo.data.data};
+    return { success: true, data: getBankInfo.data.data };
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('driver')
+  @Get()
+  async findOneById(@Req() req: Request) {
+    const { id: userId } = req.user;
+    const bankInfo = await this.bankDetailsService.findOneById(userId);
+
+    return {
+      success: true,
+      data: {
+        accountNumber: bankInfo.accountNumber,
+        accountName: bankInfo.accountName,
+        bankName: bankInfo.bankName,
+      },
+    };
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -33,6 +55,6 @@ export class BankDetailsController {
     const updateBankInfo =
       await this.bankDetailsService.saveUserBankInformation(body, userId);
 
-    return {message: 'success', data: updateBankInfo};
+    return { success: true, data: updateBankInfo };
   }
 }

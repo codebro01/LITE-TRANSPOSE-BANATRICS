@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { weeklyProofInsertType, weeklyProofTable } from '@src/db';
+import { campaignTable, weeklyProofInsertType, weeklyProofTable } from '@src/db';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql} from 'drizzle-orm';
 
 @Injectable()
 export class WeeklyProofsRepository {
@@ -13,6 +13,9 @@ export class WeeklyProofsRepository {
     data: Omit<weeklyProofInsertType, 'userId'>,
     userId: string,
   ) {
+
+
+
     const [weeklyProof] = await this.DbProvider.insert(weeklyProofTable).values({
       ...data,
       userId,
@@ -22,9 +25,29 @@ export class WeeklyProofsRepository {
   }
 
   async findAllByUserId(userId: string) {
-    const weeklyProof = await this.DbProvider.select()
+    const weeklyProof = await this.DbProvider.select({
+      id: weeklyProofTable.id,
+      campaignName: campaignTable.campaignName,
+      campaignId: campaignTable.id,
+      date: weeklyProofTable.createdAt,
+      photoCount: sql<number>`
+      (CASE WHEN ${weeklyProofTable.sideview} IS NOT NULL THEN 1 ELSE 0 END +
+       CASE WHEN ${weeklyProofTable.frontview} IS NOT NULL THEN 1 ELSE 0 END +
+       CASE WHEN ${weeklyProofTable.backview} IS NOT NULL THEN 1 ELSE 0 END)
+    `.as('photo_count'),
+      status: weeklyProofTable.statusType,
+      images: {
+        sideview: weeklyProofTable.sideview,
+        frontview: weeklyProofTable.frontview,
+        backview: weeklyProofTable.backview,
+      },
+    })
       .from(weeklyProofTable)
-      .where(eq(weeklyProofTable.userId, userId));
+      .where(eq(weeklyProofTable.userId, userId))
+      .leftJoin(
+        campaignTable,
+        eq(campaignTable.id, weeklyProofTable.campaignId),
+      );
 
     return weeklyProof;
   }

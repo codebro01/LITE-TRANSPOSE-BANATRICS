@@ -34,7 +34,7 @@ export class BankDetailsService {
   // * admin section
 
   async verifyBankDetails(data: VerifyBankDetailsDto) {
-    // console.log('url before resp', 
+    // console.log('url before resp',
     //   `${this.baseUrl}/bank/resolve?account_number=${data.accountNumber}&bank_code=${data.bankCode}`,
     // );
     const response = await firstValueFrom(
@@ -43,9 +43,14 @@ export class BankDetailsService {
         { headers: this.getHeaders() },
       ),
     );
-if(!response) throw new BadRequestException('could not resolve account information!!!')
-    
+    if (!response)
+      throw new BadRequestException('could not resolve account information!!!');
+
     return response;
+  }
+
+  async findOneById(userId: string) {
+    return await this.bankDetailsRepository.findOneById(userId)
   }
 
   async createTransferRecipients(data: CreateTransferRecipientDto) {
@@ -78,7 +83,6 @@ if(!response) throw new BadRequestException('could not resolve account informati
         'Could not pull account information using data provided',
       );
 
-
     //   console.log(getVerifiedBankDetails.data)
 
     const { account_number, account_name, bank_id } =
@@ -89,14 +93,12 @@ if(!response) throw new BadRequestException('could not resolve account informati
       bankCode: data.bankCode,
     });
 
-    
     const {
-        account_number: accNumber,
-        bank_code: bnkCode,
-        bank_name, 
+      account_number: accNumber,
+      bank_code: bnkCode,
+      bank_name,
     } = createTransferRecipients.data.data.details;
-    
-    
+
     // console.log(
     //   accNumber,
     //   accountName,
@@ -104,14 +106,14 @@ if(!response) throw new BadRequestException('could not resolve account informati
     //   createTransferRecipients.data.data.recipient_code,
     // );
     // console.log(
-  
+
     //   createTransferRecipients.data.data,
     // );
     const saveBankRecords =
       await this.bankDetailsRepository.createBankDetailsRecord(
         {
           userId,
-          bankName: bank_name, 
+          bankName: bank_name,
           accountName: createTransferRecipients.data.data.name,
           accountNumber: accNumber,
           bankCode: bnkCode,
