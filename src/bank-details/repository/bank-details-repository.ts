@@ -11,7 +11,12 @@ export class BankDetailsRepository {
   ) {}
 
   async findOneById(userId: string) {
-    const [user] = await this.DbProvider.select().from(bankDetailsTable).where(eq(bankDetailsTable.userId, userId)).limit(1);
+    const [user] = await this.DbProvider.select()
+      .from(bankDetailsTable)
+      .where(eq(bankDetailsTable.userId, userId))
+      .limit(1);
+
+      console.log(user)
     return user;
   }
 
@@ -21,7 +26,10 @@ export class BankDetailsRepository {
     trx?: any,
   ) {
     const isBankDetailsExist = await this.findOneById(userId);
-    if(isBankDetailsExist) throw new BadRequestException('User already submitted bank account information')
+    if (isBankDetailsExist)
+      throw new BadRequestException(
+        'User already submitted bank account information',
+      );
     const Trx = trx || this.DbProvider;
     const [createBankDetailsRecord] = await Trx.insert(bankDetailsTable)
       .values({

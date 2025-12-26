@@ -36,11 +36,11 @@ export class BankDetailsController {
 
     return {
       success: true,
-      data: {
+      data: bankInfo ? {
         accountNumber: bankInfo.accountNumber,
         accountName: bankInfo.accountName,
         bankName: bankInfo.bankName,
-      },
+      } : {},
     };
   }
 

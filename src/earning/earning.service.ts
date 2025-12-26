@@ -9,7 +9,7 @@ import {
 // import { CreateEarningDto } from './dto/create-earning.dto';
 // import { UpdateEarningDto } from './dto/update-earning.dto';
 import { ConfigService } from '@nestjs/config';
-import { BankDetailsRepository } from '@src/bank-details/repository/create-bank-details-repository';
+import { BankDetailsRepository } from '@src/bank-details/repository/bank-details-repository';
 import { InitializeEarningDto } from '@src/earning/dto/initialize-earning.dto';
 import { generateSecureRef } from '@src/payment/repository/payment.repository';
 import { firstValueFrom } from 'rxjs';

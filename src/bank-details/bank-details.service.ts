@@ -3,7 +3,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 // import { CreateEarningDto } from './dto/create-earning.dto';
 // import { UpdateEarningDto } from './dto/update-earning.dto';
 import { ConfigService } from '@nestjs/config';
-import { BankDetailsRepository } from '@src/bank-details/repository/create-bank-details-repository';
+import { BankDetailsRepository } from '@src/bank-details/repository/bank-details-repository';
 import { CreateTransferRecipientDto } from '@src/earning/dto/create-transfer-recipients.dto';
 import { VerifyBankDetailsDto } from '@src/bank-details/dto/verify-bank-details.dto';
 import { firstValueFrom } from 'rxjs';
@@ -50,7 +50,7 @@ export class BankDetailsService {
   }
 
   async findOneById(userId: string) {
-    return await this.bankDetailsRepository.findOneById(userId)
+    return await this.bankDetailsRepository.findOneById(userId);
   }
 
   async createTransferRecipients(data: CreateTransferRecipientDto) {
