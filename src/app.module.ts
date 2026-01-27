@@ -29,10 +29,30 @@ import { BankDetailsModule } from './bank-details/bank-details.module';
 import { WeeklyProofsModule } from './weekly-proofs/weekly-proofs.module';
 import { VehicleDetailsModule } from './vehicle-details/vehicle-details.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+
 
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000, // 1 second
+        limit: 3, // 3 requests
+      },
+      {
+        name: 'medium',
+        ttl: 10000, // 10 seconds
+        limit: 20, // 20 requests
+      },
+      {
+        name: 'long',
+        ttl: 60000, // 1 minute
+        limit: 100, // 100 requests
+      },
+    ]),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -59,7 +79,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       }),
       inject: [ConfigService],
     }),
-    ScheduleModule.forRoot(), 
+    ScheduleModule.forRoot(),
     UserModule,
     AuthModule,
     SupabaseModule,
@@ -83,6 +103,14 @@ import { ScheduleModule } from '@nestjs/schedule';
     VehicleDetailsModule,
   ],
   controllers: [AppController, UploadController],
-  providers: [AppService, NeonProvider, MulterService],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    AppService,
+    NeonProvider,
+    MulterService,
+  ],
 })
 export class AppModule {}

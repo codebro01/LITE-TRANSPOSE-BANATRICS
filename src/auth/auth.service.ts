@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { AuthRepository } from '@src/auth/repository/auth.repository';
 import crypto from 'crypto';
@@ -34,18 +35,25 @@ export class AuthService {
         'Invalid credentials, Please check email and password',
       );
 
+        if (!user.role.includes(UserType))
+          throw new BadRequestException('Invalid credentials');
+
+
 
     if(UserType === userType.DRIVER) {
       const driver = await this.authRepository.findDriverStatusById(user.id);
 
+      if(!driver) throw new NotFoundException('User not found')
+
       if(driver.approvedStatus === UserApprovalStatusType.PENDING ) {
-          throw new UnauthorizedException('User has not been approved!!!');
+          throw new UnauthorizedException('User activation is pending!!!');
       }
 
 
       if(driver.activeStatus === UserApprovalStatusType.SUSPENDED) {
+
                   throw new UnauthorizedException(
-                    'User has been deactivated!!!',
+                    'User suspended!!!',
                   );
       }
     }
@@ -53,10 +61,14 @@ export class AuthService {
     if(UserType === userType.BUSINESSOWNER) {
       const businessOwner = await this.authRepository.findBusinessOwnerStatusById(user.id);
 
+            if (!businessOwner) throw new NotFoundException('User not found');
+
+
       if (businessOwner.status === UserApprovalStatusType.SUSPENDED) {
-        throw new UnauthorizedException('User has been deactivated!!!');
+        throw new UnauthorizedException('User suspended!!!');
       }
     }
+
 
 
     const passwordIsCorrect = await bcrypt.compare(password, user.password);

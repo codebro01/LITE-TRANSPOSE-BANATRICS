@@ -16,6 +16,8 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
     console.log(exception);
 
     if (exception?.status === 401) {
+      response.clearCookie('access_token')
+      response.clearCookie('refresh_token')
       return response.status(HttpStatus.UNAUTHORIZED).json({
         statusCode: 401,
         message: exception?.response?.message || 'Unauthorized',
