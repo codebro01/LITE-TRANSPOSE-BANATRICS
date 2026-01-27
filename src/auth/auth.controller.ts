@@ -23,6 +23,8 @@ import {
 } from '@nestjs/swagger';import { UserService } from '@src/users/users.service';
 import omit from 'lodash.omit';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
+import { LoginThrottlerGuard } from '@src/auth/guards/login-throttler.guard';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -34,6 +36,9 @@ export class AuthController {
   ) {}
 
   // ! local signin (password and email)
+
+  @UseGuards(LoginThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('signin')
   @ApiOperation({
     summary: 'User login',
@@ -70,19 +75,19 @@ export class AuthController {
     const { user, accessToken, refreshToken } =
       await this.authService.loginUser(body);
 
-  res.cookie('access_token', accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 1000 * 60 * 60, // 1h
-  });
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 1000 * 60 * 60, // 1h
+    });
 
-  res.cookie('refresh_token', refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', 
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 1000 * 60 * 60 * 24 * 30, // 30d
-  });
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 1000 * 60 * 60 * 24 * 30, // 30d
+    });
 
     const safeUser = omit(user, ['password', 'refreshToken']);
 
@@ -118,12 +123,11 @@ export class AuthController {
   })
   @HttpCode(HttpStatus.OK)
   async logoutUser(@Res() res: Response, @Req() req: Request) {
-
-    const {id: userId} = req.user;
+    const { id: userId } = req.user;
     await this.authService.logoutUser(userId);
 
-     res.clearCookie('access_token');
-     res.clearCookie('refresh_token');
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token');
 
     return { message: 'Logout Successful', success: true };
   }
