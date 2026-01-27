@@ -119,10 +119,8 @@ export class UserController {
   })
   @ApiResponse({ status: 200, description: 'successs' })
   @HttpCode(HttpStatus.CREATED)
-  async finalizeDriverCreation(
-    @Body() body: CreateDriverDto,
-  ) {
-     await this.userService.finalizeDriverCreation(body);
+  async finalizeDriverCreation(@Body() body: CreateDriverDto) {
+    await this.userService.finalizeDriverCreation(body);
 
     // res.cookie('access_token', accessToken, {
     //   httpOnly: true,

@@ -15,6 +15,26 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
 
     console.log(exception);
 
+    if (exception?.status === 401) {
+      return response.status(HttpStatus.UNAUTHORIZED).json({
+        statusCode: 401,
+        message: exception?.response?.message || 'Unauthorized',
+        error: 'Unauthorized',
+        timestamp: new Date().toISOString(),
+        path: request.url,
+      });
+    }
+
+    if (exception?.status === 403) {
+      return response.status(HttpStatus.FORBIDDEN).json({
+        statusCode: 403,
+        message: exception?.response?.message || 'Forbidden',
+        error: 'Forbidden',
+        timestamp: new Date().toISOString(),
+        path: request.url,
+      });
+    }
+
     //! Handle Postgres duplicate key (wrapped in cause)
     if (exception.cause?.code === '23505') {
       return response.status(HttpStatus.BAD_REQUEST).json({
@@ -84,13 +104,13 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
     }
 
     if (exception?.response?.statusCode === 403 || exception.status === 403) {
-      return response.status(HttpStatus.BAD_REQUEST).json({
-        statusCode: HttpStatus.BAD_REQUEST,
+      return response.status(HttpStatus.FORBIDDEN).json({
+        statusCode: HttpStatus.FORBIDDEN,
         message:
           exception?.response?.message ||
           exception?.response?.data?.message ||
-          'Unauthorized request',
-        error: exception?.response?.error || 'Unauthorized',
+          'Forbidden request',
+        error: exception?.response?.error || 'Forbidden',
         timestamp: new Date().toISOString(),
         path: request.url,
       });
@@ -99,8 +119,7 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
     if (
       exception?.response?.statusCode === 422 ||
       exception?.status === 422 ||
-      exception.data?.status === 422 ||
-      exception?.status
+      exception.data?.status === 422
     ) {
       return response.status(HttpStatus.BAD_REQUEST).json({
         statusCode: HttpStatus.BAD_REQUEST,
@@ -109,18 +128,6 @@ export class DrizzleExceptionFilter implements ExceptionFilter {
           exception?.response?.data?.message ||
           exception?.data.message ||
           'Unauthorized request',
-        error: exception?.response?.error || 'Unauthorized',
-        timestamp: new Date().toISOString(),
-        path: request.url,
-      });
-    }
-
-    if (exception?.response?.statusCode === 401 || exception.status === 401) {
-      return response.status(HttpStatus.UNAUTHORIZED).json({
-        statusCode: HttpStatus.UNAUTHORIZED,
-        message:
-          exception?.response?.message ||
-          'You are not authorized to access this place',
         error: exception?.response?.error || 'Unauthorized',
         timestamp: new Date().toISOString(),
         path: request.url,

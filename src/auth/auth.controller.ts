@@ -5,6 +5,7 @@ import {
   Res,
   Req,
   HttpStatus,
+  HttpCode, 
   Get,
   UseGuards,
 } from '@nestjs/common';
@@ -115,9 +116,15 @@ export class AuthController {
     status: 401,
     description: 'Unauthorized - Invalid or missing token',
   })
+  @HttpCode(HttpStatus.OK)
   async logoutUser(@Res() res: Response, @Req() req: Request) {
-    await this.authService.logoutUser(res, req);
 
-    res.status(HttpStatus.OK).json({ message: 'Logout Successful' });
+    const {id: userId} = req.user;
+    await this.authService.logoutUser(userId);
+
+     res.clearCookie('access_token');
+     res.clearCookie('refresh_token');
+
+    return { message: 'Logout Successful', success: true };
   }
 }
