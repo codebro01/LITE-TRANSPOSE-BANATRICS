@@ -11,7 +11,7 @@ import {
   PublishCampaignDto,
 } from '@src/campaign/dto/publishCampaignDto';
 import { CloudinaryService } from '@src/cloudinary/cloudinary.service';
-import { CampaignRepository } from '@src/campaign/repository/campaign.repository';
+import { CampaignRepository, CampaignStatus } from '@src/campaign/repository/campaign.repository';
 import { NotificationService } from '@src/notification/notification.service';
 import {
   StatusType,
@@ -103,7 +103,7 @@ export class CampaignService {
           slogan: data.slogan,
           responseOnSeeingBanner: data.responseOnSeeingBanner,
           uploadedImages: data.uploadedImages,
-          statusType: 'pending', // Published directly
+          statusType: CampaignStatus.PENDING, // Published directly
         },
         userId,
       );
@@ -141,7 +141,7 @@ export class CampaignService {
           slogan: data.slogan,
           responseOnSeeingBanner: data.responseOnSeeingBanner,
           uploadedImages: data.uploadedImages,
-          statusType: 'pending', // Published directly
+          statusType: CampaignStatus.PENDING, // Published directly
         },
         userId,
       );
@@ -234,7 +234,7 @@ export class CampaignService {
               .maintenanceType as MaintenanceType,
             endDate: calculateEndDate,
             startDate: data.startDate ? new Date(startDate) : null,
-            statusType: 'draft', // Published directly
+            statusType: CampaignStatus.DRAFT, // Published directly
           },
           userId,
         );
@@ -248,7 +248,7 @@ export class CampaignService {
             ...data,
             startDate: data.startDate ? new Date(data.startDate) : null,
             endDate: data.endDate ? new Date(data.endDate) : null,
-            statusType: 'draft',
+            statusType: CampaignStatus.DRAFT,
           },
           userId,
         );
@@ -302,7 +302,7 @@ export class CampaignService {
             .maintenanceType as MaintenanceType,
           endDate: calculateEndDate,
           startDate: data.startDate ? new Date(data.startDate) : null,
-          statusType: 'draft', // Published directly
+          statusType: CampaignStatus.DRAFT // Published directly
         },
         userId,
       );
@@ -371,7 +371,7 @@ export class CampaignService {
             .maintenanceType as MaintenanceType,
           endDate: calculateEndDate,
           startDate: data.startDate ? new Date(data.startDate) : null,
-          statusType: 'pending', // Published directly
+          statusType: CampaignStatus.PENDING, // Published directly
         },
         userId,
       );
@@ -387,7 +387,7 @@ export class CampaignService {
           startDate: data.startDate ? new Date(data.startDate) : null,
           endDate: data.endDate ? new Date(data.endDate) : null,
           updatedAt: new Date(),
-          statusType: 'pending',
+          statusType: CampaignStatus.PENDING,
         },
         userId,
       );

@@ -27,7 +27,6 @@ import { CampaignService } from '@src/campaign/campaign.service';
 import { CloudinaryService } from '@src/cloudinary/cloudinary.service';
 import {
   DraftCampaignDto,
-  StatusType,
 } from '@src/campaign/dto/draftCampaignDto';
 import type { Response } from 'express';
 import type { Request } from '@src/types';
@@ -36,6 +35,7 @@ import {
   DriverCampaignStatusType,
 } from '@src/campaign/dto/create-driver-campaign.dto';
 import { updatePricePerDriverPerCampaign } from '@src/campaign/dto/update-price-per-driver-per-campaign.dto';
+import { CampaignStatus } from '@src/campaign/repository/campaign.repository';
 
 @ApiTags('Campaign')
 @Controller('campaign')
@@ -444,7 +444,7 @@ export class CampaignController {
   async getCampaignsByStatusAndUserId(
     @Req() req: Request,
     @Res() res: Response,
-    @Query() query: StatusType,
+    @Query() query: CampaignStatus,
   ) {
     const userId = req.user.id;
     const campaign = await this.campaignService.getCampaignsByStatusAndUserId(

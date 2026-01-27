@@ -2,7 +2,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { and, eq, sql, ne, lt } from 'drizzle-orm';
 import { campaignTable } from '@src/db/campaigns';
-import { MaintenanceType, StatusType } from '../dto/publishCampaignDto';
+import { MaintenanceType } from '../dto/publishCampaignDto';
 import { driverCampaignTable } from '@src/db';
 import {
   CreateDriverCampaignDto,
@@ -10,7 +10,14 @@ import {
 } from '@src/campaign/dto/create-driver-campaign.dto';
 import { updatePricePerDriverPerCampaign } from '@src/campaign/dto/update-price-per-driver-per-campaign.dto';
 
-export type CampaignStatus = 'draft' | 'pending' | 'active' | 'completed';
+export enum CampaignStatus {
+  PENDING  = 'pending', 
+  DRAFT = 'draft', 
+  APPROVED = 'approved', 
+  COMPLETED = 'completed', 
+  REJECTED = 'rejected'
+}
+   
 export type packageType = 'starter' | 'basic' | 'premium' | 'custom';
 
 export type uploadType = {
@@ -183,7 +190,7 @@ export class CampaignRepository {
       .where(
         and(
           eq(campaignTable.userId, userId),
-          eq(campaignTable.statusType, 'active'),
+          eq(campaignTable.statusType, CampaignStatus.APPROVED),
         ),
       );
 
@@ -212,7 +219,8 @@ export class CampaignRepository {
       .where(
         and(
           eq(campaignTable.userId, userId),
-          eq(campaignTable.statusType, 'active'),
+          eq(campaignTable.active, true),
+          eq(campaignTable.statusType, CampaignStatus.APPROVED),
         ),
       );
 
@@ -222,7 +230,7 @@ export class CampaignRepository {
   /**
    * Find campaigns by status for a user
    */
-  async findByStatusAndUserId(userId: string, status: StatusType) {
+  async findByStatusAndUserId(userId: string, status: CampaignStatus) {
     const campaigns = await this.DbProvider.select()
       .from(campaignTable)
       .where(
@@ -260,32 +268,28 @@ export class CampaignRepository {
     return deleted || null;
   }
 
-async findActiveCampaignByCampaignId(campaignId:string) {
-      const campaigns = await this.DbProvider.select({
-        id: campaignTable.id,
-        title: campaignTable.campaignName,
-        state: campaignTable.state,
-        duration: campaignTable.duration,
-        availability: campaignTable.availability,
-        requirements: campaignTable.requirements,
-        noOfDrivers: campaignTable.noOfDrivers,
-        description: campaignTable.campaignDescriptions,
-        
-      })
-        .from(campaignTable)
-        .where(
-          and(
-            eq(campaignTable.statusType, 'active'),
-            eq(campaignTable.paymentStatus, 'spent'),
-            eq(campaignTable.id, campaignId),
-          ),
-        );
+  async findActiveCampaignByCampaignId(campaignId: string) {
+    const campaigns = await this.DbProvider.select({
+      id: campaignTable.id,
+      title: campaignTable.campaignName,
+      state: campaignTable.state,
+      duration: campaignTable.duration,
+      availability: campaignTable.availability,
+      requirements: campaignTable.requirements,
+      noOfDrivers: campaignTable.noOfDrivers,
+      description: campaignTable.campaignDescriptions,
+    })
+      .from(campaignTable)
+      .where(
+        and(
+          eq(campaignTable.active, true),
+          eq(campaignTable.paymentStatus, 'spent'),
+          eq(campaignTable.id, campaignId),
+        ),
+      );
 
-
-        return campaigns
-}
-
-
+    return campaigns;
+  }
 
   //!===================================drivers db calls ===========================================//
 
@@ -329,7 +333,8 @@ async findActiveCampaignByCampaignId(campaignId:string) {
       )
       .where(
         and(
-          eq(campaignTable.statusType, 'active'),
+          eq(campaignTable.statusType, CampaignStatus.APPROVED),
+          eq(campaignTable.active, true),
           eq(campaignTable.paymentStatus, 'spent'),
         ),
       )
@@ -345,7 +350,7 @@ async findActiveCampaignByCampaignId(campaignId:string) {
       .from(campaignTable)
       .where(
         and(
-          eq(campaignTable.statusType, 'active'),
+          eq(campaignTable.active, true),
           eq(campaignTable.paymentStatus, 'spent'),
         ),
       );

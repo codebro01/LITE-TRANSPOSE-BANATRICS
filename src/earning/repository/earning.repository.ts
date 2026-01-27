@@ -6,7 +6,7 @@ import { startOfMonth } from 'date-fns';
 import { campaignTable, driverTable } from '@src/db';
 import { ApprovalStatusType } from '@src/earning/dto/create-earning.dto';
 import { UpdateApprovalStatusDto } from '@src/earning/dto/update-approved-status.dto';
-import { StatusType } from '@src/campaign/dto/publishCampaignDto';
+import { CampaignStatus } from '@src/campaign/repository/campaign.repository';
 
 @Injectable()
 export class EarningRepository {
@@ -56,7 +56,7 @@ export class EarningRepository {
       .where(
         and(
           eq(campaignTable.userId, userId),
-          eq(campaignTable.statusType, StatusType.COMPLETED),
+          eq(campaignTable.statusType, CampaignStatus.COMPLETED ),
         ),
       )
       .groupBy(

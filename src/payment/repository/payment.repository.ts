@@ -11,6 +11,7 @@ import { CreatePaymentDto } from '@src/payment/dto/createPaymentDto';
 import {
   businessOwnerTable,
   campaignTable,
+  PaymentStatusType,
   paymentTable,
   userTable,
 } from '@src/db';
@@ -56,7 +57,7 @@ export class PaymentRepository {
   async savePayment(
     data: CreatePaymentDto & {
       paymentMethod: string;
-      paymentStatus: string;
+      paymentStatus: PaymentStatusType;
       reference: string;
       transactionType: string;
     },
@@ -78,7 +79,7 @@ export class PaymentRepository {
   async updatePaymentStatus(
     data: {
       reference: string;
-      status: string;
+      status: PaymentStatusType;
     },
     userId: string,
     trx?: typeof this.DbProvider,

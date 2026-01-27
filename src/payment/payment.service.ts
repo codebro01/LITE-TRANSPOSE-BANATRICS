@@ -24,6 +24,7 @@ import {
 } from '@src/notification/dto/createNotificationDto';
 import { NotificationService } from '@src/notification/notification.service';
 import { EarningRepository } from '@src/earning/repository/earning.repository';
+import { PaymentStatusType } from '@src/db';
 interface VerifyPaymentResponse {
   status: boolean;
   message: string;
@@ -149,7 +150,7 @@ export class PaymentService {
           const existingPayment =
             await this.paymentRepository.findByReference(reference);
 
-          if (existingPayment && existingPayment.paymentStatus === 'success') {
+          if (existingPayment && existingPayment.paymentStatus === PaymentStatusType.SUCCESS) {
             return 'already processed';
           }
 
@@ -161,7 +162,7 @@ export class PaymentService {
                 amount: amountInNaira,
                 invoiceId,
                 dateInitiated,
-                paymentStatus: 'success',
+                paymentStatus: PaymentStatusType.SUCCESS,
                 paymentMethod: channel,
                 reference,
                 transactionType: 'deposit',
@@ -199,7 +200,7 @@ export class PaymentService {
                 amount: amountInNaira,
                 invoiceId,
                 dateInitiated,
-                paymentStatus: 'failed',
+                paymentStatus: PaymentStatusType.FAILED,
                 paymentMethod: channel,
                 reference,
                 transactionType: 'deposit',
@@ -231,7 +232,7 @@ export class PaymentService {
                 amount: amountInNaira,
                 invoiceId,
                 dateInitiated,
-                paymentStatus: 'pending',
+                paymentStatus: PaymentStatusType.PENDING,
                 paymentMethod: channel,
                 reference,
                 transactionType: 'deposit',
@@ -259,7 +260,7 @@ export class PaymentService {
         case 'refund.processed': {
           await this.paymentRepository.executeInTransaction(async (trx) => {
             await this.paymentRepository.updatePaymentStatus(
-              { reference, status: 'refunded' },
+              { reference, status: PaymentStatusType.REVERSED },
               userId,
               trx,
             );
@@ -295,12 +296,13 @@ export class PaymentService {
                 reference,
                 dateInitiated: createdAt,
                 recipientCode: recipient_code,
-                paymentStatus: 'success',
+                paymentStatus: PaymentStatusType.SUCCESS,
                 paymentMethod: 'transfer',
               },
               trx,
             );
           });
+          
           await this.notificationService.createNotification(
             {
               title: `Your withdrawal of ${amount} is successful`,
@@ -324,7 +326,7 @@ export class PaymentService {
                 reference,
                 dateInitiated: createdAt,
                 recipientCode: recipient_code,
-                paymentStatus: 'failed',
+                paymentStatus: PaymentStatusType.FAILED,
                 paymentMethod: 'transfer',
               },
               trx,
@@ -352,7 +354,7 @@ export class PaymentService {
                 reference,
                 dateInitiated: createdAt,
                 recipientCode: recipient_code,
-                paymentStatus: 'reversed',
+                paymentStatus: PaymentStatusType.REVERSED,
                 paymentMethod: 'transfer',
               },
               trx,

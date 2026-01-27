@@ -14,14 +14,10 @@ import { Transform } from 'class-transformer';
 import { MaintenanceType } from '@src/campaign/dto/publishCampaignDto';
 import { IsNotAllowedWithPackageType } from '@src/campaign/validators/conditional-fields.validator';
 import { PackageType } from '@src/campaign/dto/publishCampaignDto';
+import { CampaignStatus } from '@src/campaign/repository/campaign.repository';
 
 
-export enum StatusType {
-  PENDING = 'pending',
-  DRAFT = 'draft',
-  ACTIVE = 'active',
-  COMPLETED = 'completed',
-}
+
 
 export class DraftCampaignDto {
   @ApiProperty({
@@ -50,14 +46,14 @@ export class DraftCampaignDto {
 
   @ApiProperty({
     example: 'draft',
-    enum: StatusType,
+    enum: CampaignStatus,
     description: 'Campaign status type',
   })
-  @IsEnum(StatusType, {
+  @IsEnum(CampaignStatus, {
     message: 'Status type must be one of: pending, draft, active, completed',
   })
   @IsOptional()
-  statusType: StatusType;
+  statusType: CampaignStatus;
 
   @ApiProperty({
     example: '5-7',

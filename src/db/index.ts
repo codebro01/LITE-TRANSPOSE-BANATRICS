@@ -7,4 +7,6 @@ export * from '@src/db/driver_campaign';
 export * from '@src/db/bank_details';
 export * from '@src/db/weekly_proofs'
 export * from '@src/db/vehicle-details'
+export  * from '@src/db/campaign-designs'
+export * from "@src/db/invoices"    
 

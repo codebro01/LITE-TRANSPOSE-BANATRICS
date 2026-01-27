@@ -26,14 +26,10 @@ export enum PackageType {
   BASIC = 'basic',
   PREMIUM = 'premium',
   CUSTOM = 'custom',
+  
 }
 
-export enum StatusType {
-  PENDING = 'pending',
-  DRAFT = 'draft',
-  ACTIVE = 'active',
-  COMPLETED = 'completed',
-}
+
 
 export class PublishCampaignDto {
   @ApiProperty({

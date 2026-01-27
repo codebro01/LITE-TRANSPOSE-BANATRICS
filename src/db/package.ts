@@ -8,6 +8,7 @@ import {
 import { userTable } from './users';
 import { packageTypeEnum } from '@src/db/campaigns'; 
 import { maintenanceTypeEnum } from '@src/db/campaigns';
+import { text } from 'drizzle-orm/pg-core';
 
 
 export const packageTable = pgTable('packages', {
@@ -19,9 +20,10 @@ export const packageTable = pgTable('packages', {
   maintenanceType: maintenanceTypeEnum('maintenance_type').notNull(), 
   duration: integer('duration').notNull(),
   revisions: varchar('revisions').notNull(),
+  description: text('description'),
   price: integer('price').notNull(),
   lgaCoverage: varchar('lga_coverage', {length: 10}).notNull(),
   noOfDrivers: integer('no_of_drivers').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}); 

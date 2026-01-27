@@ -8,6 +8,13 @@ import {
 } from 'drizzle-orm/pg-core';
 import { jsonb } from 'drizzle-orm/pg-core';
 
+export enum UserApprovalStatusType {
+  ACTIVATED = 'activated', 
+  APPROVED = 'approved',
+  SUSPENDED = 'suspended',
+  PENDING = 'pending',
+}
+
 export const userTable = pgTable('users', {
   id: uuid().defaultRandom().primaryKey().notNull(),
   phone: varchar('phone', { length: 50 }).notNull().unique(),
@@ -18,22 +25,39 @@ export const userTable = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(), // can use date type if preferred
   password: varchar('password', { length: 255 }).notNull(),
   emailVerified: boolean('is_email_Verified').default(false).notNull(),
-  refreshToken: varchar('refreshToken'),
+  refreshToken: varchar('refreshToken', { length: 255 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const adminTable = pgTable('admin', {
+  id: uuid().defaultRandom().primaryKey().notNull(),
+  userId: uuid('userId')
+    .references(() => userTable.id, {
+      onDelete: 'cascade',
+    })
+    .unique()
+    .notNull(),
+  fullName: varchar('fullName', { length: 255 }).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 export const businessOwnerTable = pgTable('businessOwners', {
   id: uuid('id').defaultRandom().primaryKey().notNull(),
-  userId: uuid('userId').references(() => userTable.id, {
-    onDelete: 'cascade',
-  }).unique().notNull(),
+  userId: uuid('userId')
+    .references(() => userTable.id, {
+      onDelete: 'cascade',
+    })
+    .unique()
+    .notNull(),
   balance: doublePrecision('balance').default(0).notNull(),
   pending: doublePrecision('pending').default(0).notNull(),
   businessName: varchar('businessName', { length: 255 }).notNull(),
   businessAddress: varchar('businessAddress', { length: 255 }),
   businessLogo: varchar('businessLogo', { length: 255 }),
   refreshToken: varchar('refreshToken', { length: 255 }),
+  status: varchar('business_owner_status', { length: 50 }).$type<UserApprovalStatusType>().default(UserApprovalStatusType.APPROVED).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   // authProvider: varchar('authProvider', { length: 20 })
@@ -51,10 +75,12 @@ export const driverTable = pgTable('drivers', {
   firstname: varchar('firstname', { length: 255 })
     .notNull()
     .default('firstname'),
-  lastname: varchar('lastname', { length: 255 })
-    .notNull()
-    .default('lastname'),
-  approvedStatus: boolean('approved_status').default(false).notNull(),
+  lastname: varchar('lastname', { length: 255 }).notNull().default('lastname'),
+  approvedStatus: varchar('approved_status', { length: 20 })
+    .$type<UserApprovalStatusType>()
+    .default(UserApprovalStatusType.PENDING)
+    .notNull(),
+  activeStatus: varchar('active_status').$type<UserApprovalStatusType>().default(UserApprovalStatusType.ACTIVATED).notNull(), 
   balance: doublePrecision('balance').default(0).notNull(),
   pending: doublePrecision('pending').default(0).notNull(),
   dp: jsonb('dp').$type<{
@@ -99,6 +125,7 @@ export const driverTable = pgTable('drivers', {
   //   .notNull(),
 });
 
+export type adminInsertType = typeof adminTable.$inferInsert;
 export type businessOwnerInsertType = typeof businessOwnerTable.$inferInsert;
 export type businessOwnerSelectType = typeof businessOwnerTable.$inferSelect;
 export type userInsertType = typeof userTable.$inferInsert;

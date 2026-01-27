@@ -813,7 +813,10 @@ export class UserService {
   async getBusinessOwnerProfile(userId: string) {
     return await this.userRepository.getBusinessOwnerProfile(userId);
   }
-  async updateBusinessOwnerById(data: UpdateBusinessOwnerProfileDto, userId: string) {
+  async updateBusinessOwnerById(
+    data: UpdateBusinessOwnerProfileDto,
+    userId: string,
+  ) {
     return await this.userRepository.updateBusinessOwnerById(data, userId);
   }
   async updateDriverById(data: UpdateDriverProfileDto, userId: string) {

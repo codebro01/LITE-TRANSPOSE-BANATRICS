@@ -2,15 +2,11 @@ import { pgTable, text, timestamp, uuid, pgEnum, varchar } from 'drizzle-orm/pg-
 import { userTable } from '@src/db/users';
 
 export const statusType = pgEnum('notification_status_type', [
-  'read',
-  'unread',
-]);
-export const variantType = pgEnum('variant_type', [
-  'info',
-  'success',
-  'warning',
-  'danger',
-]);
+    'read', 
+    'unread'
+])
+export const variantType = pgEnum('variant_type', ['info', 'success', 'warning', 'danger']);
+
 
 export const categoryType = pgEnum('category_type', ['payment', 'campaign']);
 
@@ -21,9 +17,9 @@ export const notificationTable = pgTable('notifications', {
     .references(() => userTable.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   message: text('message').notNull(),
-  role: varchar('role', { length: 50 }).notNull().default('businessOwner'),
   status: statusType('status').default('unread').notNull(),
   variant: variantType('variant').default('info').notNull(),
+  role: varchar('role', { length: 50 }).notNull().default('businessOwner'),
   category: categoryType('category').notNull(),
   priority: text('priority').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),

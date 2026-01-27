@@ -7,6 +7,7 @@ import {
   text,
   pgEnum,
   uuid,
+  boolean, 
   jsonb,
 } from 'drizzle-orm/pg-core';
 import { userTable } from '@src/db/users';
@@ -25,11 +26,12 @@ export const maintenanceTypeEnum = pgEnum('maintenance_type', [
   'premium',
 ]);
 export const paymentStatusEnum = pgEnum('payment_status', ['spent', 'pending']);
-export const statusTypeEnum = pgEnum('status_type', [
+export const campaignStatusType = pgEnum('campaign_status_type', [
   'draft', //! this is the stutus when the business Owner decides to save the campaign as draft
-  'active', //! this is the stutus when the campaign of business Owner is approved and still active
-  'pending', //! this is the stutus before approval
+  'pending', //! this is the stutus when the campaign of business Owner is approved and still active
+  'approved', //! this is the stutus before approval
   'completed', //! this is the stutus when the campaign is completed
+  'rejected'
 ]);
 
 export const campaignTable = pgTable('campaigns', {
@@ -38,7 +40,7 @@ export const campaignTable = pgTable('campaigns', {
     .notNull()
     .references(() => userTable.id, { onDelete: 'cascade' }),
   packageType: packageTypeEnum('package_type'),
-  statusType: statusTypeEnum('status_type'),
+  statusType: campaignStatusType('status_type'),
   paymentStatus: paymentStatusEnum('payment_status'),
   duration: integer('duration').default(30).notNull(),
   revisions: varchar('revisions'),
@@ -69,14 +71,14 @@ export const campaignTable = pgTable('campaigns', {
   callToAction: text('call_to_action'),
   requirements: text('requirements'),
   mainMessage: text('main_message'),
-
+  active: boolean('active').default(false), 
   responseOnSeeingBanner: text('response_on_seeing_banner'),
   uploadedImages: jsonb('uploaded_images')
     .$type<{ secure_url: string; public_id: string }[]>()
     .default([]),
 
   slogan: varchar('slogan', { length: 500 }),
-
+  printHousePhoneNo: varchar('print_house_phone_no', {length: 20}), 
   spentAt: timestamp('spent_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

@@ -9,6 +9,14 @@ import { userTable } from '@src/db/users';
 
 
 
+export enum PaymentStatusType {
+  SUCCESS = 'success',
+  REVERSED = 'reversed',
+  FAILED = 'failed', 
+  PENDING = 'pending',
+  CANCELLED = 'cancelled', 
+}
+
 export const paymentTable = pgTable('payments', {
   id: uuid().defaultRandom().primaryKey().notNull(),
   userId: uuid('userId')
@@ -19,7 +27,9 @@ export const paymentTable = pgTable('payments', {
   dateInitiated: text('date_initiated'),
   amount: doublePrecision('amount').notNull(),
   paymentMethod: text('payment_method').notNull(),
-  paymentStatus: text('payment_status').notNull(),
+  paymentStatus: text('payment_status')
+    .$type<PaymentStatusType>()
+    .notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

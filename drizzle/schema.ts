@@ -1,15 +1,17 @@
-import { pgTable, foreignKey, uuid, integer, varchar, timestamp, unique, boolean, index, doublePrecision, jsonb, text, pgEnum } from "drizzle-orm/pg-core"
+import { pgTable, foreignKey, uuid, integer, varchar, timestamp, text, jsonb, boolean, index, unique, doublePrecision, pgEnum } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
+export const approvalStatusType = pgEnum("approval_status_type", ['REJECTED', 'APPROVED', 'UNAPPROVED'])
+export const campaignStatusType = pgEnum("campaign_status_type", ['draft', 'pending', 'approved', 'completed', 'rejected'])
 export const categoryType = pgEnum("category_type", ['payment', 'campaign'])
-export const driverCampaignStatusType = pgEnum("driver_campaign_status_type", ['completed', 'pending_approval', 'due_soon', 'approved'])
+export const designApprovalStatusType = pgEnum("design_approval_status_type", ['pending', 'approved', 'rejected'])
+export const driverCampaignStatusType = pgEnum("driver_campaign_status_type", ['completed', 'pending_approval', 'due_soon', 'approved', 'rejected'])
 export const maintenanceType = pgEnum("maintenance_type", ['basic', 'standard', 'premium'])
 export const notificationStatusType = pgEnum("notification_status_type", ['read', 'unread'])
 export const packageType = pgEnum("package_type", ['starter', 'basic', 'premium', 'custom'])
 export const paymentStatus = pgEnum("payment_status", ['spent', 'pending'])
-export const statusType = pgEnum("status_type", ['draft', 'active', 'pending', 'completed'])
 export const variantType = pgEnum("variant_type", ['info', 'success', 'warning', 'danger'])
-export const weeklyProofStatusType = pgEnum("weekly_proof_status_type", ['approved', 'pending_review', 'rejected'])
+export const weeklyProofStatus = pgEnum("weekly_proof_status", ['approved', 'pending_review', 'rejected', 'flagged'])
 
 
 export const packages = pgTable("packages", {
@@ -32,73 +34,10 @@ export const packages = pgTable("packages", {
 		}).onDelete("cascade"),
 ]);
 
-export const users = pgTable("users", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	phone: varchar({ length: 50 }).notNull(),
-	email: varchar({ length: 255 }).notNull(),
-	password: varchar({ length: 255 }).notNull(),
-	isEmailVerified: boolean("is_email_Verified").default(false).notNull(),
-	refreshToken: varchar({ length: 255 }),
-	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
-	role: varchar({ length: 50 }).array().default(["businessOwner"]).notNull(),
-}, (table) => [
-	unique("users_phone_unique").on(table.phone),
-	unique("users_email_unique").on(table.email),
-]);
-
-export const passwordResets = pgTable("password_resets", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	userId: uuid("user_id"),
-	email: varchar({ length: 255 }).notNull(),
-	passwordResetCode: varchar("password_reset_code").notNull(),
-	expiresAt: timestamp("expires_at", { mode: 'string' }).notNull(),
-	attempts: integer().default(0).notNull(),
-	used: boolean().default(false).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("email_code_expires_at_idx").using("btree", table.expiresAt.asc().nullsLast().op("timestamp_ops")),
-	index("email_verification_code_epxps").using("btree", table.email.asc().nullsLast().op("timestamp_ops"), table.expiresAt.asc().nullsLast().op("text_ops")),
-	foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "password_resets_user_id_users_id_fk"
-		}).onDelete("cascade"),
-	unique("password_resets_user_id_unique").on(table.userId),
-	unique("password_resets_email_unique").on(table.email),
-]);
-
-export const drivers = pgTable("drivers", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	userId: uuid().notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
-	dp: varchar({ length: 255 }),
-	balance: doublePrecision().default(0).notNull(),
-	pending: doublePrecision().default(0).notNull(),
-	fullName: varchar("full_name", { length: 255 }).default('Null Driver').notNull(),
-	nin: varchar({ length: 12 }).notNull(),
-	state: varchar({ length: 50 }).notNull(),
-	lga: varchar({ length: 50 }).notNull(),
-	frontview: jsonb().notNull(),
-	backview: jsonb().notNull(),
-	sideview: jsonb().notNull(),
-	driverLicense: jsonb("driver_license"),
-	ownershipDocument: jsonb("ownership_document"),
-	approvedStatus: boolean("approved_status").default(false).notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "drivers_userId_users_id_fk"
-		}).onDelete("cascade"),
-	unique("drivers_nin_unique").on(table.nin),
-]);
-
 export const campaigns = pgTable("campaigns", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	packageType: packageType("package_type"),
-	statusType: statusType("status_type"),
+	statusType: campaignStatusType("status_type"),
 	revisions: varchar(),
 	price: integer(),
 	noOfDrivers: integer("no_of_drivers"),
@@ -126,12 +65,35 @@ export const campaigns = pgTable("campaigns", {
 	bannerDetails: jsonb("banner_details"),
 	earningPerDriver: integer("earning_per_driver"),
 	requirements: text(),
+	active: boolean().default(false),
+	printHousePhoneNo: varchar("print_house_phone_no", { length: 20 }),
 }, (table) => [
 	foreignKey({
 			columns: [table.userId],
 			foreignColumns: [users.id],
 			name: "campaigns_userId_users_id_fk"
 		}).onDelete("cascade"),
+]);
+
+export const passwordResets = pgTable("password_resets", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid("user_id"),
+	email: varchar({ length: 255 }).notNull(),
+	passwordResetCode: varchar("password_reset_code").notNull(),
+	expiresAt: timestamp("expires_at", { mode: 'string' }).notNull(),
+	attempts: integer().default(0).notNull(),
+	used: boolean().default(false).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("email_code_expires_at_idx").using("btree", table.expiresAt.asc().nullsLast().op("timestamp_ops")),
+	index("email_verification_code_epxps").using("btree", table.email.asc().nullsLast().op("timestamp_ops"), table.expiresAt.asc().nullsLast().op("text_ops")),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "password_resets_user_id_users_id_fk"
+		}).onDelete("cascade"),
+	unique("password_resets_user_id_unique").on(table.userId),
+	unique("password_resets_email_unique").on(table.email),
 ]);
 
 export const businessOwners = pgTable("businessOwners", {
@@ -145,6 +107,7 @@ export const businessOwners = pgTable("businessOwners", {
 	userId: uuid().notNull(),
 	balance: doublePrecision().default(0).notNull(),
 	pending: doublePrecision().default(0).notNull(),
+	businessOwnerStatus: boolean("business_owner_status").default(true),
 }, (table) => [
 	foreignKey({
 			columns: [table.userId],
@@ -152,6 +115,21 @@ export const businessOwners = pgTable("businessOwners", {
 			name: "businessOwners_userId_users_id_fk"
 		}).onDelete("cascade"),
 	unique("businessOwners_userId_unique").on(table.userId),
+]);
+
+export const users = pgTable("users", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	phone: varchar({ length: 50 }).notNull(),
+	email: varchar({ length: 255 }).notNull(),
+	password: varchar({ length: 255 }).notNull(),
+	isEmailVerified: boolean("is_email_Verified").default(false).notNull(),
+	refreshToken: varchar({ length: 255 }),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
+	role: varchar({ length: 50 }).array().default(["businessOwner"]).notNull(),
+}, (table) => [
+	unique("users_phone_unique").on(table.phone),
+	unique("users_email_unique").on(table.email),
 ]);
 
 export const notifications = pgTable("notifications", {
@@ -165,6 +143,7 @@ export const notifications = pgTable("notifications", {
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
 	variant: variantType().default('info').notNull(),
+	role: varchar({ length: 50 }).default('businessOwner').notNull(),
 }, (table) => [
 	foreignKey({
 			columns: [table.userId],
@@ -190,25 +169,39 @@ export const emailVerifications = pgTable("email_verifications", {
 	unique("email_verifications_phone_unique").on(table.phone),
 ]);
 
-export const weeklyProofs = pgTable("weekly_proofs", {
+export const vehicleDetails = pgTable("vehicle_details", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
-	campaignId: uuid().notNull(),
-	frontview: jsonb().notNull(),
-	backview: jsonb().notNull(),
-	sideview: jsonb().notNull(),
-	comment: text(),
-	weeklyProofStatus: weeklyProofStatusType("weekly_proof_status").default('pending_review'),
-	rejectionReason: text("rejection_reason"),
-	month: integer(),
-	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow(),
 	userId: uuid().notNull(),
+	plateNumber: varchar("plate_number", { length: 255 }),
+	color: varchar({ length: 50 }).notNull(),
+	state: varchar({ length: 50 }).notNull(),
+	lga: varchar({ length: 50 }).notNull(),
+	vehiclePhotos: jsonb("vehicle_photos").array().notNull(),
+	yearOfManufacture: varchar("year_of_manufacture", { length: 6 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.campaignId],
-			foreignColumns: [campaigns.id],
-			name: "weekly_proofs_campaignId_campaigns_id_fk"
+			columns: [table.userId],
+			foreignColumns: [drivers.userId],
+			name: "vehicle_details_userId_drivers_userId_fk"
 		}).onDelete("cascade"),
+	unique("vehicle_details_userId_unique").on(table.userId),
+]);
+
+export const admin = pgTable("admin", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid().notNull(),
+	fullName: varchar({ length: 255 }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "admin_userId_users_id_fk"
+		}).onDelete("cascade"),
+	unique("admin_userId_unique").on(table.userId),
 ]);
 
 export const payments = pgTable("payments", {
@@ -216,7 +209,6 @@ export const payments = pgTable("payments", {
 	userId: uuid().notNull(),
 	invoiceId: text("invoice_id"),
 	reference: text(),
-	campaignId: uuid("campaign_id").notNull(),
 	dateInitiated: text("date_initiated"),
 	amount: doublePrecision().notNull(),
 	paymentMethod: text("payment_method").notNull(),
@@ -229,11 +221,6 @@ export const payments = pgTable("payments", {
 			foreignColumns: [users.id],
 			name: "payments_userId_users_id_fk"
 		}),
-	foreignKey({
-			columns: [table.campaignId],
-			foreignColumns: [campaigns.id],
-			name: "payments_campaign_id_campaigns_id_fk"
-		}).onDelete("cascade"),
 ]);
 
 export const bankDetails = pgTable("bank_details", {
@@ -242,32 +229,17 @@ export const bankDetails = pgTable("bank_details", {
 	accountNumber: varchar("account_number", { length: 10 }).notNull(),
 	accountName: varchar("account_name", { length: 255 }).notNull(),
 	bankId: integer().notNull(),
-	bankCode: integer("bank_code").notNull(),
+	bankCode: varchar("bank_code", { length: 10 }).notNull(),
 	transferRecipientCode: varchar("transfer_recipient_code", { length: 255 }).notNull(),
+	bankName: varchar("bank_name", { length: 255 }),
 }, (table) => [
 	foreignKey({
 			columns: [table.userId],
 			foreignColumns: [users.id],
 			name: "bank_details_userId_users_id_fk"
-		}),
-]);
-
-export const earnings = pgTable("earnings", {
-	campaignId: uuid(),
-	amount: doublePrecision().notNull(),
-	reference: text(),
-	dateInitiated: text("date_initiated"),
-	paymentMethod: text("payment_method").notNull(),
-	recipientCode: varchar("recipient_code", { length: 255 }).notNull(),
-	paymentStatus: text("payment_status").notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.campaignId],
-			foreignColumns: [campaigns.id],
-			name: "earnings_campaignId_campaigns_id_fk"
 		}).onDelete("cascade"),
+	unique("bank_details_userId_unique").on(table.userId),
+	unique("bank_details_transfer_recipient_code_unique").on(table.transferRecipientCode),
 ]);
 
 export const driverCampaigns = pgTable("driver_campaigns", {
@@ -278,6 +250,7 @@ export const driverCampaigns = pgTable("driver_campaigns", {
 	activeStatus: boolean("active_status").default(true),
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow(),
+	paymentStatus: boolean("payment_status").default(false),
 }, (table) => [
 	foreignKey({
 			columns: [table.userId],
@@ -289,4 +262,103 @@ export const driverCampaigns = pgTable("driver_campaigns", {
 			foreignColumns: [campaigns.id],
 			name: "driver_campaigns_campaignId_campaigns_id_fk"
 		}).onDelete("cascade"),
+]);
+
+export const earnings = pgTable("earnings", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	campaignId: uuid(),
+	userId: uuid(),
+	amount: doublePrecision().notNull(),
+	reference: text(),
+	dateInitiated: timestamp("date_initiated", { mode: 'string' }).defaultNow().notNull(),
+	paymentMethod: text("payment_method").default('transfer').notNull(),
+	recipientCode: varchar("recipient_code", { length: 255 }).notNull(),
+	rejectionReason: varchar("rejection_reason", { length: 255 }),
+	paymentStatus: text("payment_status").default('UNPAID').notNull(),
+	approved: approvalStatusType().default('UNAPPROVED'),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.campaignId],
+			foreignColumns: [campaigns.id],
+			name: "earnings_campaignId_campaigns_id_fk"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [drivers.userId],
+			name: "earnings_userId_drivers_userId_fk"
+		}).onDelete("cascade"),
+]);
+
+export const weeklyProofs = pgTable("weekly_proofs", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	campaignId: uuid().notNull(),
+	frontview: jsonb().notNull(),
+	backview: jsonb().notNull(),
+	sideview: jsonb().notNull(),
+	comment: text(),
+	weeklyProofStatus: weeklyProofStatus("weekly_proof_status").default('pending_review').notNull(),
+	rejectionReason: text("rejection_reason"),
+	month: integer(),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow(),
+	userId: uuid().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.campaignId],
+			foreignColumns: [campaigns.id],
+			name: "weekly_proofs_campaignId_campaigns_id_fk"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [drivers.userId],
+			name: "weekly_proofs_userId_drivers_userId_fk"
+		}).onDelete("cascade"),
+]);
+
+export const campaignDesigns = pgTable("campaign_designs", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	campaignId: uuid().notNull(),
+	designs: jsonb().notNull(),
+	approvalStatus: designApprovalStatusType("approval_status").default('pending'),
+	comment: text(),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow(),
+}, (table) => [
+	foreignKey({
+			columns: [table.campaignId],
+			foreignColumns: [campaigns.id],
+			name: "campaign_designs_campaignId_campaigns_id_fk"
+		}).onDelete("cascade"),
+]);
+
+export const drivers = pgTable("drivers", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid().notNull(),
+	firstname: varchar({ length: 255 }).default('firstname').notNull(),
+	approvedStatus: boolean("approved_status").default(false).notNull(),
+	balance: doublePrecision().default(0).notNull(),
+	pending: doublePrecision().default(0).notNull(),
+	nin: varchar({ length: 12 }).notNull(),
+	state: varchar({ length: 50 }).notNull(),
+	lga: varchar({ length: 50 }).notNull(),
+	frontview: jsonb().notNull(),
+	backview: jsonb().notNull(),
+	sideview: jsonb().notNull(),
+	driverLicense: jsonb("driver_license"),
+	ownershipDocument: jsonb("ownership_document"),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
+	lastname: varchar({ length: 255 }).default('lastname').notNull(),
+	dp: jsonb(),
+	address: varchar({ length: 255 }),
+}, (table) => [
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "drivers_userId_users_id_fk"
+		}).onDelete("cascade"),
+	unique("drivers_userId_unique").on(table.userId),
+	unique("drivers_nin_unique").on(table.nin),
 ]);

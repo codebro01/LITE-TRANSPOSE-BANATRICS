@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Req,
   Patch,
+  HttpCode,
 } from '@nestjs/common';
 import { UserService } from '@src/users/users.service';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
@@ -117,34 +118,36 @@ export class UserController {
     description: 'Register new driver using the information provided',
   })
   @ApiResponse({ status: 200, description: 'successs' })
+  @HttpCode(HttpStatus.CREATED)
   async finalizeDriverCreation(
     @Body() body: CreateDriverDto,
-    @Res() res: Response,
   ) {
-    const { savedUser, accessToken, refreshToken } =
-      await this.userService.finalizeDriverCreation(body);
-      
-    res.cookie('access_token', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 1000 * 60 * 60, // 1h
-    });
+     await this.userService.finalizeDriverCreation(body);
 
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 1000 * 60 * 60 * 24 * 30, // 30d
-    });
+    // res.cookie('access_token', accessToken, {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === 'production',
+    //   sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    //   maxAge: 1000 * 60 * 60, // 1h
+    // });
 
-    const safeUser = omit(savedUser, [
-      'password',
-      'refreshToken',
-      'emailVerificationCode',
-    ]);
+    // res.cookie('refresh_token', refreshToken, {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === 'production',
+    //   sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    //   maxAge: 1000 * 60 * 60 * 24 * 30, // 30d
+    // });
 
-    res.status(HttpStatus.ACCEPTED).json({ user: safeUser });
+    // const safeUser = omit(savedUser, [
+    //   'password',
+    //   'refreshToken',
+    //   'emailVerificationCode',
+    // ]);
+
+    return {
+      success: true,
+      message: 'Driver account created, Please wait for approval.',
+    };
   }
 
   // ! get driver profile
