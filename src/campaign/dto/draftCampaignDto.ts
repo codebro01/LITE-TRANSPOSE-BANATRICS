@@ -86,15 +86,15 @@ export class DraftCampaignDto {
   @IsNotAllowedWithPackageType()
   revisions: string;
 
-  @ApiProperty({
-    example: 150000,
-    description: 'Campaign price in Naira',
-  })
-  @IsNumber()
-  @IsOptional()
-  @Min(0, { message: 'Price must be a positive number' })
-  @IsNotAllowedWithPackageType()
-  price: number;
+  // @ApiProperty({
+  //   example: 150000,
+  //   description: 'Campaign price in Naira',
+  // })
+  // @IsNumber()
+  // @IsOptional()
+  // @Min(0, { message: 'Price must be a positive number' })
+  // @IsNotAllowedWithPackageType()
+  // price: number;
 
   @ApiProperty({
     example: 50,

@@ -11,7 +11,10 @@ import {
   PublishCampaignDto,
 } from '@src/campaign/dto/publishCampaignDto';
 import { CloudinaryService } from '@src/cloudinary/cloudinary.service';
-import { CampaignRepository, CampaignStatus } from '@src/campaign/repository/campaign.repository';
+import {
+  CampaignRepository,
+  CampaignStatus,
+} from '@src/campaign/repository/campaign.repository';
 import { NotificationService } from '@src/notification/notification.service';
 import {
   StatusType,
@@ -26,7 +29,6 @@ import {
 } from '@src/campaign/dto/create-driver-campaign.dto';
 import { CronExpression, Cron } from '@nestjs/schedule';
 import { updatePricePerDriverPerCampaign } from '@src/campaign/dto/update-price-per-driver-per-campaign.dto';
-
 
 @Injectable()
 export class CampaignService {
@@ -54,7 +56,6 @@ export class CampaignService {
         data.endDate ||
         data.maintenanceType ||
         data.lgaCoverage ||
-        data.price ||
         data.revisions)
     ) {
       throw new BadRequestException(
@@ -72,6 +73,8 @@ export class CampaignService {
       await this.packageRepository.findByPackageType(data.packageType);
 
     console.log(isNotCustomPackageType);
+
+    //! This handles predefined package types
     if (isNotCustomPackageType.length > 0) {
       // Calculate end date by adding days to start date
       const calculateEndDate = new Date(startDate);
@@ -83,8 +86,9 @@ export class CampaignService {
         calculateEndDate.getDate() + isNotCustomPackageType[0].duration,
       );
       campaign = await this.campaignRepository.create(
+       
         {
-          packageType: isNotCustomPackageType[0].packageType,
+          packageType: isNotCustomPackageType[0].packageType as PackageType,
           duration: isNotCustomPackageType[0].duration,
           revisions: isNotCustomPackageType[0].revisions,
           price: isNotCustomPackageType[0].price,
@@ -111,8 +115,24 @@ export class CampaignService {
         throw new InternalServerErrorException(
           'An error occcured, creating campaign, please try again',
         );
-    } else {
+    }
+    //! This handles custom package types
+    else {
       const calculateEndDate = new Date(startDate);
+
+      if (!data.endDate)
+        throw new BadRequestException(
+          'End date must be provided for custom campaigns',
+        );
+
+      const endDate = new Date(data.endDate);
+
+      const minEndDate = new Date(startDate);
+      minEndDate.setDate(minEndDate.getDate() + 30);
+
+      if (endDate < minEndDate) {
+        throw new BadRequestException('Campaign must run for at least 30 days');
+      }
       // if (!data.duration)
       //   throw new BadRequestException(
       //     'duration is required if package type is custom',
@@ -128,8 +148,8 @@ export class CampaignService {
           packageType: data.packageType,
           duration: data.duration || undefined,
           revisions: data.revisions,
-          price: data.price,
-          noOfDrivers: data.noOfDrivers,
+          price: data.noOfDrivers ? data.noOfDrivers * 120000 : 0,
+          noOfDrivers: data.noOfDrivers ? data.noOfDrivers : 0,
           campaignName: data.campaignName,
           campaignDescriptions: data.campaignDescriptions,
           startDate: data.startDate ? new Date(data.startDate) : null,
@@ -164,7 +184,7 @@ export class CampaignService {
         status: StatusType.UNREAD,
       },
       userId,
-      'businessOwner', 
+      'businessOwner',
     );
 
     return {
@@ -192,7 +212,6 @@ export class CampaignService {
           data.endDate ||
           data.maintenanceType ||
           data.lgaCoverage ||
-          data.price ||
           data.revisions)
       ) {
         throw new BadRequestException(
@@ -210,6 +229,8 @@ export class CampaignService {
       const isNotCustomPackageType =
         await this.packageRepository.findByPackageType(data.packageType);
 
+      // ! For predefined packages
+
       if (isNotCustomPackageType.length > 0) {
         // Validate dates
 
@@ -224,7 +245,7 @@ export class CampaignService {
         );
         draft = await this.campaignRepository.draftCampaign(
           {
-            packageType: isNotCustomPackageType[0].packageType,
+            packageType: isNotCustomPackageType[0].packageType as PackageType,
             duration: isNotCustomPackageType[0].duration,
             revisions: isNotCustomPackageType[0].revisions,
             price: isNotCustomPackageType[0].price,
@@ -242,13 +263,34 @@ export class CampaignService {
           throw new InternalServerErrorException(
             'An error occcured, creating draft, please try again',
           );
-      } else {
+      }
+      // ! For custom packages
+      else {
+        if (!data.endDate)
+          throw new BadRequestException(
+            'End date must be provided for custom campaigns',
+          );
+
+        const endDate = new Date(data.endDate);
+
+        const minEndDate = new Date(startDate);
+        minEndDate.setDate(minEndDate.getDate() + 30);
+
+        if (endDate < minEndDate) {
+          throw new BadRequestException(
+            'Campaign must run for at least 30 days',
+          );
+        }
+
         draft = await this.campaignRepository.draftCampaign(
           {
             ...data,
+            price: data.noOfDrivers ? data.noOfDrivers * 120000 : 0,
+            noOfDrivers: data.noOfDrivers ? data.noOfDrivers : 0,
             startDate: data.startDate ? new Date(data.startDate) : null,
             endDate: data.endDate ? new Date(data.endDate) : null,
             statusType: CampaignStatus.DRAFT,
+
           },
           userId,
         );
@@ -264,6 +306,11 @@ export class CampaignService {
 
   async updateDraft(id: string, userId: string, data: DraftCampaignDto) {
     // console.log(id, userId)
+
+    const startDate = new Date(data.startDate);
+
+    if(startDate < new Date()) throw new BadRequestException('Start date cannot be in the past')
+
     const existing = await this.campaignRepository.findDraftByIdAndUserId(
       id,
       userId,
@@ -278,6 +325,7 @@ export class CampaignService {
     const isNotCustomPackageType =
       await this.packageRepository.findByPackageType(data.packageType);
 
+    //! For predefined packages
     if (isNotCustomPackageType.length > 0) {
       // Calculate end date by adding days to start date
       const calculateEndDate = new Date(data.startDate);
@@ -292,7 +340,7 @@ export class CampaignService {
         id,
         {
           ...data,
-          packageType: isNotCustomPackageType[0].packageType,
+          packageType: isNotCustomPackageType[0].packageType as PackageType,
           duration: isNotCustomPackageType[0].duration,
           revisions: isNotCustomPackageType[0].revisions,
           price: isNotCustomPackageType[0].price,
@@ -302,7 +350,7 @@ export class CampaignService {
             .maintenanceType as MaintenanceType,
           endDate: calculateEndDate,
           startDate: data.startDate ? new Date(data.startDate) : null,
-          statusType: CampaignStatus.DRAFT // Published directly
+          statusType: CampaignStatus.DRAFT, // Published directly
         },
         userId,
       );
@@ -310,11 +358,30 @@ export class CampaignService {
         throw new InternalServerErrorException(
           'An error occcured, creating draft, please try again',
         );
-    } else {
+    }
+    //! For custom Packages
+    else {
+          if (!data.endDate)
+            throw new BadRequestException(
+              'End date must be provided for custom campaigns',
+            );
+
+          const endDate = new Date(data.endDate);
+
+          const minEndDate = new Date(startDate);
+          minEndDate.setDate(minEndDate.getDate() + 30);
+
+          if (endDate < minEndDate) {
+            throw new BadRequestException(
+              'Campaign must run for at least 30 days',
+            );
+          }
       updated = await this.campaignRepository.updateById(
         id,
         {
           ...data,
+          price: data.noOfDrivers ? data.noOfDrivers * 120000 : 0,
+          noOfDrivers: data.noOfDrivers ? data.noOfDrivers : 0,
           startDate: data.startDate ? new Date(data.startDate) : null,
           endDate: data.endDate ? new Date(data.endDate) : null,
           updatedAt: new Date(),
@@ -334,6 +401,11 @@ export class CampaignService {
     if (!userId || !data)
       throw new BadRequestException('Please provide userId and draft data');
 
+
+    const startDate = new Date(data.startDate);
+
+    if(startDate < new Date()) throw new BadRequestException('Start date cannot be in the past')
+
     const existing = await this.campaignRepository.findDraftByIdAndUserId(
       id,
       userId,
@@ -348,6 +420,7 @@ export class CampaignService {
     const isNotCustomPackageType =
       await this.packageRepository.findByPackageType(data.packageType);
 
+    // ! For predefined packages
     if (isNotCustomPackageType.length > 0) {
       // Calculate end date by adding days to start date
       const calculateEndDate = new Date(data.startDate);
@@ -361,7 +434,7 @@ export class CampaignService {
       published = await this.campaignRepository.updateById(
         id,
         {
-          packageType: isNotCustomPackageType[0].packageType,
+          packageType: isNotCustomPackageType[0].packageType as PackageType,
           duration: isNotCustomPackageType[0].duration,
           revisions: isNotCustomPackageType[0].revisions,
           price: isNotCustomPackageType[0].price,
@@ -379,11 +452,31 @@ export class CampaignService {
         throw new InternalServerErrorException(
           'An error occcured, creating draft, please try again',
         );
-    } else {
+    }
+
+    // ! For custom packages
+    else {
+          if (!data.endDate)
+            throw new BadRequestException(
+              'End date must be provided for custom campaigns',
+            );
+
+          const endDate = new Date(data.endDate);
+
+          const minEndDate = new Date(startDate);
+          minEndDate.setDate(minEndDate.getDate() + 30);
+
+          if (endDate < minEndDate) {
+            throw new BadRequestException(
+              'Campaign must run for at least 30 days',
+            );
+          }
       published = await this.campaignRepository.updateById(
         id,
         {
           ...data,
+          price: data.noOfDrivers ? data.noOfDrivers * 120000 : 0,
+          noOfDrivers: data.noOfDrivers ? data.noOfDrivers : 0,
           startDate: data.startDate ? new Date(data.startDate) : null,
           endDate: data.endDate ? new Date(data.endDate) : null,
           updatedAt: new Date(),
@@ -468,7 +561,6 @@ export class CampaignService {
     const campaigns = await this.campaignRepository.getAllAvailableCampaigns();
     return campaigns;
   }
-
 
   async driverCampaignDashboard(userId: string) {
     const result =

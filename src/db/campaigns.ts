@@ -7,17 +7,18 @@ import {
   text,
   pgEnum,
   uuid,
-  boolean, 
+  boolean,
   jsonb,
 } from 'drizzle-orm/pg-core';
 import { userTable } from '@src/db/users';
 
 // Package type enum
-export const packageTypeEnum = pgEnum('package_type', [
+export const campaignPackageTypeEnum = pgEnum('package_type', [
   'starter',
   'basic',
   'premium',
   'custom',
+  'grand',
 ]);
 
 export const maintenanceTypeEnum = pgEnum('maintenance_type', [
@@ -31,7 +32,7 @@ export const campaignStatusType = pgEnum('campaign_status_type', [
   'pending', //! this is the stutus when the campaign of business Owner is approved and still active
   'approved', //! this is the stutus before approval
   'completed', //! this is the stutus when the campaign is completed
-  'rejected'
+  'rejected',
 ]);
 
 export const campaignTable = pgTable('campaigns', {
@@ -39,7 +40,7 @@ export const campaignTable = pgTable('campaigns', {
   userId: uuid('userId')
     .notNull()
     .references(() => userTable.id, { onDelete: 'cascade' }),
-  packageType: packageTypeEnum('package_type'),
+  packageType: campaignPackageTypeEnum('package_type'),
   statusType: campaignStatusType('status_type'),
   paymentStatus: paymentStatusEnum('payment_status'),
   duration: integer('duration').default(30).notNull(),
@@ -51,8 +52,8 @@ export const campaignTable = pgTable('campaigns', {
   availability: integer('availability'),
   campaignName: varchar('campaign_name', { length: 255 }),
   campaignDescriptions: text('campaign_descriptions'),
-  startDate: timestamp('start_date'),
-  endDate: timestamp('end_date'),
+  startDate: timestamp('start_date', { mode: 'date', withTimezone: true }),
+  endDate: timestamp('end_date', { mode: 'date', withTimezone: true }),
   companyLogo: jsonb('company_logo').$type<{
     secure_url: string;
     public_id: string;
@@ -71,17 +72,21 @@ export const campaignTable = pgTable('campaigns', {
   callToAction: text('call_to_action'),
   requirements: text('requirements'),
   mainMessage: text('main_message'),
-  active: boolean('active').default(false), 
+  active: boolean('active').default(false),
   responseOnSeeingBanner: text('response_on_seeing_banner'),
   uploadedImages: jsonb('uploaded_images')
     .$type<{ secure_url: string; public_id: string }[]>()
     .default([]),
 
   slogan: varchar('slogan', { length: 500 }),
-  printHousePhoneNo: varchar('print_house_phone_no', {length: 20}), 
-  spentAt: timestamp('spent_at'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  printHousePhoneNo: varchar('print_house_phone_no', { length: 20 }),
+  spentAt: timestamp('spent_at', { mode: 'date', withTimezone: true }),
+  createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 // Types

@@ -13,6 +13,7 @@ import { jwtConstants } from '@src/auth/jwtContants';
 import { userTable } from '@src/db';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq } from 'drizzle-orm';
+import bcrypt from 'bcrypt';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -102,9 +103,11 @@ export class JwtAuthGuard implements CanActivate {
       const newTokenUser = await this.jwtService.verifyAsync(newAccessToken, {
         secret: jwtConstants.accessTokenSecret,
       });
+
+      const hashedRefreshToken = await bcrypt.hash(newRefreshToken, 10)
       // console.log('got to newTokenUser');
       await this.DbProvider.update(userTable)
-        .set({ refreshToken: newRefreshToken })
+        .set({ refreshToken: hashedRefreshToken })
         .where(eq(userTable.id, id));
       if (!newTokenUser) {
         response.clearCookie('access_token');

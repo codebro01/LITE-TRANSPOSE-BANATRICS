@@ -26,7 +26,7 @@ export enum PackageType {
   BASIC = 'basic',
   PREMIUM = 'premium',
   CUSTOM = 'custom',
-  
+  GRAND = 'grand', 
 }
 
 
@@ -87,21 +87,21 @@ export class PublishCampaignDto {
   @IsNotAllowedWithPackageType()
   revisions?: string;
 
-  @ApiProperty({
-    example: 150000,
-    description:
-      'Campaign price in Naira. Required when packageType is custom.',
-    required: false,
-  })
-  @ValidateIf(
-    (o) => o.packageType === PackageType.CUSTOM || o.price !== undefined,
-  )
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  @Min(0, { message: 'Price must be a positive number' })
-  @IsNotAllowedWithPackageType()
-  price?: number;
+  // @ApiProperty({
+  //   example: 150000,
+  //   description:
+  //     'Campaign price in Naira. Required when packageType is custom.',
+  //   required: false,
+  // })
+  // @ValidateIf(
+  //   (o) => o.packageType === PackageType.CUSTOM || o.price !== undefined,
+  // )
+  // @Type(() => Number)
+  // @IsNumber()
+  // @IsOptional()
+  // @Min(0, { message: 'Price must be a positive number' })
+  // @IsNotAllowedWithPackageType()
+  // price?: number;
 
   @ApiProperty({
     example: 50,

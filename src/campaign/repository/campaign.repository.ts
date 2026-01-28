@@ -9,6 +9,7 @@ import {
   DriverCampaignStatusType,
 } from '@src/campaign/dto/create-driver-campaign.dto';
 import { updatePricePerDriverPerCampaign } from '@src/campaign/dto/update-price-per-driver-per-campaign.dto';
+import { PackageType } from '../dto/publishCampaignDto';
 
 export enum CampaignStatus {
   PENDING  = 'pending', 
@@ -18,15 +19,14 @@ export enum CampaignStatus {
   REJECTED = 'rejected'
 }
    
-export type packageType = 'starter' | 'basic' | 'premium' | 'custom';
-
 export type uploadType = {
   secure_url: string;
   public_id: string;
 };
 
 export interface CreateCampaignData {
-  packageType?: packageType;
+  packageType
+  ?: PackageType;
   duration?: number;
   revisions?: string;
   price?: number;
@@ -49,7 +49,7 @@ export interface CreateCampaignData {
 }
 
 export interface UpdateCampaignData {
-  packageType?: packageType;
+  packageType?: PackageType;
   duration?: number;
   revisions?: string;
   price?: number;
