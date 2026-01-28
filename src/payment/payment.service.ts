@@ -4,6 +4,8 @@ import {
   Injectable,
   HttpStatus,
   HttpException,
+  NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
@@ -15,7 +17,6 @@ import {
 import { UserRepository } from '@src/users/repository/user.repository';
 import crypto from 'crypto';
 import { InitializePaymentDto } from '@src/payment/dto/initializePaymentDto';
-import { MakePaymentForCampaignDto } from '@src/payment/dto/makePaymentForCampaignDto';
 import { CampaignRepository } from '@src/campaign/repository/campaign.repository';
 import {
   CategoryType,
@@ -25,6 +26,8 @@ import {
 import { NotificationService } from '@src/notification/notification.service';
 import { EarningRepository } from '@src/earning/repository/earning.repository';
 import { PaymentStatusType } from '@src/db';
+import { CronExpression, Cron } from '@nestjs/schedule';
+
 interface VerifyPaymentResponse {
   status: boolean;
   message: string;
@@ -69,7 +72,11 @@ export class PaymentService {
   }
 
   async initializePayment(
-    data: InitializePaymentDto & { email: string; userId: string, role: string },
+    data: InitializePaymentDto & {
+      email: string;
+      userId: string;
+      role: string;
+    },
   ) {
     try {
       const response = await firstValueFrom(
@@ -85,7 +92,7 @@ export class PaymentService {
               userId: data.userId,
               invoiceId: generateSecureInvoiceId(),
               dateInitiated: new Date().toISOString(),
-              role: data.role, 
+              role: data.role,
             },
           },
           { headers: this.getHeaders() },
@@ -150,7 +157,10 @@ export class PaymentService {
           const existingPayment =
             await this.paymentRepository.findByReference(reference);
 
-          if (existingPayment && existingPayment.paymentStatus === PaymentStatusType.SUCCESS) {
+          if (
+            existingPayment &&
+            existingPayment.paymentStatus === PaymentStatusType.SUCCESS
+          ) {
             return 'already processed';
           }
 
@@ -188,7 +198,7 @@ export class PaymentService {
               status: StatusType.UNREAD,
             },
             userId,
-            'businessOwner', 
+            'businessOwner',
           );
 
           break;
@@ -220,7 +230,7 @@ export class PaymentService {
               status: StatusType.UNREAD,
             },
             userId,
-            'businessOwner', 
+            'businessOwner',
           );
           break;
         }
@@ -252,7 +262,7 @@ export class PaymentService {
               status: StatusType.UNREAD,
             },
             userId,
-            'businessOwner', 
+            'businessOwner',
           );
           break;
         }
@@ -282,7 +292,7 @@ export class PaymentService {
               status: StatusType.UNREAD,
             },
             userId,
-            'businessOwner', 
+            'businessOwner',
           );
 
           break;
@@ -302,7 +312,7 @@ export class PaymentService {
               trx,
             );
           });
-          
+
           await this.notificationService.createNotification(
             {
               title: `Your withdrawal of ${amount} is successful`,
@@ -313,7 +323,7 @@ export class PaymentService {
               status: StatusType.UNREAD,
             },
             userId,
-            'driver', 
+            'driver',
           );
 
           break;
@@ -342,7 +352,7 @@ export class PaymentService {
               status: StatusType.UNREAD,
             },
             userId,
-            'driver', 
+            'driver',
           );
           break;
         }
@@ -370,7 +380,7 @@ export class PaymentService {
               status: StatusType.UNREAD,
             },
             userId,
-            'driver', 
+            'driver',
           );
           break;
         }
@@ -428,50 +438,179 @@ export class PaymentService {
   }
 
   async makePaymentForCampaign(
-    data: MakePaymentForCampaignDto,
+    data: {
+      campaignId: string;
+    },
     userId: string,
+    trx?:any, 
   ) {
-    const { campaignId } = data;
-    try {
-      const result = await this.paymentRepository.moveMoneyFromBalanceToPending(
-        { campaignId },
-        userId,
-      );
+   
+      const { campaignId } = data;
+      // console.log(campaignId, amount);
 
-      return result;
-    } catch (error) {
-      console.error('error', error.message);
-      throw new HttpException(
-        error.response?.data?.message ||
-          error?.message ||
-          'Failed to list transactions',
-        error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+      // ! Perform money move transactions
+          // ! get campaign amount from db
+
+          const getAmount = await this.paymentRepository.getCampaignPrice(
+            campaignId,
+            userId,
+            trx,
+          );
+
+          const amount = getAmount.amount;
+
+          // ! check balanace before performing performing money move trx to prevent negative value on balance
+
+          const businessOwner =
+            await this.paymentRepository.getBusinessOwnerBalanceAndPending(
+              userId,
+              trx,
+            );
+
+          if (!businessOwner) {
+            throw new NotFoundException('Business owner not found');
+          }
+
+          if (Number(businessOwner.balance) < amount) {
+            throw new BadRequestException(
+              `Insufficient balance. Available: ${businessOwner.balance.toFixed(2)}, Required: ${amount}`,
+            );
+          }
+
+          const updateBalanceAndPending =
+            await this.paymentRepository.updateBalanceAndPending(
+              userId,
+              amount,
+              trx,
+            );
+
+          const updateCampaignStatus =
+            await this.paymentRepository.updateCampaignStatus(
+              campaignId,
+              'pending',
+              userId,
+              true,
+              trx,
+            );
+
+          if (!updateCampaignStatus) {
+            throw new InternalServerErrorException(
+              'Could not make payment for Campaign',
+            );
+          }
+
+          return {
+            currentData: {
+              balance: updateBalanceAndPending.balance,
+              pending: updateBalanceAndPending.pending,
+            },
+            updateCampaignStatus,
+          };
   }
-  async finalizePaymentForCampaign(
-    data: MakePaymentForCampaignDto,
+
+  // ! This functions handles the deduction of money from pending (The state at which the capaign is still active) to total Amount spent (When the campaign is completed, its going to be a cron job)
+
+  @Cron(CronExpression.EVERY_12_HOURS)
+  async deductFromPendingToTotalAmountSpent(
+    data: {
+      campaignId: string;
+    },
     userId: string,
   ) {
-    const { campaignId } = data;
     try {
-      const result =
-        await this.paymentRepository.moveMoneyFromPendingToTotalAmountSpent(
-          { campaignId },
-          userId,
+      const { campaignId } = data;
+
+      const Trx = await this.paymentRepository.executeInTransaction(
+        async (trx) => {
+          const getAmount = await this.paymentRepository.getCampaignPrice(
+            campaignId,
+            userId,
+            trx,
+          );
+
+          const amount = getAmount.amount;
+
+          const businessOwner =
+            await this.paymentRepository.getBusinessOwnerBalanceAndPending(
+              userId,
+              trx,
+            );
+
+          if (!businessOwner) {
+            throw new NotFoundException('Business owner not found');
+          }
+
+          if (Number(businessOwner.pending) < amount) {
+            throw new BadRequestException(
+              `Insufficient pending balance. Available: ${businessOwner.pending.toFixed(2)}, Required: ${amount}`,
+            );
+          }
+
+          const updatePendingAndTotalSpent =
+            await this.paymentRepository.updatePendingAndTotalSpent(
+              userId,
+              amount,
+              trx,
+            );
+
+          const updateCampaignStatus =
+            await this.paymentRepository.updateCampaignStatus(
+              campaignId,
+              'completed',
+              userId,
+              undefined,
+              trx,
+            );
+
+          await this.notificationService.createNotification(
+            {
+              title: `Campaign charge`,
+              message: `${amount} has been successfully dedecuted to settle the campaign charge`,
+              variant: VariantType.SUCCESS,
+              category: CategoryType.CAMPAIGN,
+              priority: '',
+              status: StatusType.UNREAD,
+            },
+            userId,
+            'businessOwner',
+          );
+
+          // console.log('updateCampaignResult', updateCampaignResult);
+
+          if (!updateCampaignStatus) {
+            throw new Error(
+              'Campaign not found or not in pending status. Only campaigns with status "pending" can be paid for.',
+            );
+          }
+
+          const currentData = {
+            pending: updatePendingAndTotalSpent.pending,
+            totalSpent: updatePendingAndTotalSpent.totalSpent,
+          };
+
+          return { currentData };
+        },
+      );
+      // console.log('currentData', Trx.currentData);
+      if (
+        !Trx.currentData ||
+        !Trx.currentData.pending ||
+        !Trx.currentData.totalSpent
+      )
+        throw new InternalServerErrorException(
+          'An error occured fetching current payment data, please try again',
         );
 
-      return result;
+      return {
+        totalSpent: Trx.currentData.totalSpent.toFixed(2),
+        currentPending: Trx.currentData.pending.toFixed(2),
+      };
     } catch (error) {
-      console.error('error', error.message);
-      throw new HttpException(
-        error.response?.data?.message ||
-          error?.message ||
-          'Failed to list transactions',
-        error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      // console.log(error);
+      throw new Error(error);
     }
   }
+
   async listTransactions(userId: string) {
     try {
       const result = await this.paymentRepository.listTransactions(userId);

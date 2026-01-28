@@ -33,7 +33,7 @@ export class HomeDashboardsRepository {
           .where(
             and(
               eq(campaignTable.userId, userId),
-              eq(campaignTable.paymentStatus, 'spent'),
+              eq(campaignTable.paymentStatus, true),
             ),
           ),
 

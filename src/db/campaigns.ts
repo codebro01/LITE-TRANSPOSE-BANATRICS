@@ -42,7 +42,7 @@ export const campaignTable = pgTable('campaigns', {
     .references(() => userTable.id, { onDelete: 'cascade' }),
   packageType: campaignPackageTypeEnum('package_type'),
   statusType: campaignStatusType('status_type'),
-  paymentStatus: paymentStatusEnum('payment_status'),
+  paymentStatus: boolean('payment_status').default(false).notNull(),
   duration: integer('duration').default(30).notNull(),
   revisions: varchar('revisions'),
   maintenanceType: maintenanceTypeEnum('maintenance_type'),

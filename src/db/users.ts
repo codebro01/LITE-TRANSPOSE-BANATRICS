@@ -53,6 +53,7 @@ export const businessOwnerTable = pgTable('businessOwners', {
     .notNull(),
   balance: doublePrecision('balance').default(0).notNull(),
   pending: doublePrecision('pending').default(0).notNull(),
+  totalSpent: doublePrecision('totalSpent').default(0).notNull(),
   businessName: varchar('businessName', { length: 255 }).notNull(),
   businessAddress: varchar('businessAddress', { length: 255 }),
   businessLogo: varchar('businessLogo', { length: 255 }),

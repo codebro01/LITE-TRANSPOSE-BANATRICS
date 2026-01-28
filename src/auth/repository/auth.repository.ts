@@ -38,7 +38,7 @@ export class AuthRepository {
   }
 
   async findUserById(userId: string) {
-    const user = await this.DbProvider.select().from(userTable).where(eq(userTable.id, userId));
+    const [user] = await this.DbProvider.select().from(userTable).where(eq(userTable.id, userId));
 
     return user;
   }

@@ -84,8 +84,9 @@ export class CampaignRepository {
   //!===================================business owner db calls ===========================================//
 
   //Create a new campaign
-  async create(data: CreateCampaignData, userId: string) {
-    const [campaign] = await this.DbProvider.insert(campaignTable)
+  async create(data: CreateCampaignData, userId: string, trx?:any) {
+    const Trx = trx || this.DbProvider
+    const [campaign] = await Trx.insert(campaignTable)
       .values({ userId, ...data })
       .returning();
 
@@ -145,14 +146,26 @@ export class CampaignRepository {
   /**
    * Update a campaign by ID
    */
-  async updateById(id: string, data: UpdateCampaignData, userId: string) {
-    const [updated] = await this.DbProvider.update(campaignTable)
+  async updateById(id: string, data: UpdateCampaignData, userId: string, trx?: any) {
+        const Trx = trx || this.DbProvider;
+
+    const [updated] = await Trx.update(campaignTable)
       .set(data)
       .where(and(eq(campaignTable.id, id), eq(campaignTable.userId, userId)))
       .returning();
 
     return updated;
   }
+
+  // // ! Publish Draft
+  // async publishDraft(id: string, data: UpdateCampaignData, userId: string, trx?: any) {
+  //   const [updated] = await this.DbProvider.update(campaignTable)
+  //     .set({...data, statusType: 'pending'})
+  //     .where(and(eq(campaignTable.id, id), eq(campaignTable.userId, userId)))
+  //     .returning();
+
+  //   return updated;
+  // }
 
   /**
    * Find all campaigns for a user
@@ -283,7 +296,7 @@ export class CampaignRepository {
       .where(
         and(
           eq(campaignTable.active, true),
-          eq(campaignTable.paymentStatus, 'spent'),
+          eq(campaignTable.paymentStatus, true),
           eq(campaignTable.id, campaignId),
         ),
       );
@@ -335,7 +348,7 @@ export class CampaignRepository {
         and(
           eq(campaignTable.statusType, CampaignStatus.APPROVED),
           eq(campaignTable.active, true),
-          eq(campaignTable.paymentStatus, 'spent'),
+          eq(campaignTable.paymentStatus, true),
         ),
       )
       .groupBy(campaignTable.id)
@@ -351,7 +364,7 @@ export class CampaignRepository {
       .where(
         and(
           eq(campaignTable.active, true),
-          eq(campaignTable.paymentStatus, 'spent'),
+          eq(campaignTable.paymentStatus, true),
         ),
       );
     return { campaigns, ...count };

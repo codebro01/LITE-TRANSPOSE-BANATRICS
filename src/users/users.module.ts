@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { UserController } from './users.controller';
 import { UserService } from './users.service';
 import { UserRepository } from '@src/users/repository/user.repository';
@@ -11,7 +11,6 @@ import { jwtConstants } from '@src/auth/jwtContants';
 import { EmailModule } from '@src/email/email.module';
 import { PasswordResetModule } from '@src/password-reset/password-reset.module';
 import { EmailVerificationModule } from '@src/email-verification/email-verification.module';
-import { EarningModule } from '@src/earning/earning.module';
 
 
 @Module({
@@ -19,14 +18,13 @@ import { EarningModule } from '@src/earning/earning.module';
     EmailVerificationModule, 
     DbModule,
     SupabaseModule,
-    AuthModule,
+    forwardRef(() => AuthModule),
     JwtModule.register({
       global: true,
       secret: jwtConstants.accessTokenSecret,
     }),
     EmailModule, 
     PasswordResetModule, 
-    EarningModule,
   ],
   controllers: [UserController],
   providers: [UserService, UserRepository, JwtService, NeonProvider],

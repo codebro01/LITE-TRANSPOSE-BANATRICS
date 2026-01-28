@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { PaymentController } from './payment.controller';
 import { PaymentService } from './payment.service';
-import { DbProvider } from '@src/db/provider';
+import { DbModule } from '@src/db/db.module';
 import {  HttpModule } from '@nestjs/axios';
 import { UserModule } from '@src/users/users.module';
 import { PaymentRepository } from '@src/payment/repository/payment.repository';
@@ -11,9 +11,18 @@ import { NotificationModule } from '@src/notification/notification.module';
 import { EarningModule } from '@src/earning/earning.module';
 
 @Module({
-  imports: [HttpModule, UserModule, CampaignModule, CatchErrorModule, NotificationModule, EarningModule],
+  imports: [
+    DbModule,
+    HttpModule,
+    UserModule,
+    forwardRef(() => CampaignModule),
+    CatchErrorModule,
+    NotificationModule,
+    EarningModule,
+  ],
   controllers: [PaymentController],
-  providers: [PaymentService, DbProvider, PaymentRepository],
+  providers: [PaymentService, PaymentRepository],
+  exports: [PaymentService, PaymentRepository],
 })
 export class PaymentModule {}
 

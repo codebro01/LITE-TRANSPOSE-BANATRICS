@@ -14,6 +14,7 @@ import { userTable } from '@src/db';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
+import { AuthRepository } from '@src/auth/repository/auth.repository';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -21,6 +22,7 @@ export class JwtAuthGuard implements CanActivate {
     private jwtService: JwtService,
     @Inject('DB')
     private readonly DbProvider: NodePgDatabase<typeof import('@src/db/users')>,
+    private readonly authRepository: AuthRepository, 
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -69,7 +71,17 @@ export class JwtAuthGuard implements CanActivate {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
+
+
       const { email, id, role } = token;
+
+      const user = await this.authRepository.findUserById(id);
+
+      if(user.refreshToken === null) throw new UnauthorizedException('Invalid refresh token');
+
+      const isSameToken = await bcrypt.compare(refresh_token, user.refreshToken);
+
+      if(!isSameToken) throw new UnauthorizedException('Invalid refresh token');
 
       const newAccessToken = await this.jwtService.signAsync(
         { email, id, role },

@@ -27,8 +27,8 @@ import {
   CreateDriverCampaignDto,
   DriverCampaignStatusType,
 } from '@src/campaign/dto/create-driver-campaign.dto';
-import { CronExpression, Cron } from '@nestjs/schedule';
-import { updatePricePerDriverPerCampaign } from '@src/campaign/dto/update-price-per-driver-per-campaign.dto';
+import { PaymentService } from '@src/payment/payment.service';
+import { PaymentRepository } from '@src/payment/repository/payment.repository';
 
 @Injectable()
 export class CampaignService {
@@ -37,6 +37,8 @@ export class CampaignService {
     private readonly cloudinaryService: CloudinaryService,
     private readonly notificationService: NotificationService,
     private readonly packageRepository: PackageRepository,
+    private readonly paymentService: PaymentService,
+    private readonly paymentRepository: PaymentRepository,
   ) {}
 
   //!===================================business owner db calls ===========================================//
@@ -69,6 +71,7 @@ export class CampaignService {
     }
 
     let campaign: campaignSelectType;
+    let Trx: any;
     const isNotCustomPackageType =
       await this.packageRepository.findByPackageType(data.packageType);
 
@@ -85,36 +88,46 @@ export class CampaignService {
       console.log(
         calculateEndDate.getDate() + isNotCustomPackageType[0].duration,
       );
-      campaign = await this.campaignRepository.create(
-       
-        {
-          packageType: isNotCustomPackageType[0].packageType as PackageType,
-          duration: isNotCustomPackageType[0].duration,
-          revisions: isNotCustomPackageType[0].revisions,
-          price: isNotCustomPackageType[0].price,
-          noOfDrivers: isNotCustomPackageType[0].noOfDrivers,
-          lgaCoverage: isNotCustomPackageType[0].lgaCoverage,
-          maintenanceType: isNotCustomPackageType[0]
-            .maintenanceType as MaintenanceType,
-          campaignName: data.campaignName,
-          campaignDescriptions: data.campaignDescriptions,
-          startDate: data.startDate ? new Date(data.startDate) : null,
-          endDate: calculateEndDate,
-          companyLogo: data.companyLogo,
-          colorPallete: data.colorPallete,
-          callToAction: data.callToAction,
-          mainMessage: data.mainMessage,
-          slogan: data.slogan,
-          responseOnSeeingBanner: data.responseOnSeeingBanner,
-          uploadedImages: data.uploadedImages,
-          statusType: CampaignStatus.PENDING, // Published directly
-        },
-        userId,
-      );
-      if (!campaign)
-        throw new InternalServerErrorException(
-          'An error occcured, creating campaign, please try again',
+      Trx = await this.paymentRepository.executeInTransaction(async (trx) => {
+        campaign = await this.campaignRepository.create(
+          {
+            packageType: isNotCustomPackageType[0].packageType as PackageType,
+            duration: isNotCustomPackageType[0].duration,
+            revisions: isNotCustomPackageType[0].revisions,
+            price: isNotCustomPackageType[0].price,
+            noOfDrivers: isNotCustomPackageType[0].noOfDrivers,
+            lgaCoverage: isNotCustomPackageType[0].lgaCoverage,
+            maintenanceType: isNotCustomPackageType[0]
+              .maintenanceType as MaintenanceType,
+            campaignName: data.campaignName,
+            campaignDescriptions: data.campaignDescriptions,
+            startDate: data.startDate ? new Date(data.startDate) : null,
+            endDate: calculateEndDate,
+            companyLogo: data.companyLogo,
+            colorPallete: data.colorPallete,
+            callToAction: data.callToAction,
+            mainMessage: data.mainMessage,
+            slogan: data.slogan,
+            responseOnSeeingBanner: data.responseOnSeeingBanner,
+            uploadedImages: data.uploadedImages,
+            statusType: CampaignStatus.PENDING, // Published directly
+          },
+          userId,
+          trx,
         );
+        if (!campaign)
+          throw new InternalServerErrorException(
+            'An error occcured, creating campaign, please try again',
+          );
+
+        await this.paymentService.makePaymentForCampaign(
+          { campaignId: campaign.id },
+          userId,
+          trx,
+        );
+
+        return campaign;
+      });
     }
     //! This handles custom package types
     else {
@@ -143,32 +156,41 @@ export class CampaignService {
       calculateEndDate.setDate(calculateEndDate.getDate() + duration);
 
       // console.log(calculateEndDate.getDate() + data.duration);
-      campaign = await this.campaignRepository.create(
-        {
-          packageType: data.packageType,
-          duration: data.duration || undefined,
-          revisions: data.revisions,
-          price: data.noOfDrivers ? data.noOfDrivers * 120000 : 0,
-          noOfDrivers: data.noOfDrivers ? data.noOfDrivers : 0,
-          campaignName: data.campaignName,
-          campaignDescriptions: data.campaignDescriptions,
-          startDate: data.startDate ? new Date(data.startDate) : null,
-          endDate: data.endDate ? new Date(data.endDate) : null,
-          companyLogo: data.companyLogo,
-          colorPallete: data.colorPallete,
-          callToAction: data.callToAction,
-          mainMessage: data.mainMessage,
-          slogan: data.slogan,
-          responseOnSeeingBanner: data.responseOnSeeingBanner,
-          uploadedImages: data.uploadedImages,
-          statusType: CampaignStatus.PENDING, // Published directly
-        },
-        userId,
-      );
-      if (!campaign)
-        throw new InternalServerErrorException(
-          'An error occcured, creating campaign, please try again',
+      Trx = await this.paymentRepository.executeInTransaction(async (trx) => {
+        campaign = await this.campaignRepository.create(
+          {
+            packageType: data.packageType,
+            duration: data.duration || undefined,
+            revisions: data.revisions,
+            price: data.noOfDrivers ? data.noOfDrivers * 120000 : 0,
+            noOfDrivers: data.noOfDrivers ? data.noOfDrivers : 0,
+            campaignName: data.campaignName,
+            campaignDescriptions: data.campaignDescriptions,
+            startDate: data.startDate ? new Date(data.startDate) : null,
+            endDate: data.endDate ? new Date(data.endDate) : null,
+            companyLogo: data.companyLogo,
+            colorPallete: data.colorPallete,
+            callToAction: data.callToAction,
+            mainMessage: data.mainMessage,
+            slogan: data.slogan,
+            responseOnSeeingBanner: data.responseOnSeeingBanner,
+            uploadedImages: data.uploadedImages,
+            statusType: CampaignStatus.PENDING, // Published directly
+          },
+          userId,
+          trx,
         );
+        if (!campaign)
+          throw new InternalServerErrorException(
+            'An error occcured, creating campaign, please try again',
+          );
+        await this.paymentService.makePaymentForCampaign(
+          { campaignId: campaign.id },
+          userId,
+          trx,
+        );
+        return campaign;
+      });
     }
 
     // Calculate end date by adding days to start date
@@ -189,7 +211,7 @@ export class CampaignService {
 
     return {
       message: 'Campaign created and published successfully',
-      campaign,
+      campaign: Trx.campaign,
     };
   }
 
@@ -290,7 +312,6 @@ export class CampaignService {
             startDate: data.startDate ? new Date(data.startDate) : null,
             endDate: data.endDate ? new Date(data.endDate) : null,
             statusType: CampaignStatus.DRAFT,
-
           },
           userId,
         );
@@ -309,7 +330,8 @@ export class CampaignService {
 
     const startDate = new Date(data.startDate);
 
-    if(startDate < new Date()) throw new BadRequestException('Start date cannot be in the past')
+    if (startDate < new Date())
+      throw new BadRequestException('Start date cannot be in the past');
 
     const existing = await this.campaignRepository.findDraftByIdAndUserId(
       id,
@@ -361,21 +383,19 @@ export class CampaignService {
     }
     //! For custom Packages
     else {
-          if (!data.endDate)
-            throw new BadRequestException(
-              'End date must be provided for custom campaigns',
-            );
+      if (!data.endDate)
+        throw new BadRequestException(
+          'End date must be provided for custom campaigns',
+        );
 
-          const endDate = new Date(data.endDate);
+      const endDate = new Date(data.endDate);
 
-          const minEndDate = new Date(startDate);
-          minEndDate.setDate(minEndDate.getDate() + 30);
+      const minEndDate = new Date(startDate);
+      minEndDate.setDate(minEndDate.getDate() + 30);
 
-          if (endDate < minEndDate) {
-            throw new BadRequestException(
-              'Campaign must run for at least 30 days',
-            );
-          }
+      if (endDate < minEndDate) {
+        throw new BadRequestException('Campaign must run for at least 30 days');
+      }
       updated = await this.campaignRepository.updateById(
         id,
         {
@@ -401,10 +421,10 @@ export class CampaignService {
     if (!userId || !data)
       throw new BadRequestException('Please provide userId and draft data');
 
-
     const startDate = new Date(data.startDate);
 
-    if(startDate < new Date()) throw new BadRequestException('Start date cannot be in the past')
+    if (startDate < new Date())
+      throw new BadRequestException('Start date cannot be in the past');
 
     const existing = await this.campaignRepository.findDraftByIdAndUserId(
       id,
@@ -416,6 +436,7 @@ export class CampaignService {
     }
 
     let published: campaignSelectType | null = null;
+    let Trx: any;
 
     const isNotCustomPackageType =
       await this.packageRepository.findByPackageType(data.packageType);
@@ -431,62 +452,116 @@ export class CampaignService {
       console.log(
         calculateEndDate.getDate() + isNotCustomPackageType[0].duration,
       );
-      published = await this.campaignRepository.updateById(
-        id,
-        {
-          packageType: isNotCustomPackageType[0].packageType as PackageType,
-          duration: isNotCustomPackageType[0].duration,
-          revisions: isNotCustomPackageType[0].revisions,
-          price: isNotCustomPackageType[0].price,
-          noOfDrivers: isNotCustomPackageType[0].noOfDrivers,
-          lgaCoverage: isNotCustomPackageType[0].lgaCoverage,
-          maintenanceType: isNotCustomPackageType[0]
-            .maintenanceType as MaintenanceType,
-          endDate: calculateEndDate,
-          startDate: data.startDate ? new Date(data.startDate) : null,
-          statusType: CampaignStatus.PENDING, // Published directly
-        },
-        userId,
-      );
-      if (!published)
-        throw new InternalServerErrorException(
-          'An error occcured, creating draft, please try again',
+
+      if (
+        !data.startDate ||
+        !data.campaignName ||
+        !data.callToAction ||
+        !data.campaignDescriptions ||
+        !data.colorPallete ||
+        !data.mainMessage ||
+        !data.companyLogo ||
+        !data.responseOnSeeingBanner ||
+        !data.slogan
+      )
+        throw new BadRequestException(
+          'startDate, campaignName, callToAction, campaignDescriptions, colorPallete, mainMessage, companyLogo, responseOnSeeingBanner, and slogal are all required to publish campaign',
         );
+
+      Trx = await this.paymentRepository.executeInTransaction(async (trx) => {
+        published = await this.campaignRepository.updateById(
+          id,
+          {
+            packageType: isNotCustomPackageType[0].packageType as PackageType,
+            duration: isNotCustomPackageType[0].duration,
+            revisions: isNotCustomPackageType[0].revisions,
+            price: isNotCustomPackageType[0].price,
+            noOfDrivers: isNotCustomPackageType[0].noOfDrivers,
+            lgaCoverage: isNotCustomPackageType[0].lgaCoverage,
+            maintenanceType: isNotCustomPackageType[0]
+              .maintenanceType as MaintenanceType,
+
+            endDate: calculateEndDate,
+            startDate: data.startDate ? new Date(data.startDate) : null,
+            statusType: CampaignStatus.PENDING, // Published directly
+          },
+          userId,
+          trx,
+        );
+        if (!published)
+          throw new InternalServerErrorException(
+            'An error occcured, creating draft, please try again',
+          );
+
+        await this.paymentService.makePaymentForCampaign(
+          { campaignId: published.id },
+          userId,
+          trx,
+        );
+
+        return {published}
+      });
     }
 
     // ! For custom packages
     else {
-          if (!data.endDate)
-            throw new BadRequestException(
-              'End date must be provided for custom campaigns',
-            );
+      if (
+        !data.startDate ||
+        !data.campaignName ||
+        !data.callToAction ||
+        !data.campaignDescriptions ||
+        !data.colorPallete ||
+        !data.mainMessage ||
+        !data.companyLogo ||
+        !data.responseOnSeeingBanner ||
+        !data.slogan ||
+        !data.endDate ||
+        !data.noOfDrivers
+      )
+        throw new BadRequestException(
+          'startDate, endDate, campaignName, callToAction, campaignDescriptions, colorPallete, mainMessage, companyLogo, responseOnSeeingBanner, and slogal are all required to publish campaign',
+        );
 
-          const endDate = new Date(data.endDate);
+      const endDate = new Date(data.endDate);
 
-          const minEndDate = new Date(startDate);
-          minEndDate.setDate(minEndDate.getDate() + 30);
+      const minEndDate = new Date(startDate);
+      minEndDate.setDate(minEndDate.getDate() + 30);
 
-          if (endDate < minEndDate) {
-            throw new BadRequestException(
-              'Campaign must run for at least 30 days',
-            );
-          }
-      published = await this.campaignRepository.updateById(
-        id,
-        {
-          ...data,
-          price: data.noOfDrivers ? data.noOfDrivers * 120000 : 0,
-          noOfDrivers: data.noOfDrivers ? data.noOfDrivers : 0,
-          startDate: data.startDate ? new Date(data.startDate) : null,
-          endDate: data.endDate ? new Date(data.endDate) : null,
-          updatedAt: new Date(),
-          statusType: CampaignStatus.PENDING,
-        },
-        userId,
-      );
+      if (endDate < minEndDate) {
+        throw new BadRequestException('Campaign must run for at least 30 days');
+      }
+
+      Trx = await this.paymentRepository.executeInTransaction(async (trx) => {
+        published = await this.campaignRepository.updateById(
+          id,
+          {
+            ...data,
+            price: data.noOfDrivers ? data.noOfDrivers * 120000 : 0,
+            noOfDrivers: data.noOfDrivers ? data.noOfDrivers : 0,
+            startDate: data.startDate ? new Date(data.startDate) : null,
+            endDate: data.endDate ? new Date(data.endDate) : null,
+            updatedAt: new Date(),
+            statusType: CampaignStatus.PENDING,
+          },
+          userId,
+          trx,
+        );
+        if (!published)
+          throw new InternalServerErrorException(
+            'An error occcured, creating draft, please try again',
+          );
+
+        await this.paymentService.makePaymentForCampaign(
+          { campaignId: published.id },
+          userId,
+          trx,
+        );
+
+        return {published}
+      });
     }
 
-    return { message: 'Campaign published successfully', campaign: published };
+    return { message: 'Campaign published successfully', campaign: Trx.published };
   }
 
   //*---------------- get all camapaign particular to each business owners---------------------------
@@ -659,28 +734,5 @@ export class CampaignService {
 
   async driverApplyForCampaign(data: CreateDriverCampaignDto, userId: string) {
     await this.campaignRepository.driverApplyForCampaign(data, userId);
-  }
-
-  // !====================== admin section ===================================================
-
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async handleCampaignStatusUpdate() {
-    console.log('Running campaign status update job...');
-
-    const result = await this.campaignRepository.handleCampaignStatusUpdate();
-
-    return result;
-  }
-
-  async updateCampaignStatusManually() {
-    const result = await this.campaignRepository.updateCampaignStatusManually();
-
-    return result;
-  }
-  async updatePricePerDriverPerCampaign(data: updatePricePerDriverPerCampaign) {
-    const result =
-      await this.campaignRepository.updatePricePerDriverPerCampaign(data);
-
-    return result;
   }
 }

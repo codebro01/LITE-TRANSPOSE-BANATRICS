@@ -11,7 +11,6 @@ import {
   Query,
   UseGuards,
   Res,
-  Patch,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -30,7 +29,6 @@ import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@src/auth/guards/roles.guard';
 import { Roles } from '@src/auth/decorators/roles.decorators';
 import { PaymentRepository } from '@src/payment/repository/payment.repository';
-import { MakePaymentForCampaignDto } from '@src/payment/dto/makePaymentForCampaignDto';
 import type { Request } from '@src/types';
 import type { Response } from 'express';
 import { NotificationService } from '@src/notification/notification.service';
@@ -338,160 +336,6 @@ export class PaymentController {
   //   const result = await this.paymentService.listAllTransactions();
   //   return result;
   // }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('businessOwner')
-  @Patch('make-payment-for-campaign')
-  @ApiCookieAuth('access_token')
-  @ApiOperation({
-    summary: 'Make payment for a campaign',
-    description:
-      'Initiates payment from user balance for a specific campaign. Deducts the campaign cost from the business owner wallet balance.',
-  })
-  @ApiBody({
-    type: MakePaymentForCampaignDto,
-    description: 'Campaign payment data',
-    examples: {
-      example1: {
-        summary: 'Pay for campaign',
-        value: {
-          campaignId: 'camp_123abc',
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Campaign payment initiated successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        success: { type: 'boolean', example: true },
-        data: {
-          type: 'object',
-          properties: {
-            campaignId: { type: 'string', example: 'camp_123abc' },
-            amount: { type: 'number', example: 25000 },
-            previousBalance: { type: 'number', example: 100000 },
-            newBalance: { type: 'number', example: 75000 },
-            paymentStatus: { type: 'string', example: 'completed' },
-          },
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad Request - Insufficient balance or invalid campaign',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - Invalid or missing JWT token',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - User is not a business owner',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Not Found - Campaign not found',
-  })
-  async makePaymentForCampaign(
-    @Body()
-    body: MakePaymentForCampaignDto,
-    @Req() req: Request,
-    @Res() res: Response,
-  ) {
-    const { id: userId } = req.user;
-
-    const result = await this.paymentService.makePaymentForCampaign(
-      { campaignId: body.campaignId },
-      userId,
-    );
-
-    res.status(HttpStatus.OK).json({
-      success: true,
-      data: result,
-    });
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  @Patch('finalize-payment-for-campaign')
-  @ApiCookieAuth('access_token')
-  @ApiOperation({
-    summary: 'Finalize campaign payment',
-    description:
-      'Completes and finalizes the payment process for a campaign. This confirms the payment and updates the campaign status to paid.',
-  })
-  @ApiBody({
-    type: MakePaymentForCampaignDto,
-    description: 'Campaign finalization data',
-    examples: {
-      example1: {
-        summary: 'Finalize campaign payment',
-        value: {
-          campaignId: 'camp_123abc',
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Campaign payment finalized successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        success: { type: 'boolean', example: true },
-        data: {
-          type: 'object',
-          properties: {
-            campaignId: { type: 'string', example: 'camp_123abc' },
-            paymentStatus: { type: 'string', example: 'finalized' },
-            finalizedAt: {
-              type: 'string',
-              format: 'date-time',
-              example: '2024-11-16T10:40:00Z',
-            },
-          },
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad Request - Payment cannot be finalized',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - Invalid or missing JWT token',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - User is not a business owner',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Not Found - Campaign or payment not found',
-  })
-  async finalizePaymentForCampaign(
-    @Body()
-    body: MakePaymentForCampaignDto,
-    @Req() req: Request,
-    @Res() res: Response,
-  ) {
-    const { id: userId } = req.user;
-
-    const result = await this.paymentService.finalizePaymentForCampaign(
-      { campaignId: body.campaignId },
-      userId,
-    );
-
-    res.status(HttpStatus.OK).json({
-      success: true,
-      data: result,
-    });
-  }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')

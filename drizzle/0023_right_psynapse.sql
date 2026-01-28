@@ -1,0 +1,1 @@
+ALTER TABLE "businessOwners" ADD COLUMN "totalSpent" double precision DEFAULT 0 NOT NULL;

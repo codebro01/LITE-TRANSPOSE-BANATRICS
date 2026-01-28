@@ -34,7 +34,6 @@ import {
   CreateDriverCampaignDto,
   DriverCampaignStatusType,
 } from '@src/campaign/dto/create-driver-campaign.dto';
-import { updatePricePerDriverPerCampaign } from '@src/campaign/dto/update-price-per-driver-per-campaign.dto';
 import { CampaignStatus } from '@src/campaign/repository/campaign.repository';
 
 @ApiTags('Campaign')
@@ -617,47 +616,4 @@ export class CampaignController {
 
   //     res.status(HttpStatus.CREATED).json({ message: 'success', data: campaign });
   //   }
-
-  // ! ========================           admin section     ================================================
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  @Patch('update/campaign-status')
-  @ApiCookieAuth('access_token')
-  @ApiOperation({
-    description: 'Admin update campaign status to completed manually',
-    summary: 'Admin update campaign status to completed manually',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Update successful',
-  })
-  async updateCampaignStatusManually(@Res() res: Response) {
-    const campaign = await this.campaignService.updateCampaignStatusManually();
-
-    res.status(HttpStatus.OK).json({ message: 'success', data: campaign });
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  @Patch('update/campaign-status')
-  @ApiCookieAuth('access_token')
-  @ApiOperation({
-    description: 'update earning-per-driver for a campaign',
-    summary: 'update earning-per-driver for a campaign',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Update successful',
-  })
-  async updatePricePerDriverPerCampaign(
-    // @Req() req: Request,
-    @Body() body: updatePricePerDriverPerCampaign,
-    @Res() res: Response,
-  ) {
-    const campaign =
-      await this.campaignService.updatePricePerDriverPerCampaign(body);
-
-    res.status(HttpStatus.OK).json({ message: 'success', data: campaign });
-  }
 }

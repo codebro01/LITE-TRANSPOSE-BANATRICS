@@ -32,7 +32,6 @@ import { InitializeBusinessOwnerCreationDto } from '@src/users/dto/initialize-bu
 import { createBusinessOwnerDto } from '@src/users/dto/create-business-owner.dto';
 import { InitializeDriverCreationDto } from '@src/users/dto/initialize-driver-creation.dto';
 import { CreateDriverDto } from '@src/users/dto/create-driver.dto';
-import { EarningService } from '@src/earning/earning.service';
 import { UpdateDriverDpDto } from '@src/users/dto/update-driver-dp.dto';
 import { addBusinessOwnerRoleDto } from '@src/users/dto/add-business-owner-role.dto';
 import { AddDriverRoleDto } from '@src/users/dto/add-driver-role.dto';
@@ -42,7 +41,6 @@ import { UpdateDriverProfileDto } from '@src/users/dto/update-driver-profile.dto
 export class UserController {
   constructor(
     private readonly userService: UserService,
-    private readonly earningService: EarningService,
   ) {}
 
   // ! initialize business owner  creation
