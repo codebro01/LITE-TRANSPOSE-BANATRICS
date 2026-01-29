@@ -23,7 +23,7 @@ export const packageTable = pgTable('packages', {
   revisions: varchar('revisions').notNull(),
   description: text('description'),
   price: integer('price').notNull(),
-  lgaCoverage: varchar('lga_coverage', { length: 10 }).notNull(),
+  // lgaCoverage: varchar('lga_coverage', { length: 10 }).notNull(),
   noOfDrivers: integer('no_of_drivers').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

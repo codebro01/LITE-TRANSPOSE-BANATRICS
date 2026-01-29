@@ -20,8 +20,8 @@ export class HomeDashboardsRepository {
       await Promise.all([
         this.DbProvider.select({
           totalCampaigns: sql<number>`COUNT(DISTINCT ${campaignTable.id})`,
-          activeCampaigns: sql<number>`COUNT(DISTINCT CASE WHEN ${campaignTable.statusType} = 'active' THEN ${campaignTable.id} END)`,
-          noOfDrivers: sql<number>`SUM(CASE WHEN ${campaignTable.statusType} = 'active' THEN ${campaignTable.noOfDrivers} ELSE 0 END)`,
+          activeCampaigns: sql<number>`COUNT(DISTINCT CASE WHEN ${campaignTable.active} = true THEN ${campaignTable.id} END)`,
+          noOfDrivers: sql<number>`SUM(CASE WHEN ${campaignTable.active} = true THEN ${campaignTable.noOfDrivers} ELSE 0 END)`,
         })
           .from(campaignTable)
           .where(eq(campaignTable.userId, userId)),

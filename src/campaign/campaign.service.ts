@@ -96,7 +96,6 @@ export class CampaignService {
             revisions: isNotCustomPackageType[0].revisions,
             price: isNotCustomPackageType[0].price,
             noOfDrivers: isNotCustomPackageType[0].noOfDrivers,
-            lgaCoverage: isNotCustomPackageType[0].lgaCoverage,
             maintenanceType: isNotCustomPackageType[0]
               .maintenanceType as MaintenanceType,
             campaignName: data.campaignName,
@@ -272,7 +271,6 @@ export class CampaignService {
             revisions: isNotCustomPackageType[0].revisions,
             price: isNotCustomPackageType[0].price,
             noOfDrivers: isNotCustomPackageType[0].noOfDrivers,
-            lgaCoverage: isNotCustomPackageType[0].lgaCoverage,
             maintenanceType: isNotCustomPackageType[0]
               .maintenanceType as MaintenanceType,
             endDate: calculateEndDate,
@@ -367,7 +365,6 @@ export class CampaignService {
           revisions: isNotCustomPackageType[0].revisions,
           price: isNotCustomPackageType[0].price,
           noOfDrivers: isNotCustomPackageType[0].noOfDrivers,
-          lgaCoverage: isNotCustomPackageType[0].lgaCoverage,
           maintenanceType: isNotCustomPackageType[0]
             .maintenanceType as MaintenanceType,
           endDate: calculateEndDate,
@@ -477,7 +474,6 @@ export class CampaignService {
             revisions: isNotCustomPackageType[0].revisions,
             price: isNotCustomPackageType[0].price,
             noOfDrivers: isNotCustomPackageType[0].noOfDrivers,
-            lgaCoverage: isNotCustomPackageType[0].lgaCoverage,
             maintenanceType: isNotCustomPackageType[0]
               .maintenanceType as MaintenanceType,
 

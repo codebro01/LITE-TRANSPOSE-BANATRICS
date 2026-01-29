@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { AuthRepository } from '@src/auth/repository/auth.repository';
 import crypto from 'crypto';
-
 import bcrypt from 'bcrypt';
 import { jwtConstants } from '@src/auth/jwtContants';
 import { JwtService } from '@nestjs/jwt';
@@ -78,7 +77,7 @@ export class AuthService {
       );
 
 
-    const payload = { id: user.id, email: user.email, role: user.role };
+    const payload = { id: user.id, email: user.email, role: [UserType] };
 
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: jwtConstants.accessTokenSecret,
