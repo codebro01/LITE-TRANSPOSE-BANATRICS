@@ -136,21 +136,27 @@ export class PaymentRepository {
     return { message: 'succcess', payments };
   }
 
-  async getBusinessOwnerBalanceAndPending(userId: string, trx?: any) {
-    const Trx = trx || this.DbProvider;
-    try {
-      const [balance] = await Trx.select({
-        balance: businessOwnerTable.balance,
-        pending: businessOwnerTable.pending,
-      })
-        .from(businessOwnerTable)
-        .where(eq(businessOwnerTable.userId, userId));
-      return balance;
-    } catch (error) {
-      console.log(error);
-      throw new Error(error);
-    }
-  }
+ async getBusinessOwnerBalanceAndPending(userId: string, trx?: any) {
+  const Trx = trx || this.DbProvider;
+  const [balance] = await Trx.select({
+    balance: businessOwnerTable.balance,
+    pending: businessOwnerTable.pending,
+  })
+    .from(businessOwnerTable)
+    .where(eq(businessOwnerTable.userId, userId));
+  return balance;
+}
+
+async getCampaignPrice(campaignId: string, userId: string, trx?: any) {
+  const Trx = trx || this.DbProvider;
+  const [getAmount] = await Trx.select({ amount: campaignTable.price })
+    .from(campaignTable)
+    .where(
+      and(eq(campaignTable.userId, userId), eq(campaignTable.id, campaignId)),
+    );
+  return getAmount;
+}
+
 
   async updateCampaignStatus(
     campaignId: string,
@@ -203,17 +209,6 @@ export class PaymentRepository {
       .returning();
 
     return update;
-  }
-
-  async getCampaignPrice(campaignId: string, userId: string, trx?: any) {
-    const Trx = trx || this.DbProvider;
-    const [getAmount] = await Trx.select({ amount: campaignTable.price })
-      .from(campaignTable)
-      .where(
-        and(eq(campaignTable.userId, userId), eq(campaignTable.id, campaignId)),
-      );
-
-    return getAmount;
   }
 
   async findByReference(reference: string) {

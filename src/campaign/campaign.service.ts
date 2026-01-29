@@ -120,7 +120,7 @@ export class CampaignService {
             'An error occcured, creating campaign, please try again',
           );
 
-        await this.paymentService.makePaymentForCampaign(
+       await this.paymentService.makePaymentForCampaign(
           { campaignId: campaign.id },
           userId,
           trx,
