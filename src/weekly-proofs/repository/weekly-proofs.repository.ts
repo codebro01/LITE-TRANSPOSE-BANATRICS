@@ -31,14 +31,10 @@ export class WeeklyProofsRepository {
       campaignId: campaignTable.id,
       date: weeklyProofTable.createdAt,
       photoCount: sql<number>`
-      (CASE WHEN ${weeklyProofTable.sideview} IS NOT NULL THEN 1 ELSE 0 END +
-       CASE WHEN ${weeklyProofTable.frontview} IS NOT NULL THEN 1 ELSE 0 END +
-       CASE WHEN ${weeklyProofTable.backview} IS NOT NULL THEN 1 ELSE 0 END)
+      (CASE WHEN ${weeklyProofTable.backview} IS NOT NULL THEN 1 ELSE 0 END)
     `.as('photo_count'),
       status: weeklyProofTable.statusType,
       images: {
-        sideview: weeklyProofTable.sideview,
-        frontview: weeklyProofTable.frontview,
         backview: weeklyProofTable.backview,
       },
     })

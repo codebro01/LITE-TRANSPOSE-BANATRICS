@@ -26,24 +26,24 @@ export const weeklyProofTable = pgTable('weekly_proofs', {
   userId: uuid('userId')
     .references(() => driverTable.userId, { onDelete: 'cascade' })
     .notNull(),
-  frontview: jsonb('frontview')
-    .$type<{
-      secure_url: string;
-      public_id: string;
-    }>()
-    .notNull(),
+  // frontview: jsonb('frontview')
+  //   .$type<{
+  //     secure_url: string;
+  //     public_id: string;
+  //   }>()
+  //   .notNull(),
   backview: jsonb('backview')
     .$type<{
       secure_url: string;
       public_id: string;
     }>()
     .notNull(),
-  sideview: jsonb('sideview')
-    .$type<{
-      secure_url: string;
-      public_id: string;
-    }>()
-    .notNull(),
+  // sideview: jsonb('sideview')
+  //   .$type<{
+  //     secure_url: string;
+  //     public_id: string;
+  //   }>()
+  //   .notNull(),
   comment: text('comment'),
   month: integer('month'),
   weekNumber: integer('week_number'),

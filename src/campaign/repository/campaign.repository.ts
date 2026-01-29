@@ -1,6 +1,6 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {  Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { and, eq, sql, ne, lt } from 'drizzle-orm';
+import { and, eq, sql, ne } from 'drizzle-orm';
 import { campaignTable } from '@src/db/campaigns';
 import { MaintenanceType } from '../dto/publishCampaignDto';
 import { driverCampaignTable } from '@src/db';
@@ -8,7 +8,6 @@ import {
   CreateDriverCampaignDto,
   DriverCampaignStatusType,
 } from '@src/campaign/dto/create-driver-campaign.dto';
-import { updatePricePerDriverPerCampaign } from '@src/campaign/dto/update-price-per-driver-per-campaign.dto';
 import { PackageType } from '../dto/publishCampaignDto';
 
 export enum CampaignStatus {
@@ -324,7 +323,7 @@ export class CampaignRepository {
     return campaign;
   }
 
-  async getAllAvailableCampaigns() {
+  async getAllAvailableCampaigns(userId: string) {
     const campaigns = await this.DbProvider.select({
       title: campaignTable.campaignName,
       campaignId: campaignTable.id,
@@ -338,6 +337,13 @@ export class CampaignRepository {
       totalEarning: campaignTable.earningPerDriver,
       TotalNumberOfDrivers: campaignTable.noOfDrivers,
       totalDriversApplied: sql<number>`COUNT(${driverCampaignTable.id})::int`,
+      hasApplied: userId
+        ? sql<boolean>`EXISTS (
+            SELECT 1 FROM ${driverCampaignTable} 
+            WHERE ${driverCampaignTable.campaignId} = ${campaignTable.id} 
+            AND ${driverCampaignTable.userId} = ${userId}
+          )`
+        : sql<boolean>`false`,
     })
       .from(campaignTable)
       .leftJoin(
@@ -485,6 +491,8 @@ export class CampaignRepository {
         and(
           eq(driverCampaignTable.userId, userId),
           eq(driverCampaignTable.active, true),
+          eq(driverCampaignTable.campaignStatus, 'approved'), 
+          ne(driverCampaignTable.campaignStatus, 'completed')
         ),
       )
       .leftJoin(
@@ -518,75 +526,12 @@ export class CampaignRepository {
     return campaigns;
   }
 
-  async driverApplyForCampaign(data: CreateDriverCampaignDto, userId: string) {
-    const alreadyApplied = await this.findDriverCampaignById(
-      data.campaignId,
-      userId,
-    );
-
-    if (alreadyApplied)
-      throw new BadRequestException(
-        'You have already applied for this  campaign!!!',
-      );
-    await this.DbProvider.insert(driverCampaignTable).values({
+  async createDriverCampaign(data: CreateDriverCampaignDto, userId: string) {
+    const driverCampaign =   await this.DbProvider.insert(driverCampaignTable).values({
       ...data,
       userId,
     });
+    return driverCampaign
   }
 
-  // ! ============================ admin section ===============================
-  async handleCampaignStatusUpdate() {
-    const now = new Date();
-
-    const result = await this.DbProvider.update(campaignTable)
-      .set({
-        statusType: 'completed',
-        updatedAt: now,
-      })
-      .where(
-        and(
-          lt(campaignTable.endDate, now),
-          ne(campaignTable.statusType, 'completed'),
-        ),
-      )
-      .returning({
-        id: campaignTable.id,
-        campaignName: campaignTable.campaignName,
-      });
-
-    return result;
-  }
-
-  async updateCampaignStatusManually() {
-    const now = new Date();
-
-    const result = await this.DbProvider.update(campaignTable)
-      .set({
-        statusType: 'completed',
-        updatedAt: now,
-      })
-      .where(
-        and(
-          lt(campaignTable.endDate, now),
-          ne(campaignTable.statusType, 'completed'),
-        ),
-      )
-      .returning({
-        id: campaignTable.id,
-        campaignName: campaignTable.campaignName,
-      });
-
-    return {
-      success: true,
-      updatedCount: result.length,
-      campaigns: result,
-    };
-  }
-
-  async updatePricePerDriverPerCampaign(data: updatePricePerDriverPerCampaign) {
-    const campaign = await this.DbProvider.update(campaignTable)
-      .set({ earningPerDriver: data.earningPerDriver })
-      .where(eq(campaignTable.id, data.campaignId));
-    return campaign;
-  }
 }

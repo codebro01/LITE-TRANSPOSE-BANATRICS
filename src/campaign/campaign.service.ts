@@ -120,7 +120,7 @@ export class CampaignService {
             'An error occcured, creating campaign, please try again',
           );
 
-       await this.paymentService.makePaymentForCampaign(
+        await this.paymentService.makePaymentForCampaign(
           { campaignId: campaign.id },
           userId,
           trx,
@@ -499,7 +499,7 @@ export class CampaignService {
           trx,
         );
 
-        return {published}
+        return { published };
       });
     }
 
@@ -557,11 +557,14 @@ export class CampaignService {
           trx,
         );
 
-        return {published}
+        return { published };
       });
     }
 
-    return { message: 'Campaign published successfully', campaign: Trx.published };
+    return {
+      message: 'Campaign published successfully',
+      campaign: Trx.published,
+    };
   }
 
   //*---------------- get all camapaign particular to each business owners---------------------------
@@ -632,8 +635,8 @@ export class CampaignService {
 
   //*---------------- get all available campaigns  ------------------------------------------------------
 
-  async getAllAvailableCampaigns() {
-    const campaigns = await this.campaignRepository.getAllAvailableCampaigns();
+  async getAllAvailableCampaigns(userId: string) {
+    const campaigns = await this.campaignRepository.getAllAvailableCampaigns(userId);
     return campaigns;
   }
 
@@ -733,6 +736,19 @@ export class CampaignService {
   }
 
   async driverApplyForCampaign(data: CreateDriverCampaignDto, userId: string) {
-    await this.campaignRepository.driverApplyForCampaign(data, userId);
+    const alreadyApplied = await this.campaignRepository.findDriverCampaignById(
+      data.campaignId,
+      userId,
+    );
+    if (alreadyApplied)
+      throw new BadRequestException(
+        'You have already applied for this campaign!!!',
+      );
+
+    const existingCampaign = await this.campaignRepository.getAllActiveCampaigns(userId);
+    console.log('existing campaign', existingCampaign)
+    if(existingCampaign && existingCampaign.length > 0) throw new BadRequestException('You cannot apply for another campaign because you already have an active campaign.')
+    const createDriverCampaign = await this.campaignRepository.createDriverCampaign(data, userId);
+    if(!createDriverCampaign) throw new InternalServerErrorException('An error occured while trying to apply for the campaign')
   }
 }

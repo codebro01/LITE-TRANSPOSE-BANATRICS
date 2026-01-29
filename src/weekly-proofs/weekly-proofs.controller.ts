@@ -26,7 +26,7 @@ export class WeeklyProofsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
-  @Post('create')
+  @Post()
   @ApiBearerAuth()
   @ApiOperation({
     description:
@@ -53,7 +53,7 @@ export class WeeklyProofsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
-  @Get('find-all')
+  @Get()
   @ApiBearerAuth()
   @ApiOperation({
     description: 'Find all submitted weekly proofs by driver',
@@ -75,7 +75,7 @@ export class WeeklyProofsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
-  @Get('find/:id')
+  @Get(':id')
   @ApiBearerAuth()
   @ApiOperation({
     description: 'Find single weekly proof by driver',
@@ -104,7 +104,7 @@ export class WeeklyProofsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('driver')
-  @Patch('update/:id')
+  @Patch(':id')
   @ApiBearerAuth()
   @ApiOperation({
     description: 'update weekly proofs by driver',

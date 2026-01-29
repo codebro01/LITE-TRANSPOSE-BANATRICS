@@ -474,8 +474,9 @@ export class CampaignController {
     status: 200,
     description: 'Listed all available campaigns succesfully',
   })
-  async getAllAVailableCampaigns() {
-    const campaigns = await this.campaignService.getAllAvailableCampaigns();
+  async getAllAVailableCampaigns(@Req() req: Request) {
+    const {id: userId} = req.user;
+    const campaigns = await this.campaignService.getAllAvailableCampaigns(userId);
     return { message: 'success', data: campaigns };
   }
 

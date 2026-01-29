@@ -46,14 +46,14 @@ export class CreateWeeklyProofDto {
   @IsNotEmpty()
   campaignId: string;
 
-  @ApiProperty({
-    description: 'Front view image proof of the vehicle wrap',
-    type: ImageProofDto,
-  })
-  @ValidateNested()
-  @Type(() => ImageProofDto)
-  @IsNotEmpty()
-  frontview: ImageProofDto;
+  // @ApiProperty({
+  //   description: 'Front view image proof of the vehicle wrap',
+  //   type: ImageProofDto,
+  // })
+  // @ValidateNested()
+  // @Type(() => ImageProofDto)
+  // @IsNotEmpty()
+  // frontview: ImageProofDto;
 
   @ApiProperty({
     description: 'Back view image proof of the vehicle wrap',
@@ -64,14 +64,14 @@ export class CreateWeeklyProofDto {
   @IsNotEmpty()
   backview: ImageProofDto;
 
-  @ApiProperty({
-    description: 'Side view image proof of the vehicle wrap',
-    type: ImageProofDto,
-  })
-  @ValidateNested()
-  @Type(() => ImageProofDto)
-  @IsNotEmpty()
-  sideview: ImageProofDto;
+  // @ApiProperty({
+  //   description: 'Side view image proof of the vehicle wrap',
+  //   type: ImageProofDto,
+  // })
+  // @ValidateNested()
+  // @Type(() => ImageProofDto)
+  // @IsNotEmpty()
+  // sideview: ImageProofDto;
 
   @ApiPropertyOptional({
     description:
