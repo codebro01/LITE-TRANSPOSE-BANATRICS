@@ -1,7 +1,7 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { earningsTable, earningTableInsertType } from '@src/db/earnings';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { and, eq, sql, gte, sum,  count } from 'drizzle-orm';
+import { and, eq, sql, gte, sum, count } from 'drizzle-orm';
 import { startOfMonth } from 'date-fns';
 import { campaignTable, driverTable } from '@src/db';
 import { ApprovalStatusType } from '@src/earning/dto/create-earning.dto';
@@ -56,7 +56,7 @@ export class EarningRepository {
       .where(
         and(
           eq(campaignTable.userId, userId),
-          eq(campaignTable.statusType, CampaignStatus.COMPLETED ),
+          eq(campaignTable.statusType, CampaignStatus.COMPLETED),
         ),
       )
       .groupBy(

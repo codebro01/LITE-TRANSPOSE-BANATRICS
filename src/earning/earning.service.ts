@@ -67,11 +67,15 @@ export class EarningService {
       throw new BadRequestException(
         'You already have a pending payout, please kindly wait while we clear pending payout!!!',
       );
-    const balance = await this.earningRepository.availableBalance(userId);
-    const campaign = await this.campaignRepository.findDriverCampaignById(
+        const campaign = await this.campaignRepository.findDriverCampaignById(
       data.campaignId,
       userId,
     );
+    const checkIfCampaignCompleted = await this.campaignRepository.findCampaignByCampaignId(data.campaignId);
+    if(checkIfCampaignCompleted.statusType !== "completed" || campaign.status !== "completed") throw new BadRequestException('Payout can only be requested when campaign is completed.')
+
+    const balance = await this.earningRepository.availableBalance(userId);
+  
     console.log(campaign);
     if (!campaign)
       throw new NotFoundException(
@@ -90,7 +94,7 @@ export class EarningService {
     const bankDetails = await this.bankDetailsRepository.findOneById(userId);
     if (!bankDetails)
       throw new BadRequestException(
-        'Please, add bank information from your profile',
+        'Please, add bank information to your profile',
       );
 
     const earnings = await this.earningRepository.requestPayouts(

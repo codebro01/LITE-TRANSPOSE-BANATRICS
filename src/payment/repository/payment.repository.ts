@@ -192,7 +192,12 @@ export class PaymentRepository {
         balance: sql`${businessOwnerTable.balance} - ${amount}`,
         pending: sql`${businessOwnerTable.pending} + ${amount}`,
       })
-      .where(eq(businessOwnerTable.userId, userId))
+      .where(
+        and(
+          eq(businessOwnerTable.userId, userId),
+          gte(businessOwnerTable.balance, amount),
+        ),
+      )
       .returning();
 
     return update;

@@ -347,6 +347,7 @@ export class CampaignRepository {
       campaignId: campaignTable.id,
       paid: driverCampaignTable.paid,
       earningPerDriver: campaignTable.earningPerDriver,
+      status: campaignTable.statusType, 
     })
       .from(driverCampaignTable)
       .where(

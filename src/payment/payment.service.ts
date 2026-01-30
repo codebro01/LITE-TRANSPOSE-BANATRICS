@@ -442,70 +442,62 @@ export class PaymentService {
       campaignId: string;
     },
     userId: string,
-    trx?:any, 
+    trx?: any,
   ) {
-   
-      const { campaignId } = data;
-      // console.log(campaignId, amount);
+    const { campaignId } = data;
+    // console.log(campaignId, amount);
 
-      // ! Perform money move transactions
-          // ! get campaign amount from db
+    // ! Perform money move transactions
+    // ! get campaign amount from db
 
-          const getAmount = await this.paymentRepository.getCampaignPrice(
-            campaignId,
-            userId,
-            trx,
-          );
+    const getAmount = await this.paymentRepository.getCampaignPrice(
+      campaignId,
+      userId,
+      trx,
+    );
 
-          const amount = getAmount.amount;
+    const amount = getAmount.amount;
 
-          // ! check balanace before performing performing money move trx to prevent negative value on balance
+    const businessOwner =
+      await this.paymentRepository.getBusinessOwnerBalanceAndPending(
+        userId,
+        trx,
+      );
 
-          const businessOwner =
-            await this.paymentRepository.getBusinessOwnerBalanceAndPending(
-              userId,
-              trx,
-            );
+    if (!businessOwner) {
+      throw new NotFoundException('Business owner not found');
+    }
 
-          if (!businessOwner) {
-            throw new NotFoundException('Business owner not found');
-          }
+    const updateBalanceAndPending =
+      await this.paymentRepository.updateBalanceAndPending(userId, amount, trx);
 
-          if (Number(businessOwner.balance) < amount) {
-            throw new BadRequestException(
-              `Insufficient balance. Available: ${businessOwner.balance.toFixed(2)}, Required: ${amount}`,
-            );
-          }
+    if (!updateBalanceAndPending)
+      throw new BadRequestException(
+        `Insufficient balance or user not found. Required: ${amount}`,
+      );
 
-          const updateBalanceAndPending =
-            await this.paymentRepository.updateBalanceAndPending(
-              userId,
-              amount,
-              trx,
-            );
+    const updateCampaignStatus =
+      await this.paymentRepository.updateCampaignStatus(
+        campaignId,
+        'pending',
+        userId,
+        true,
+        trx,
+      );
 
-          const updateCampaignStatus =
-            await this.paymentRepository.updateCampaignStatus(
-              campaignId,
-              'pending',
-              userId,
-              true,
-              trx,
-            );
+    if (!updateCampaignStatus) {
+      throw new InternalServerErrorException(
+        'Could not make payment for Campaign',
+      );
+    }
 
-          if (!updateCampaignStatus) {
-            throw new InternalServerErrorException(
-              'Could not make payment for Campaign',
-            );
-          }
-
-          return {
-            currentData: {
-              balance: updateBalanceAndPending.balance,
-              pending: updateBalanceAndPending.pending,
-            },
-            updateCampaignStatus,
-          };
+    return {
+      currentData: {
+        balance: updateBalanceAndPending.balance,
+        pending: updateBalanceAndPending.pending,
+      },
+      updateCampaignStatus,
+    };
   }
 
   // ! This functions handles the deduction of money from pending (The state at which the capaign is still active) to total Amount spent (When the campaign is completed, its going to be a cron job)
