@@ -31,7 +31,7 @@ import { VehicleDetailsModule } from './vehicle-details/vehicle-details.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-
+import {InstallmentProofsModule} from './installment-proofs/installment-proofs.module'
 
 
 @Module({
@@ -101,6 +101,7 @@ import { APP_GUARD } from '@nestjs/core';
     BankDetailsModule,
     WeeklyProofsModule,
     VehicleDetailsModule,
+    InstallmentProofsModule, 
   ],
   controllers: [AppController, UploadController],
   providers: [

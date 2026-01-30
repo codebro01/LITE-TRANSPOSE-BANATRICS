@@ -25,6 +25,6 @@ export const packageTable = pgTable('packages', {
   price: integer('price').notNull(),
   // lgaCoverage: varchar('lga_coverage', { length: 10 }).notNull(),
   noOfDrivers: integer('no_of_drivers').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });

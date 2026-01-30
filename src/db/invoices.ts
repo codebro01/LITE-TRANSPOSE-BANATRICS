@@ -22,9 +22,9 @@ export const invoicesTable = pgTable('invoices', {
       amount: doublePrecision('amount').notNull(),
       dueDate: timestamp('due_date').defaultNow().notNull(),
       invoiceId: varchar('invoice_id', {length: 50}).notNull(), 
-      date: timestamp('date').defaultNow().notNull(),
-      createdAt: timestamp('created_at').defaultNow().notNull(),
-      updatedAt: timestamp('updated_at').defaultNow().notNull(),
+      date: timestamp('date', {withTimezone: true}).defaultNow().notNull(),
+     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+       updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 })
 
 export type invoicesInsertType = typeof invoicesTable.$inferInsert;

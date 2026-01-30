@@ -26,8 +26,8 @@ export const userTable = pgTable('users', {
   password: varchar('password', { length: 255 }).notNull(),
   emailVerified: boolean('is_email_Verified').default(false).notNull(),
   refreshToken: varchar('refreshToken'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 export const adminTable = pgTable('admin', {
@@ -39,8 +39,8 @@ export const adminTable = pgTable('admin', {
     .unique()
     .notNull(),
   fullName: varchar('fullName', { length: 255 }).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 export const businessOwnerTable = pgTable('businessOwners', {
@@ -58,9 +58,12 @@ export const businessOwnerTable = pgTable('businessOwners', {
   businessAddress: varchar('businessAddress', { length: 255 }),
   businessLogo: varchar('businessLogo', { length: 255 }),
   refreshToken: varchar('refreshToken', { length: 255 }),
-  status: varchar('business_owner_status', { length: 50 }).$type<UserApprovalStatusType>().default(UserApprovalStatusType.APPROVED).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  status: varchar('business_owner_status', { length: 50 })
+    .$type<UserApprovalStatusType>()
+    .default(UserApprovalStatusType.APPROVED)
+    .notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
   // authProvider: varchar('authProvider', { length: 20 })
   //   .default('local')
   //   .notNull(),
@@ -119,8 +122,8 @@ export const driverTable = pgTable('drivers', {
     public_id: string;
   }>(),
 
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
   // authProvider: varchar('authProvider', { length: 20 })
   //   .default('local')
   //   .notNull(),

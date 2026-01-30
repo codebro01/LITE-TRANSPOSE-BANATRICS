@@ -1,4 +1,4 @@
-import {  Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { and, eq, sql, ne } from 'drizzle-orm';
 import { campaignTable } from '@src/db/campaigns';
@@ -11,21 +11,20 @@ import {
 import { PackageType } from '../dto/publishCampaignDto';
 
 export enum CampaignStatus {
-  PENDING  = 'pending', 
-  DRAFT = 'draft', 
-  APPROVED = 'approved', 
-  COMPLETED = 'completed', 
-  REJECTED = 'rejected'
+  PENDING = 'pending',
+  DRAFT = 'draft',
+  APPROVED = 'approved',
+  COMPLETED = 'completed',
+  REJECTED = 'rejected',
 }
-   
+
 export type uploadType = {
   secure_url: string;
   public_id: string;
 };
 
 export interface CreateCampaignData {
-  packageType
-  ?: PackageType;
+  packageType?: PackageType;
   duration?: number;
   revisions?: string;
   price?: number;
@@ -83,8 +82,8 @@ export class CampaignRepository {
   //!===================================business owner db calls ===========================================//
 
   //Create a new campaign
-  async create(data: CreateCampaignData, userId: string, trx?:any) {
-    const Trx = trx || this.DbProvider
+  async create(data: CreateCampaignData, userId: string, trx?: any) {
+    const Trx = trx || this.DbProvider;
     const [campaign] = await Trx.insert(campaignTable)
       .values({ userId, ...data })
       .returning();
@@ -145,8 +144,13 @@ export class CampaignRepository {
   /**
    * Update a campaign by ID
    */
-  async updateById(id: string, data: UpdateCampaignData, userId: string, trx?: any) {
-        const Trx = trx || this.DbProvider;
+  async updateById(
+    id: string,
+    data: UpdateCampaignData,
+    userId: string,
+    trx?: any,
+  ) {
+    const Trx = trx || this.DbProvider;
 
     const [updated] = await Trx.update(campaignTable)
       .set(data)
@@ -473,7 +477,7 @@ export class CampaignRepository {
     return campaign;
   }
 
-  async getAllActiveCampaigns(userId: string) {
+  async getAllActiveDriverCampaigns(userId: string) {
     const campaigns = await this.DbProvider.select({
       activeStatus: driverCampaignTable.active,
       title: campaignTable.campaignName,
@@ -491,8 +495,29 @@ export class CampaignRepository {
         and(
           eq(driverCampaignTable.userId, userId),
           eq(driverCampaignTable.active, true),
-          eq(driverCampaignTable.campaignStatus, 'approved'), 
-          ne(driverCampaignTable.campaignStatus, 'completed')
+          eq(driverCampaignTable.campaignStatus, 'approved'),
+          ne(driverCampaignTable.campaignStatus, 'completed'),
+        ),
+      )
+      .leftJoin(
+        campaignTable,
+        eq(driverCampaignTable.campaignId, campaignTable.id),
+      );
+
+    return campaigns;
+  }
+  async getActiveDriverCampaignByCampaignId(
+    campaignId: string,
+    userId: string,
+  ) {
+    const campaigns = await this.DbProvider.select()
+      .from(driverCampaignTable)
+      .where(
+        and(
+          eq(driverCampaignTable.userId, userId),
+          eq(driverCampaignTable.campaignId, campaignId),
+          eq(driverCampaignTable.active, false),
+          eq(driverCampaignTable.campaignStatus, 'approved'),
         ),
       )
       .leftJoin(
@@ -527,11 +552,12 @@ export class CampaignRepository {
   }
 
   async createDriverCampaign(data: CreateDriverCampaignDto, userId: string) {
-    const driverCampaign =   await this.DbProvider.insert(driverCampaignTable).values({
+    const driverCampaign = await this.DbProvider.insert(
+      driverCampaignTable,
+    ).values({
       ...data,
       userId,
     });
-    return driverCampaign
+    return driverCampaign;
   }
-
 }

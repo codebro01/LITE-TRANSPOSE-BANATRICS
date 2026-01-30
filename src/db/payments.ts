@@ -24,14 +24,14 @@ export const paymentTable = pgTable('payments', {
     .references(() => userTable.id),
   invoiceId: text('invoice_id'),
   reference: text('reference'),
-  dateInitiated: text('date_initiated'),
+  dateInitiated: timestamp('date_initiated', {withTimezone: true}).defaultNow(),
   amount: doublePrecision('amount').notNull(),
   paymentMethod: text('payment_method').notNull(),
   paymentStatus: text('payment_status')
     .$type<PaymentStatusType>()
     .notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 export type paymentInsertType = typeof paymentTable.$inferInsert;

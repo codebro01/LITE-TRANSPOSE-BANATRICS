@@ -6,18 +6,16 @@ import {
   text,
   pgEnum,
   timestamp,
-  integer,
   jsonb,
 } from 'drizzle-orm/pg-core';
 
-export const weeklyProofStatusType = pgEnum('weekly_proof_status', [
+export const installmentProofStatus = pgEnum('installment_proof_status', [
+  'pending_approval',
   'approved',
-  'pending_review',
   'rejected',
-  'flagged'
 ]);
 
-export const weeklyProofTable = pgTable('weekly_proofs', {
+export const installmentProofTable = pgTable('installment_proofs', {
   id: uuid('id').defaultRandom().primaryKey().notNull(),
 
   campaignId: uuid('campaignId')
@@ -38,22 +36,13 @@ export const weeklyProofTable = pgTable('weekly_proofs', {
       public_id: string;
     }>()
     .notNull(),
-  // sideview: jsonb('sideview')
-  //   .$type<{
-  //     secure_url: string;
-  //     public_id: string;
-  //   }>()
-  //   .notNull(),
   comment: text('comment'),
-  month: integer('month'),
-  weekNumber: integer('week_number'),
-  year: integer('year'),
-  statusType: weeklyProofStatusType('weekly_proof_status')
+  statusType: installmentProofStatus('installment_proof_status')
     .notNull()
-    .default('pending_review'),
+    .default('pending_approval'),
   rejectionReason: text('rejection_reason'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
-export type weeklyProofInsertType = typeof weeklyProofTable.$inferInsert;
+export type installmentProofInsertType = typeof installmentProofTable.$inferInsert;

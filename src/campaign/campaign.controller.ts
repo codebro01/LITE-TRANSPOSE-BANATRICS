@@ -25,9 +25,7 @@ import { RolesGuard } from '@src/auth/guards/roles.guard';
 import { Roles } from '@src/auth/decorators/roles.decorators';
 import { CampaignService } from '@src/campaign/campaign.service';
 import { CloudinaryService } from '@src/cloudinary/cloudinary.service';
-import {
-  DraftCampaignDto,
-} from '@src/campaign/dto/draftCampaignDto';
+import { DraftCampaignDto } from '@src/campaign/dto/draftCampaignDto';
 import type { Response } from 'express';
 import type { Request } from '@src/types';
 import {
@@ -475,8 +473,9 @@ export class CampaignController {
     description: 'Listed all available campaigns succesfully',
   })
   async getAllAVailableCampaigns(@Req() req: Request) {
-    const {id: userId} = req.user;
-    const campaigns = await this.campaignService.getAllAvailableCampaigns(userId);
+    const { id: userId } = req.user;
+    const campaigns =
+      await this.campaignService.getAllAvailableCampaigns(userId);
     return { message: 'success', data: campaigns };
   }
 
@@ -547,8 +546,7 @@ export class CampaignController {
   })
   async getAllDriverCampaigns(@Req() req: Request, @Res() res: Response) {
     const { id: userId } = req.user;
-    const campaign =
-      await this.campaignService.getDriverCampaignsById(userId);
+    const campaign = await this.campaignService.getDriverCampaignsById(userId);
 
     res.status(HttpStatus.CREATED).json({ message: 'success', data: campaign });
   }
@@ -594,7 +592,7 @@ export class CampaignController {
   //   })
   //   async getallActiveCampaigns(@Req() req: Request, @Res() res: Response) {
   //     const { id: userId } = req.user;
-  //     const campaign = await this.campaignService.getAllActiveCampaigns(userId);
+  //     const campaign = await this.campaignService.getAllActiveDriverCampaigns(userId);
 
   //     res.status(HttpStatus.OK).json({ message: 'success', data: campaign });
   //   }

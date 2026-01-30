@@ -14,6 +14,6 @@ export const campaignDesignsTable = pgTable('campaign_designs', {
     }>().notNull(), 
     approvalStatus: designApprovalStatusType('approval_status').default('pending'), 
     comment: text('comment'), 
-    createdAt: timestamp('created_at').defaultNow(), 
-    updatedAt: timestamp('updated_at').defaultNow(), 
+   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 })

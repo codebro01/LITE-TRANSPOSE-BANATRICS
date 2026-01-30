@@ -62,7 +62,7 @@ export class PaymentRepository {
   ) {
     const DbTrx = trx || this.DbProvider;
     const [payment] = await DbTrx.insert(paymentTable)
-      .values({ userId, ...data })
+      .values({ userId, ...data, dateInitiated: data.dateInitiated ? new Date(data.dateInitiated) : new Date() })
       .returning();
 
     if (!payment)
@@ -136,27 +136,26 @@ export class PaymentRepository {
     return { message: 'succcess', payments };
   }
 
- async getBusinessOwnerBalanceAndPending(userId: string, trx?: any) {
-  const Trx = trx || this.DbProvider;
-  const [balance] = await Trx.select({
-    balance: businessOwnerTable.balance,
-    pending: businessOwnerTable.pending,
-  })
-    .from(businessOwnerTable)
-    .where(eq(businessOwnerTable.userId, userId));
-  return balance;
-}
+  async getBusinessOwnerBalanceAndPending(userId: string, trx?: any) {
+    const Trx = trx || this.DbProvider;
+    const [balance] = await Trx.select({
+      balance: businessOwnerTable.balance,
+      pending: businessOwnerTable.pending,
+    })
+      .from(businessOwnerTable)
+      .where(eq(businessOwnerTable.userId, userId));
+    return balance;
+  }
 
-async getCampaignPrice(campaignId: string, userId: string, trx?: any) {
-  const Trx = trx || this.DbProvider;
-  const [getAmount] = await Trx.select({ amount: campaignTable.price })
-    .from(campaignTable)
-    .where(
-      and(eq(campaignTable.userId, userId), eq(campaignTable.id, campaignId)),
-    );
-  return getAmount;
-}
-
+  async getCampaignPrice(campaignId: string, userId: string, trx?: any) {
+    const Trx = trx || this.DbProvider;
+    const [getAmount] = await Trx.select({ amount: campaignTable.price })
+      .from(campaignTable)
+      .where(
+        and(eq(campaignTable.userId, userId), eq(campaignTable.id, campaignId)),
+      );
+    return getAmount;
+  }
 
   async updateCampaignStatus(
     campaignId: string,

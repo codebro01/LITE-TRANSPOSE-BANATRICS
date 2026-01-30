@@ -724,8 +724,8 @@ export class CampaignService {
   ) {
     return await this.campaignRepository.filterDriverCampaigns(filter, userId);
   }
-  async getAllActiveCampaigns(userId: string) {
-    return await this.campaignRepository.getAllActiveCampaigns(userId);
+  async getAllActiveDriverCampaigns(userId: string) {
+    return await this.campaignRepository.getAllActiveDriverCampaigns(userId);
   }
   async getAllCompletedCampaigns(userId: string) {
     return await this.campaignRepository.getAllCompletedCampaigns(userId);
@@ -741,7 +741,7 @@ export class CampaignService {
         'You have already applied for this campaign!!!',
       );
 
-    const existingCampaign = await this.campaignRepository.getAllActiveCampaigns(userId);
+    const existingCampaign = await this.campaignRepository.getAllActiveDriverCampaigns(userId);
     console.log('existing campaign', existingCampaign)
     if(existingCampaign && existingCampaign.length > 0) throw new BadRequestException('You cannot apply for another campaign because you already have an active campaign.')
     const createDriverCampaign = await this.campaignRepository.createDriverCampaign(data, userId);

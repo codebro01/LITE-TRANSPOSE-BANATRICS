@@ -1,0 +1,1 @@
+ALTER TABLE "payments" ALTER COLUMN "date_initiated" SET DEFAULT now();

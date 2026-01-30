@@ -22,8 +22,8 @@ export const notificationTable = pgTable('notifications', {
   role: varchar('role', { length: 50 }).notNull().default('businessOwner'),
   category: categoryType('category').notNull(),
   priority: text('priority').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 export type notificationTableSelectType = typeof notificationTable.$inferSelect;

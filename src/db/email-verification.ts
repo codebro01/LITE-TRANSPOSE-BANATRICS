@@ -16,11 +16,11 @@ export const emailVerificationTable = pgTable(
     phone: varchar('phone', { length: 255 }).notNull().unique(), 
           nin: varchar('nin', { length: 255 }),
     emailVerificationCode: varchar('email_verification_code').notNull(),
-    expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     attempts: integer('attempts').notNull().default(0),
     used: boolean('used').notNull().default(false),
-    createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
-  },
+createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),  },
   (table) => ({
     emailExpiresIdx: index('email_expires_idx').on(
       table.email,

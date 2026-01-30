@@ -20,8 +20,8 @@ export const passwordResetTable = pgTable(
     expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
     attempts: integer('attempts').notNull().default(0),
     used: boolean('used').notNull().default(false),
-    createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
-  },
+createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),  },
   (table) => ({
     emailCodeExpiresIdx: index('email_verification_code_epxps').on(
       table.email,
