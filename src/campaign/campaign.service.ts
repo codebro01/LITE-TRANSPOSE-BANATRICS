@@ -29,7 +29,7 @@ import {
 } from '@src/campaign/dto/create-driver-campaign.dto';
 import { PaymentService } from '@src/payment/payment.service';
 import { PaymentRepository } from '@src/payment/repository/payment.repository';
-import { UpdateCampaignDesignDto } from '@src/campaign/dto/update-campaign-design.dto';
+import { CampaignDesignStatusType, UpdateCampaignDesignDto } from '@src/campaign/dto/update-campaign-design.dto';
 
 @Injectable()
 export class CampaignService {
@@ -635,6 +635,8 @@ export class CampaignService {
     data: UpdateCampaignDesignDto,
     campaignId: string,
   ) {
+
+    if(data.approvalStatus === CampaignDesignStatusType.REJECT && !data.comment) throw new BadRequestException('Comment must be provided, if campaign design is rejected')
     const validCampaign =
       await this.campaignRepository.findCampaignDesignByCampaignId(campaignId);
 
