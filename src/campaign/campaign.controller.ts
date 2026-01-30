@@ -416,7 +416,7 @@ export class CampaignController {
   // !  get all campaign owned by business owners and filter by status
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
-  @Patch('campaign-designs/:campaignId')
+  @Patch('approve-reject-designs/:campaignId')
   @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Approve - reject campaign design',
