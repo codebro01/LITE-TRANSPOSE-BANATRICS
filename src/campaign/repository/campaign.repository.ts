@@ -3,12 +3,13 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { and, eq, sql, ne } from 'drizzle-orm';
 import { campaignTable } from '@src/db/campaigns';
 import { MaintenanceType } from '../dto/publishCampaignDto';
-import { driverCampaignTable } from '@src/db';
+import { campaignDesignsTable, driverCampaignTable } from '@src/db';
 import {
   CreateDriverCampaignDto,
   DriverCampaignStatusType,
 } from '@src/campaign/dto/create-driver-campaign.dto';
 import { PackageType } from '../dto/publishCampaignDto';
+import { UpdateCampaignDesignDto } from '@src/campaign/dto/update-campaign-design.dto';
 
 export enum CampaignStatus {
   PENDING = 'pending',
@@ -101,7 +102,7 @@ export class CampaignRepository {
   /**
    * Find a campaign by ID and user ID
    */
-  async findByIdAndUserId(id: string, userId: string) {
+  async findCampaignByCampaignIdAndUserId(id: string, userId: string) {
     const [campaign] = await this.DbProvider.select()
       .from(campaignTable)
       .where(and(eq(campaignTable.id, id), eq(campaignTable.userId, userId)))
@@ -176,7 +177,20 @@ export class CampaignRepository {
   async findAllByUserId(userId: string) {
     const campaigns = await this.DbProvider.select()
       .from(campaignTable)
-      .where(eq(campaignTable.userId, userId));
+      .where(eq(campaignTable.userId, userId))
+      .leftJoin(
+        campaignDesignsTable,
+        eq(campaignDesignsTable.campaignId, campaignTable.id),
+      );
+
+    return campaigns;
+  }
+
+  async findCampaignByCampaignId(campaignId: string) {
+    const [campaigns] = await this.DbProvider.select()
+      .from(campaignTable)
+      .where(eq(campaignTable.id, campaignId))
+      .limit(1);
 
     return campaigns;
   }
@@ -303,6 +317,25 @@ export class CampaignRepository {
           eq(campaignTable.id, campaignId),
         ),
       );
+
+    return campaigns;
+  }
+
+  async approveOrRejectCampaignDesign(
+    data: UpdateCampaignDesignDto,
+    campaignId: string,
+  ) {
+    const approveOrReject = await this.DbProvider.update(campaignDesignsTable)
+      .set(data)
+      .where(eq(campaignDesignsTable.campaignId, campaignId));
+    return approveOrReject;
+  }
+
+  async findCampaignDesignByCampaignId(campaignId: string) {
+    const [campaigns] = await this.DbProvider.select()
+      .from(campaignDesignsTable)
+      .where(eq(campaignDesignsTable.campaignId, campaignId))
+      .limit(1);
 
     return campaigns;
   }

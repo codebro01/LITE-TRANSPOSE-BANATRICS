@@ -1,7 +1,6 @@
 import {
   Controller,
   Body,
-  Patch,
   Param,
   UseGuards,
   HttpCode,
@@ -30,7 +29,8 @@ export class InstallmentProofsController {
   @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: 'Upload an installment proof',
-    description: 'Upload an installment proof for a specific campaign using camapign id',
+    description:
+      'Upload an installment proof for a specific campaign using camapign id',
   })
   @HttpCode(HttpStatus.OK)
   // @ApiQuery({
@@ -45,46 +45,14 @@ export class InstallmentProofsController {
   //   type: String,
   //   description: 'Optional driver ID to filter applications',
   // })
-  async getCampaignInstallmentProof(
+  async uploadInstallmentProof(
     @Req() req: Request,
-    @Body() body: CreateInstallmentProofDto, 
+    @Body() body: CreateInstallmentProofDto,
     @Param('campaignId', ParseUUIDPipe) campaignId: string,
   ) {
-
-    const {id: userId} = req.user;
+    const { id: userId } = req.user;
     const installmentProofs =
-      await this.installmentProofsService.createInstallmentProof(
-        body,
-        campaignId,
-        userId,
-      );
-
-    return {
-      success: true,
-      data: installmentProofs,
-    };
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('driver')
-  @Patch(':campaignId')
-  @ApiCookieAuth('access_token')
-  @ApiOperation({
-    summary: 'update installment proofs',
-    description: 'Update an existing installment proof',
-  })
-  @HttpCode(HttpStatus.OK)
-  async approveOrRejectInstallmentProof(
-    @Body('body') body: CreateInstallmentProofDto,
-    @Param('campaignId', ParseUUIDPipe) campaignId: string,
-        @Req() req: Request,
-
-  ) {
-
-        const {id: userId} = req.user;
-
-    const installmentProofs =
-      await this.installmentProofsService.updateInstallmentProof(
+      await this.installmentProofsService.uploadInstallmentProof(
         body,
         campaignId,
         userId,

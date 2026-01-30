@@ -29,6 +29,7 @@ import {
 } from '@src/campaign/dto/create-driver-campaign.dto';
 import { PaymentService } from '@src/payment/payment.service';
 import { PaymentRepository } from '@src/payment/repository/payment.repository';
+import { UpdateCampaignDesignDto } from '@src/campaign/dto/update-campaign-design.dto';
 
 @Injectable()
 export class CampaignService {
@@ -604,10 +605,11 @@ export class CampaignService {
   //*---------------- get single campaign by id------------------------------------------------------
 
   async getCampaignById(id: string, userId: string) {
-    const campaign = await this.campaignRepository.findByIdAndUserId(
-      id,
-      userId,
-    );
+    const campaign =
+      await this.campaignRepository.findCampaignByCampaignIdAndUserId(
+        id,
+        userId,
+      );
 
     if (!campaign) {
       throw new NotFoundException('Campaign not found');
@@ -627,12 +629,32 @@ export class CampaignService {
     return { campaign };
   }
 
+  // *---------------approve - - reject campaign designs
+
+  async approveOrRejectCampaignDesign(
+    data: UpdateCampaignDesignDto,
+    campaignId: string,
+  ) {
+    const validCampaign =
+      await this.campaignRepository.findCampaignDesignByCampaignId(campaignId);
+
+    if (!validCampaign)
+      throw new NotFoundException('Campaign design not found for update');
+    const approveOrReject =
+      await this.campaignRepository.approveOrRejectCampaignDesign(
+        data,
+        campaignId,
+      );
+    return approveOrReject;
+  }
+
   //!===================================drivers db calls ===========================================//
 
   //*---------------- get all available campaigns  ------------------------------------------------------
 
   async getAllAvailableCampaigns(userId: string) {
-    const campaigns = await this.campaignRepository.getAllAvailableCampaigns(userId);
+    const campaigns =
+      await this.campaignRepository.getAllAvailableCampaigns(userId);
     return campaigns;
   }
 
@@ -741,10 +763,18 @@ export class CampaignService {
         'You have already applied for this campaign!!!',
       );
 
-    const existingCampaign = await this.campaignRepository.getAllActiveDriverCampaigns(userId);
-    console.log('existing campaign', existingCampaign)
-    if(existingCampaign && existingCampaign.length > 0) throw new BadRequestException('You cannot apply for another campaign because you already have an active campaign.')
-    const createDriverCampaign = await this.campaignRepository.createDriverCampaign(data, userId);
-    if(!createDriverCampaign) throw new InternalServerErrorException('An error occured while trying to apply for the campaign')
+    const existingCampaign =
+      await this.campaignRepository.getAllActiveDriverCampaigns(userId);
+    console.log('existing campaign', existingCampaign);
+    if (existingCampaign && existingCampaign.length > 0)
+      throw new BadRequestException(
+        'You cannot apply for another campaign because you already have an active campaign.',
+      );
+    const createDriverCampaign =
+      await this.campaignRepository.createDriverCampaign(data, userId);
+    if (!createDriverCampaign)
+      throw new InternalServerErrorException(
+        'An error occured while trying to apply for the campaign',
+      );
   }
 }

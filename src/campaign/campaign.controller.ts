@@ -10,6 +10,7 @@ import {
   HttpStatus,
   Param,
   Query,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -33,6 +34,7 @@ import {
   DriverCampaignStatusType,
 } from '@src/campaign/dto/create-driver-campaign.dto';
 import { CampaignStatus } from '@src/campaign/repository/campaign.repository';
+import { UpdateCampaignDesignDto } from '@src/campaign/dto/update-campaign-design.dto';
 
 @ApiTags('Campaign')
 @Controller('campaign')
@@ -412,6 +414,46 @@ export class CampaignController {
   }
 
   // !  get all campaign owned by business owners and filter by status
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('businessOwner')
+  @Patch('campaign-designs/:campaignId')
+  @ApiCookieAuth('access_token')
+  @ApiOperation({
+    summary: 'Approve - reject campaign design',
+    description:
+      'This endpoint allows users to approve or reject a campaign design',
+  })
+  // @ApiBody({ type: StatusType })
+  @ApiResponse({
+    status: 201,
+    description: 'Successfully retrieved campaigns by status',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Invalid status type',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Not a business owner',
+  })
+  async approveOrRejectCampaignDesign(
+    @Param('campaignId', ParseUUIDPipe) campaignId: string,
+    @Body() body: UpdateCampaignDesignDto,
+  ) {
+    const campaign = await this.campaignService.approveOrRejectCampaignDesign(
+      body,
+      campaignId,
+    );
+    return {
+      success: true,
+      data: campaign,
+    };
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('businessOwner')
   @Get('get-campaigns-by-status')

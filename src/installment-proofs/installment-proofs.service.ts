@@ -12,20 +12,23 @@ export class InstallmentProofsService {
 
 
 
-    async createInstallmentProof(data:CreateInstallmentProofDto , campaignId: string, userId: string) {
+    async uploadInstallmentProof(data:CreateInstallmentProofDto , campaignId: string, userId: string) {
       const validCampaign =
         await this.campaignRepository.getActiveDriverCampaignByCampaignId(campaignId, userId);
 
         if(!validCampaign) throw new BadRequestException('Installment proof can only be uploaded for approved campaigns')
-        const installmentProof = await this.installmentProofRepository.createInstallmentProof(data, campaignId, userId)
+
+      const previousInstallmentProof = await this.installmentProofRepository.getCampaignInstallmentProof(campaignId, userId)
+      if(previousInstallmentProof) {
+        
+        return  await this.installmentProofRepository.updateInstallmentProof(
+            data,
+            campaignId,
+            userId,
+          );
+
+      }
+        return await this.installmentProofRepository.createInstallmentProof(data, campaignId, userId)
   
-          return installmentProof;
-    }
-  
-  
-    async updateInstallmentProof(data:CreateInstallmentProofDto , campaignId: string, userId: string) {
-        const installmentProof = await this.installmentProofRepository.updateInstallmentProof(data, campaignId, userId)
-  
-          return installmentProof;
     }
 }
