@@ -3,7 +3,7 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { and, eq, sql, ne } from 'drizzle-orm';
 import { campaignTable } from '@src/db/campaigns';
 import { MaintenanceType } from '../dto/publishCampaignDto';
-import { campaignDesignsTable, driverCampaignTable } from '@src/db';
+import { campaignDesignsTable, driverCampaignTable, installmentProofTable } from '@src/db';
 import {
   CreateDriverCampaignDto,
   DriverCampaignStatusType,
@@ -486,12 +486,17 @@ export class CampaignRepository {
       requirements: campaignTable.requirements,
       description: campaignTable.campaignDescriptions,
       totalEarning: campaignTable.earningPerDriver,
+      installmentProofStatus: installmentProofTable.statusType,
     })
       .from(driverCampaignTable)
       .where(eq(driverCampaignTable.userId, userId))
       .leftJoin(
         campaignTable,
         eq(driverCampaignTable.campaignId, campaignTable.id),
+      )
+      .leftJoin(
+        installmentProofTable,
+        eq(installmentProofTable.campaignId, driverCampaignTable.campaignId),
       );
     return campaigns;
   }
