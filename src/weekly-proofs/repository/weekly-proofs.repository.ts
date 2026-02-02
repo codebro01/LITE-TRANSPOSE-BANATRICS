@@ -9,21 +9,37 @@ export class WeeklyProofsRepository {
     @Inject('DB')
     private readonly DbProvider: NodePgDatabase<typeof import('@src/db')>,
   ) {}
-  async create(
-    data: Omit<weeklyProofInsertType, 'userId'>,
-    userId: string,
-  ) {
-
-
-
-    const [weeklyProof] = await this.DbProvider.insert(weeklyProofTable).values({
-      ...data,
-      userId,
-    }).returning();
+  async create(data: Omit<weeklyProofInsertType, 'userId'>, userId: string) {
+    const [weeklyProof] = await this.DbProvider.insert(weeklyProofTable)
+      .values({
+        ...data,
+        userId,
+      })
+      .returning();
 
     return weeklyProof;
   }
 
+  async findByWeek(
+    userId: string,
+    campaignId: string,
+    year: number,
+    weekNumber: number,
+  ) {
+    const [result] = await this.DbProvider.select()
+      .from(weeklyProofTable)
+      .where(
+        and(
+          eq(weeklyProofTable.userId, userId),
+          eq(weeklyProofTable.campaignId, campaignId),
+          eq(weeklyProofTable.year, year),
+          eq(weeklyProofTable.weekNumber, weekNumber),
+        ),
+      )
+      .limit(1);
+
+    return result;
+  }
   async findAllByUserId(userId: string) {
     const weeklyProof = await this.DbProvider.select({
       id: weeklyProofTable.id,
@@ -75,7 +91,8 @@ export class WeeklyProofsRepository {
           eq(weeklyProofTable.id, weeklyProofId),
           eq(weeklyProofTable.userId, userId),
         ),
-      ).returning();
+      )
+      .returning();
 
     return weeklyProof;
   }

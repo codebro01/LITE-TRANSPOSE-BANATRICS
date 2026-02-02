@@ -1,3 +1,5 @@
+process.env.TZ = 'Africa/Lagos';
+
 import * as dotenv from 'dotenv';
 dotenv.config();
 import { NestFactory } from '@nestjs/core';
@@ -18,7 +20,7 @@ async function bootstrap() {
       'http://localhost:3000', // frontend dev
       'http://localhost:5173', // Vite dev
       'https://lite-transpose-banatrics.onrender.com',
-      'https://banatrics.vercel.app'
+      'https://banatrics.vercel.app',
     ],
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
@@ -43,7 +45,7 @@ async function bootstrap() {
     .addCookieAuth('access_token', {
       type: 'apiKey',
       in: 'cookie',
-      name: 'access_token', 
+      name: 'access_token',
     })
     .build();
 
@@ -51,9 +53,9 @@ async function bootstrap() {
   SwaggerModule.setup('api/v1/api-docs', app, document, {
     swaggerOptions: {
       persistAuthorization: true,
-      withCredentials: true, 
+      withCredentials: true,
     },
-  }); 
+  });
 
   app.getHttpAdapter().get('/', (req, res) => {
     res.send({ status: 'ok', message: 'Banatrics Project API' });
