@@ -21,6 +21,9 @@ async function bootstrap() {
       'http://localhost:5173', // Vite dev
       'https://lite-transpose-banatrics.onrender.com',
       'https://banatrics.vercel.app',
+      'https://www.banatrics.vercel.app',
+      'https://banatrics.com',
+      'https://www.banatrics.com',
     ],
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
