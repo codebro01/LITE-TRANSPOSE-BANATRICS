@@ -13,7 +13,7 @@ export class EmailSenderService {
     const apiKey = this.configService.get<string>('RESEND_API_KEY');
     this.resend = new Resend(apiKey);
     this.fromEmail =
-      this.configService.get<string>('EMAIL_FROM') || 'onboarding@resend.dev';
+      this.configService.get<string>('FROM_EMAIL') || 'onboarding@resend.dev';
   }
 
   async sendEmail(data: EmailJobData): Promise<EmailResponse> {
