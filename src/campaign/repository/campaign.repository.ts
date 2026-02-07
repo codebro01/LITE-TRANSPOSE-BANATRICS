@@ -327,7 +327,9 @@ export class CampaignRepository {
   ) {
     const approveOrReject = await this.DbProvider.update(campaignDesignsTable)
       .set(data)
-      .where(eq(campaignDesignsTable.campaignId, campaignId));
+      .where(eq(campaignDesignsTable.campaignId, campaignId)).returning({
+        status: campaignDesignsTable.approvalStatus
+      });
     return approveOrReject;
   }
 

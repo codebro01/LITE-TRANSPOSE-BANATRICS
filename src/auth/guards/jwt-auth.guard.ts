@@ -5,7 +5,6 @@ import {
   UnauthorizedException,
   Inject,
   ForbiddenException,
-  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
