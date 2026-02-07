@@ -219,11 +219,14 @@ export class CampaignService {
 
   async draftCampaign(userId: string, data: DraftCampaignDto): Promise<any> {
     try {
+      if(data.statusType !== CampaignStatus.DRAFT) throw new BadRequestException('Please set statusType to draft to draft campaigns')
       if (!userId || !data)
         throw new BadRequestException('Please provide userId and draft data');
 
       if (!data.packageType)
         throw new BadRequestException('Package type must be provided!!!');
+
+      console.log(data)
 
       if (
         (data.packageType === PackageType.STARTER ||
@@ -266,7 +269,7 @@ export class CampaignService {
           calculateEndDate.getDate() + isNotCustomPackageType[0].duration,
         );
         draft = await this.campaignRepository.draftCampaign(
-          {
+          {...data, 
             packageType: isNotCustomPackageType[0].packageType as PackageType,
             duration: isNotCustomPackageType[0].duration,
             revisions: isNotCustomPackageType[0].revisions,
@@ -277,6 +280,7 @@ export class CampaignService {
             endDate: calculateEndDate,
             startDate: data.startDate ? new Date(startDate) : null,
             statusType: CampaignStatus.DRAFT, // Published directly
+          
           },
           userId,
         );
@@ -326,7 +330,10 @@ export class CampaignService {
 
   async updateDraft(id: string, userId: string, data: DraftCampaignDto) {
     // console.log(id, userId)
-
+  if (data.statusType !== CampaignStatus.DRAFT)
+    throw new BadRequestException(
+      'Please set statusType to draft to draft campaigns',
+    );
     const startDate = new Date(data.startDate);
 
     if (startDate < new Date())
