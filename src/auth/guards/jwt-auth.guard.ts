@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
   Inject,
   ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
@@ -49,7 +50,12 @@ export class JwtAuthGuard implements CanActivate {
           'Could not verify token, Unauthorization error',
         );
 
-      console.log(token);
+const existingUser = await this.DbProvider.select({
+  id: userTable.id
+})
+  .from(userTable)
+  .where(eq(userTable.id, token.id));
+  if(!existingUser) throw new UnauthorizedException('User not authorized')
 
       // const payload = this.jwtService.verify(token); // verify with secret
       request['user'] = token; // attach user to request

@@ -16,7 +16,9 @@ export class EmailSenderService {
       this.configService.get<string>('FROM_EMAIL') || 'onboarding@resend.dev';
   }
 
+  
   async sendEmail(data: EmailJobData): Promise<EmailResponse> {
+    // console.log(this.fromEmail)
     try {
       // Build email data conditionally - only include defined fields
       const emailData: any = {

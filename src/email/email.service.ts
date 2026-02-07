@@ -52,20 +52,21 @@ export class EmailService {
     }
   }
 
-
   async queueTemplatedEmail(
     template: EmailTemplateType,
     to: string | string[],
     data: Record<string, any>,
   ): Promise<string> {
-            console.log('got into queue');
+    console.log('got into queue');
 
     const emailData = this.buildTemplateEmail(template, to, data);
-    const queueEmail =  await this.queueEmail(emailData, this.getTemplatePriority(template));
-    console.log(queueEmail)
-    return queueEmail
+    const queueEmail = await this.queueEmail(
+      emailData,
+      this.getTemplatePriority(template),
+    );
+    console.log(queueEmail);
+    return queueEmail;
   }
-
 
   private buildTemplateEmail(
     template: EmailTemplateType,
