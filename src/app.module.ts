@@ -32,6 +32,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import {InstallmentProofsModule} from './installment-proofs/installment-proofs.module'
+import { InvoiceModule } from './invoice/invoice.module';
 
 
 @Module({
@@ -101,7 +102,8 @@ import {InstallmentProofsModule} from './installment-proofs/installment-proofs.m
     BankDetailsModule,
     WeeklyProofsModule,
     VehicleDetailsModule,
-    InstallmentProofsModule, 
+    InstallmentProofsModule,
+    InvoiceModule,
   ],
   controllers: [AppController, UploadController],
   providers: [

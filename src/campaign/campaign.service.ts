@@ -28,9 +28,15 @@ import {
   DriverCampaignStatusType,
 } from '@src/campaign/dto/create-driver-campaign.dto';
 import { PaymentService } from '@src/payment/payment.service';
-import { PaymentRepository } from '@src/payment/repository/payment.repository';
-import { CampaignDesignStatusType, UpdateCampaignDesignDto } from '@src/campaign/dto/update-campaign-design.dto';
-
+import {
+  generateSecureInvoiceId,
+  PaymentRepository,
+} from '@src/payment/repository/payment.repository';
+import {
+  CampaignDesignStatusType,
+  UpdateCampaignDesignDto,
+} from '@src/campaign/dto/update-campaign-design.dto';
+import { InvoiceRepository } from '@src/invoice/repository/invoice.repository';
 @Injectable()
 export class CampaignService {
   constructor(
@@ -40,6 +46,7 @@ export class CampaignService {
     private readonly packageRepository: PackageRepository,
     private readonly paymentService: PaymentService,
     private readonly paymentRepository: PaymentRepository,
+    private readonly InvoiceRepository: InvoiceRepository,
   ) {}
 
   //!===================================business owner db calls ===========================================//
@@ -125,6 +132,17 @@ export class CampaignService {
           userId,
           trx,
         );
+        if (!campaign.price)
+          throw new BadRequestException('Could not create campaign.');
+        await this.InvoiceRepository.create(
+          {
+            amount: campaign.price,
+            invoiceId: generateSecureInvoiceId(),
+          },
+          campaign.id,
+          userId,
+          trx,
+        );
 
         return campaign;
       });
@@ -189,6 +207,19 @@ export class CampaignService {
           userId,
           trx,
         );
+
+        if (!campaign.price)
+          throw new BadRequestException('Could not create campaign.');
+        await this.InvoiceRepository.create(
+          {
+            amount: campaign.price,
+            invoiceId: generateSecureInvoiceId(),
+          },
+          campaign.id,
+          userId,
+          trx,
+        );
+
         return campaign;
       });
     }
@@ -219,14 +250,17 @@ export class CampaignService {
 
   async draftCampaign(userId: string, data: DraftCampaignDto): Promise<any> {
     try {
-      if(data.statusType !== CampaignStatus.DRAFT) throw new BadRequestException('Please set statusType to draft to draft campaigns')
+      if (data.statusType !== CampaignStatus.DRAFT)
+        throw new BadRequestException(
+          'Please set statusType to draft to draft campaigns',
+        );
       if (!userId || !data)
         throw new BadRequestException('Please provide userId and draft data');
 
       if (!data.packageType)
         throw new BadRequestException('Package type must be provided!!!');
 
-      console.log(data)
+      console.log(data);
 
       if (
         (data.packageType === PackageType.STARTER ||
@@ -269,7 +303,8 @@ export class CampaignService {
           calculateEndDate.getDate() + isNotCustomPackageType[0].duration,
         );
         draft = await this.campaignRepository.draftCampaign(
-          {...data, 
+          {
+            ...data,
             packageType: isNotCustomPackageType[0].packageType as PackageType,
             duration: isNotCustomPackageType[0].duration,
             revisions: isNotCustomPackageType[0].revisions,
@@ -280,7 +315,6 @@ export class CampaignService {
             endDate: calculateEndDate,
             startDate: data.startDate ? new Date(startDate) : null,
             statusType: CampaignStatus.DRAFT, // Published directly
-          
           },
           userId,
         );
@@ -330,10 +364,10 @@ export class CampaignService {
 
   async updateDraft(id: string, userId: string, data: DraftCampaignDto) {
     // console.log(id, userId)
-  if (data.statusType !== CampaignStatus.DRAFT)
-    throw new BadRequestException(
-      'Please set statusType to draft to draft campaigns',
-    );
+    if (data.statusType !== CampaignStatus.DRAFT)
+      throw new BadRequestException(
+        'Please set statusType to draft to draft campaigns',
+      );
     const startDate = new Date(data.startDate);
 
     if (startDate < new Date())
@@ -503,6 +537,18 @@ export class CampaignService {
           trx,
         );
 
+        if (!published.price)
+          throw new BadRequestException('Could not create campaign.');
+        await this.InvoiceRepository.create(
+          {
+            amount: published.price,
+            invoiceId: generateSecureInvoiceId(),
+          },
+          published.id,
+          userId,
+          trx,
+        );
+
         return { published };
       });
     }
@@ -561,9 +607,36 @@ export class CampaignService {
           trx,
         );
 
+        if (!published.price)
+          throw new BadRequestException('Could not create campaign.');
+        await this.InvoiceRepository.create(
+          {
+            amount: published.price,
+            invoiceId: generateSecureInvoiceId(),
+          },
+          published.id,
+          userId,
+          trx,
+        );
+
         return { published };
       });
     }
+
+
+     await this.notificationService.createNotification(
+       {
+         title: 'Campaign created successfully',
+         message:
+           'The campaign has been created successfully, please you will have to have to wait till when things such as design is ready, and other factors to be in place afterwhich it will be published',
+         variant: VariantType.INFO,
+         category: CategoryType.CAMPAIGN,
+         priority: '',
+         status: StatusType.UNREAD,
+       },
+       userId,
+       'businessOwner',
+     );
 
     return {
       message: 'Campaign published successfully',
@@ -642,8 +715,13 @@ export class CampaignService {
     data: UpdateCampaignDesignDto,
     campaignId: string,
   ) {
-
-    if(data.approvalStatus === CampaignDesignStatusType.REJECT && !data.comment) throw new BadRequestException('Comment must be provided, if campaign design is rejected')
+    if (
+      data.approvalStatus === CampaignDesignStatusType.REJECT &&
+      !data.comment
+    )
+      throw new BadRequestException(
+        'Comment must be provided, if campaign design is rejected',
+      );
     const validCampaign =
       await this.campaignRepository.findCampaignDesignByCampaignId(campaignId);
 
