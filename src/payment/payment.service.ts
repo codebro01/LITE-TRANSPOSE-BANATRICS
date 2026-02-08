@@ -473,7 +473,7 @@ export class PaymentService {
 
     if (!updateBalanceAndPending)
       throw new BadRequestException(
-        `Insufficient balance or user not found. Required: ${amount}`,
+        `Insufficient balance. Required: ${amount}`,
       );
 
     const updateCampaignStatus =

@@ -1,6 +1,6 @@
 import { pgTable, uuid, doublePrecision, timestamp, varchar } from "drizzle-orm/pg-core";
 import { campaignTable } from "@src/db/campaigns";
-import { driverTable } from "@src/db/users";
+import {  userTable } from "@src/db/users";
 
 
 export enum InvoiceStatusType {
@@ -15,7 +15,7 @@ export const invoicesTable = pgTable('invoices', {
       campaignId: uuid('campaignId').references(() => campaignTable.id, {
         onDelete: 'cascade',
       }),
-      userId: uuid('userId').references(() => driverTable.userId, {
+      userId: uuid('userId').references(() => userTable.id, {
         onDelete: 'cascade',
       }),
       status: varchar('status', {length: 100}).$type<InvoiceStatusType>().default(InvoiceStatusType.PENDING), 
