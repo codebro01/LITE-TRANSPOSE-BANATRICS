@@ -393,7 +393,7 @@ export class CampaignRepository {
       .where(
         and(
           eq(campaignTable.statusType, CampaignStatus.APPROVED),
-          eq(campaignTable.active, true),
+          // eq(campaignTable.active, true),
           eq(campaignTable.paymentStatus, true),
         ),
       )
