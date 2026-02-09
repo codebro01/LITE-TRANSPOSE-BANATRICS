@@ -26,7 +26,7 @@ import {
 import { NotificationService } from '@src/notification/notification.service';
 import { EarningRepository } from '@src/earning/repository/earning.repository';
 import { PaymentStatusType } from '@src/db';
-import { CronExpression, Cron } from '@nestjs/schedule';
+// import { CronExpression, Cron } from '@nestjs/schedule';
 
 interface VerifyPaymentResponse {
   status: boolean;
@@ -481,6 +481,7 @@ export class PaymentService {
         campaignId,
         'pending',
         userId,
+        new Date(), 
         true,
         trx,
       );
@@ -500,108 +501,109 @@ export class PaymentService {
     };
   }
 
-  // ! This functions handles the deduction of money from pending (The state at which the capaign is still active) to total Amount spent (When the campaign is completed, its going to be a cron job)
+  // // ! This functions handles the deduction of money from pending (The state at which the capaign is still active) to total Amount spent (When the campaign is completed, its going to be a cron job)
 
-  @Cron(CronExpression.EVERY_12_HOURS)
-  async deductFromPendingToTotalAmountSpent(
-    data: {
-      campaignId: string;
-    },
-    userId: string,
-  ) {
-    try {
-      const { campaignId } = data;
+  // @Cron(CronExpression.EVERY_12_HOURS)
+  // async deductFromPendingToTotalAmountSpent(
+  //   data: {
+  //     campaignId: string;
+  //   },
+  //   userId: string,
+  // ) {
+  //   try {
+  //     const { campaignId } = data;
 
-      const Trx = await this.paymentRepository.executeInTransaction(
-        async (trx) => {
-          const getAmount = await this.paymentRepository.getCampaignPrice(
-            campaignId,
-            userId,
-            trx,
-          );
+  //     const Trx = await this.paymentRepository.executeInTransaction(
+  //       async (trx) => {
+  //         const getAmount = await this.paymentRepository.getCampaignPrice(
+  //           campaignId,
+  //           userId,
+  //           trx,
+  //         );
 
-          const amount = getAmount.amount;
+  //         const amount = getAmount.amount;
 
-          const businessOwner =
-            await this.paymentRepository.getBusinessOwnerBalanceAndPending(
-              userId,
-              trx,
-            );
+  //         const businessOwner =
+  //           await this.paymentRepository.getBusinessOwnerBalanceAndPending(
+  //             userId,
+  //             trx,
+  //           );
 
-          if (!businessOwner) {
-            throw new NotFoundException('Business owner not found');
-          }
+  //         if (!businessOwner) {
+  //           throw new NotFoundException('Business owner not found');
+  //         }
 
-          if (Number(businessOwner.pending) < amount) {
-            throw new BadRequestException(
-              `Insufficient pending balance. Available: ${businessOwner.pending.toFixed(2)}, Required: ${amount}`,
-            );
-          }
+  //         if (Number(businessOwner.pending) < amount) {
+  //           throw new BadRequestException(
+  //             `Insufficient pending balance. Available: ${businessOwner.pending.toFixed(2)}, Required: ${amount}`,
+  //           );
+  //         }
 
-          const updatePendingAndTotalSpent =
-            await this.paymentRepository.updatePendingAndTotalSpent(
-              userId,
-              amount,
-              trx,
-            );
+  //         const updatePendingAndTotalSpent =
+  //           await this.paymentRepository.updatePendingAndTotalSpent(
+  //             userId,
+  //             amount,
+  //             trx,
+  //           );
 
-          const updateCampaignStatus =
-            await this.paymentRepository.updateCampaignStatus(
-              campaignId,
-              'completed',
-              userId,
-              undefined,
-              trx,
-            );
+  //         const updateCampaignStatus =
+  //           await this.paymentRepository.updateCampaignStatus(
+  //             campaignId,
+  //             'completed',
+  //             userId,
+  //             undefined, 
+  //             undefined,
+  //             trx,
+  //           );
 
-          await this.notificationService.createNotification(
-            {
-              title: `Campaign charge`,
-              message: `${amount} has been successfully dedecuted to settle the campaign charge`,
-              variant: VariantType.SUCCESS,
-              category: CategoryType.CAMPAIGN,
-              priority: '',
-              status: StatusType.UNREAD,
-            },
-            userId,
-            'businessOwner',
-          );
+  //         await this.notificationService.createNotification(
+  //           {
+  //             title: `Campaign charge`,
+  //             message: `${amount} has been successfully dedecuted to settle the campaign charge`,
+  //             variant: VariantType.SUCCESS,
+  //             category: CategoryType.CAMPAIGN,
+  //             priority: '',
+  //             status: StatusType.UNREAD,
+  //           },
+  //           userId,
+  //           'businessOwner',
+  //         );
 
-          // console.log('updateCampaignResult', updateCampaignResult);
+  //         // console.log('updateCampaignResult', updateCampaignResult);
 
-          if (!updateCampaignStatus) {
-            throw new Error(
-              'Campaign not found or not in pending status. Only campaigns with status "pending" can be paid for.',
-            );
-          }
+  //         if (!updateCampaignStatus) {
+  //           throw new Error(
+  //             'Campaign not found or not in pending status. Only campaigns with status "pending" can be paid for.',
+  //           );
+  //         }
 
-          const currentData = {
-            pending: updatePendingAndTotalSpent.pending,
-            totalSpent: updatePendingAndTotalSpent.totalSpent,
-          };
+  //         const currentData = {
+  //           pending: updatePendingAndTotalSpent.pending,
+  //           totalSpent: updatePendingAndTotalSpent.totalSpent,
+  //         };
 
-          return { currentData };
-        },
-      );
-      // console.log('currentData', Trx.currentData);
-      if (
-        !Trx.currentData ||
-        !Trx.currentData.pending ||
-        !Trx.currentData.totalSpent
-      )
-        throw new InternalServerErrorException(
-          'An error occured fetching current payment data, please try again',
-        );
+  //         return { currentData };
+  //       },
+  //     );
+  //     // console.log('currentData', Trx.currentData);
+  //     if (
+  //       !Trx.currentData ||
+  //       !Trx.currentData.pending ||
+  //       !Trx.currentData.totalSpent
+  //     )
+  //       throw new InternalServerErrorException(
+  //         'An error occured fetching current payment data, please try again',
+  //       );
 
-      return {
-        totalSpent: Trx.currentData.totalSpent.toFixed(2),
-        currentPending: Trx.currentData.pending.toFixed(2),
-      };
-    } catch (error) {
-      // console.log(error);
-      throw new Error(error);
-    }
-  }
+  //     return {
+  //       totalSpent: Trx.currentData.totalSpent.toFixed(2),
+  //       currentPending: Trx.currentData.pending.toFixed(2),
+  //     };
+  //   } catch (error) {
+  //     // console.log(error);
+  //     throw new Error(error);
+  //   }
+  // }
 
   async listTransactions(userId: string) {
     try {

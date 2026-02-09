@@ -62,7 +62,13 @@ export class PaymentRepository {
   ) {
     const DbTrx = trx || this.DbProvider;
     const [payment] = await DbTrx.insert(paymentTable)
-      .values({ userId, ...data, dateInitiated: data.dateInitiated ? new Date(data.dateInitiated) : new Date() })
+      .values({
+        userId,
+        ...data,
+        dateInitiated: data.dateInitiated
+          ? new Date(data.dateInitiated)
+          : new Date(),
+      })
       .returning();
 
     if (!payment)
@@ -161,6 +167,7 @@ export class PaymentRepository {
     campaignId: string,
     status: string,
     userId: string,
+    spentAt?: Date,
     paymentStatus?: boolean,
     trx?: any,
   ) {
@@ -168,9 +175,13 @@ export class PaymentRepository {
     const updateData: {
       paymentStatus?: boolean;
       statusType: string;
-    } = { statusType: status };
+      spentAt?: Date;
+    } = { statusType: status, };
     if (paymentStatus !== undefined) {
       updateData.paymentStatus = paymentStatus;
+    }
+    if (spentAt !== undefined) {
+      updateData.spentAt = spentAt;
     }
 
     const [updateCampaignStatus] = await Trx.update(campaignTable)
@@ -266,6 +277,7 @@ export class PaymentRepository {
           and(
             eq(campaignTable.userId, userId),
             eq(campaignTable.paymentStatus, true),
+            eq(campaignTable.statusType, 'approved'),
           ),
         );
 

@@ -34,6 +34,7 @@ export class HomeDashboardsRepository {
             and(
               eq(campaignTable.userId, userId),
               eq(campaignTable.paymentStatus, true),
+              eq(campaignTable.statusType, 'approved')
             ),
           ),
 
