@@ -325,21 +325,21 @@ export class CampaignService {
       }
       // ! For custom packages
       else {
-        if (!data.endDate)
-          throw new BadRequestException(
-            'End date must be provided for custom campaigns',
-          );
+        // if (!data.endDate)
+        //   throw new BadRequestException(
+        //     'End date must be provided for custom campaigns',
+        //   );
 
-        const endDate = new Date(data.endDate);
+        // const endDate = new Date(data.endDate);
 
-        const minEndDate = new Date(startDate);
-        minEndDate.setDate(minEndDate.getDate() + 30);
+        // const minEndDate = new Date(startDate);
+        // minEndDate.setDate(minEndDate.getDate() + 30);
 
-        if (endDate < minEndDate) {
-          throw new BadRequestException(
-            'Campaign must run for at least 30 days',
-          );
-        }
+        // if (endDate < minEndDate) {
+        //   throw new BadRequestException(
+        //     'Campaign must run for at least 30 days',
+        //   );
+        // }
 
         draft = await this.campaignRepository.draftCampaign(
           {
@@ -422,19 +422,19 @@ export class CampaignService {
     }
     //! For custom Packages
     else {
-      if (!data.endDate)
-        throw new BadRequestException(
-          'End date must be provided for custom campaigns',
-        );
+      // if (!data.endDate)
+      //   throw new BadRequestException(
+      //     'End date must be provided for custom campaigns',
+      //   );
 
-      const endDate = new Date(data.endDate);
+      // const endDate = new Date(data.endDate);
 
-      const minEndDate = new Date(startDate);
-      minEndDate.setDate(minEndDate.getDate() + 30);
+      // const minEndDate = new Date(startDate);
+      // minEndDate.setDate(minEndDate.getDate() + 30);
 
-      if (endDate < minEndDate) {
-        throw new BadRequestException('Campaign must run for at least 30 days');
-      }
+      // if (endDate < minEndDate) {
+      //   throw new BadRequestException('Campaign must run for at least 30 days');
+      // }
       updated = await this.campaignRepository.updateById(
         id,
         {
