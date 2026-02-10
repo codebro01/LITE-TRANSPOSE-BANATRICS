@@ -17,6 +17,7 @@ async function bootstrap() {
 
   app.enableCors({
     origin: [
+      'https://banatrics-service-5gybv.ondigitalocean.app',
       'http://localhost:3000', // frontend dev
       'http://localhost:5173', // Vite dev
       'https://lite-transpose-banatrics.onrender.com',
