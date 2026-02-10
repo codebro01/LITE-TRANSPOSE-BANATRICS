@@ -18,9 +18,11 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'https://banatrics-service-5gybv.ondigitalocean.app',
+      'https://www.banatrics-service-5gybv.ondigitalocean.app',
       'http://localhost:3000', // frontend dev
       'http://localhost:5173', // Vite dev
       'https://lite-transpose-banatrics.onrender.com',
+      'https://www.lite-transpose-banatrics.onrender.com',
       'https://banatrics.vercel.app',
       'https://www.banatrics.vercel.app',
       'https://banatrics.com',
@@ -45,7 +47,10 @@ async function bootstrap() {
     .setVersion('1.0') // Version
     .addBearerAuth()
     .addServer('http://localhost:3000', 'Local Dev')
-    .addServer('https://lite-transpose-banatrics.onrender.com', 'Production')
+    .addServer(
+      'https://banatrics-service-5gybv.ondigitalocean.app',
+      'Production',
+    )
     .addCookieAuth('access_token', {
       type: 'apiKey',
       in: 'cookie',
