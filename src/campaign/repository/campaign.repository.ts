@@ -227,6 +227,9 @@ export class CampaignRepository {
   async findAllByUserId(userId: string) {
     const campaigns = await this.DbProvider.query.campaignTable.findMany({
       where: eq(campaignTable.userId, userId),
+      columns: {
+        earningPerDriver: false,
+      },
       with: {
         weeklyProofs: true,
         campaignDesigns: true,
