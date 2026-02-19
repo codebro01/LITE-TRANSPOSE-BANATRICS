@@ -11,6 +11,9 @@ import {
   jsonb,
 } from 'drizzle-orm/pg-core';
 import { userTable } from '@src/db/users';
+import { relations } from 'drizzle-orm';
+import { weeklyProofTable } from '@src/db/weekly_proofs';
+import { campaignDesignsTable } from '@src/db/campaign-designs';
 
 // Package type enum
 export const campaignPackageTypeEnum = pgEnum('package_type', [
@@ -89,6 +92,31 @@ export const campaignTable = pgTable('campaigns', {
     .notNull(),
 });
 
-// Types
+
+export const campaignRelations = relations(campaignTable, ({ many }) => ({
+  weeklyProofs: many(weeklyProofTable),
+  campaignDesigns: many(campaignDesignsTable),
+}));
+
+export const campaignDesignsRelations = relations(
+  campaignDesignsTable,
+  ({ one }) => ({
+    campaign: one(campaignTable, {
+      fields: [campaignDesignsTable.campaignId],
+      references: [campaignTable.id],
+    }),
+  }),
+);
+
+export const weeklyProofRelations = relations(weeklyProofTable, ({ one }) => ({
+  campaign: one(campaignTable, {
+    fields: [weeklyProofTable.campaignId],
+    references: [campaignTable.id],
+  }),
+}));
+
+
+
+
 export type campaignInsertType = typeof campaignTable.$inferInsert;
 export type campaignSelectType = typeof campaignTable.$inferSelect;

@@ -174,14 +174,64 @@ export class CampaignRepository {
   /**
    * Find all campaigns for a user
    */
+  // async findAllByUserId(userId: string) {
+  //   const campaigns = await this.DbProvider.select({
+  //     id: campaignTable.id,
+  //     userId: campaignTable.userId,
+  //     packageType: campaignTable.packageType,
+  //     statusType: campaignTable.statusType,
+  //     paymentStatus: campaignTable.paymentStatus,
+  //     duration: campaignTable.duration,
+  //     revisions: campaignTable.revisions,
+  //     maintenanceType: campaignTable.maintenanceType,
+  //     lgaCoverage: campaignTable.lgaCoverage,
+  //     price: campaignTable.price,
+  //     noOfDrivers: campaignTable.noOfDrivers,
+  //     availability: campaignTable.availability,
+  //     campaignName: campaignTable.campaignName,
+  //     campaignDescriptions: campaignTable.campaignDescriptions,
+  //     startDate: campaignTable.startDate,
+  //     endDate: campaignTable.endDate,
+  //     companyLogo: campaignTable.companyLogo,
+  //     state: campaignTable.state,
+  //     bannerDetails: campaignTable.bannerDetails,
+  //     earningPerDriver: campaignTable.earningPerDriver,
+  //     colorPallete: campaignTable.colorPallete,
+  //     callToAction: campaignTable.callToAction,
+  //     requirements: campaignTable.requirements,
+  //     mainMessage: campaignTable.mainMessage,
+  //     active: campaignTable.active,
+  //     responseOnSeeingBanner: campaignTable.responseOnSeeingBanner,
+  //     uploadedImages: campaignTable.uploadedImages,
+  //     slogan: campaignTable.slogan,
+  //     printHousePhoneNo: campaignTable.printHousePhoneNo,
+  //     spentAt: campaignTable.spentAt,
+  //     createdAt: campaignTable.createdAt,
+  //     updatedAt: campaignTable.updatedAt,
+  //     weeklyProofs: weeklyProofTable.backview,
+  //   })
+  //     .from(campaignTable)
+  //     .where(eq(campaignTable.userId, userId))
+  //     .leftJoin(
+  //       campaignDesignsTable,
+  //       eq(campaignDesignsTable.campaignId, campaignTable.id),
+  //     )
+  //     .leftJoin(
+  //       weeklyProofTable,
+  //       eq(weeklyProofTable.campaignId, campaignTable.id),
+  //     );
+
+  //   return campaigns;
+  // }
+
   async findAllByUserId(userId: string) {
-    const campaigns = await this.DbProvider.select()
-      .from(campaignTable)
-      .where(eq(campaignTable.userId, userId))
-      .leftJoin(
-        campaignDesignsTable,
-        eq(campaignDesignsTable.campaignId, campaignTable.id),
-      );
+    const campaigns = await this.DbProvider.query.campaignTable.findMany({
+      where: eq(campaignTable.userId, userId),
+      with: {
+        weeklyProofs: true,
+        campaignDesigns: true,
+      },
+    });
 
     return campaigns;
   }
@@ -327,8 +377,9 @@ export class CampaignRepository {
   ) {
     const approveOrReject = await this.DbProvider.update(campaignDesignsTable)
       .set(data)
-      .where(eq(campaignDesignsTable.campaignId, campaignId)).returning({
-        status: campaignDesignsTable.approvalStatus
+      .where(eq(campaignDesignsTable.campaignId, campaignId))
+      .returning({
+        status: campaignDesignsTable.approvalStatus,
       });
     return approveOrReject;
   }
@@ -349,7 +400,7 @@ export class CampaignRepository {
       campaignId: campaignTable.id,
       paid: driverCampaignTable.paid,
       earningPerDriver: campaignTable.earningPerDriver,
-      status: campaignTable.statusType, 
+      status: campaignTable.statusType,
     })
       .from(driverCampaignTable)
       .where(
@@ -379,8 +430,8 @@ export class CampaignRepository {
   //     totalDriversApplied: sql<number>`COUNT(${driverCampaignTable.id})::int`,
   //     hasApplied: userId
   //       ? sql<boolean>`EXISTS (
-  //           SELECT 1 FROM ${driverCampaignTable} 
-  //           WHERE ${driverCampaignTable.campaignId} = ${campaignTable.id} 
+  //           SELECT 1 FROM ${driverCampaignTable}
+  //           WHERE ${driverCampaignTable.campaignId} = ${campaignTable.id}
   //           AND ${driverCampaignTable.userId} = ${userId}
   //         )`
   //       : sql<boolean>`false`,
@@ -416,73 +467,72 @@ export class CampaignRepository {
   //   return { campaigns, ...count };
   // }
 
-
   async getAllAvailableCampaigns(userId: string) {
-  const campaigns = await this.DbProvider.select({
-    title: campaignTable.campaignName,
-    campaignId: campaignTable.id,
-    state: campaignTable.state,
-    startDate: campaignTable.startDate,
-    endDate: campaignTable.endDate,
-    duration: campaignTable.duration,
-    availability: campaignTable.availability,
-    requirements: campaignTable.requirements,
-    description: campaignTable.campaignDescriptions,
-    totalEarning: campaignTable.earningPerDriver,
-    TotalNumberOfDrivers: campaignTable.noOfDrivers,
+    const campaigns = await this.DbProvider.select({
+      title: campaignTable.campaignName,
+      campaignId: campaignTable.id,
+      state: campaignTable.state,
+      startDate: campaignTable.startDate,
+      endDate: campaignTable.endDate,
+      duration: campaignTable.duration,
+      availability: campaignTable.availability,
+      requirements: campaignTable.requirements,
+      description: campaignTable.campaignDescriptions,
+      totalEarning: campaignTable.earningPerDriver,
+      TotalNumberOfDrivers: campaignTable.noOfDrivers,
 
-    // COUNT only drivers who are NOT the current user
-    totalDriversApplied: sql`COUNT(${driverCampaignTable.id})::int`,
+      // COUNT only drivers who are NOT the current user
+      totalDriversApplied: sql`COUNT(${driverCampaignTable.id})::int`,
 
-    // Check if THIS driver has already applied
-    hasApplied: userId
-      ? sql`EXISTS (
+      // Check if THIS driver has already applied
+      hasApplied: userId
+        ? sql`EXISTS (
           SELECT 1 FROM ${driverCampaignTable}
           WHERE ${driverCampaignTable.campaignId} = ${campaignTable.id}
           AND ${driverCampaignTable.userId} = ${userId}
         )`
-      : sql`false`,
-  })
-    .from(campaignTable)
-    .leftJoin(
-      driverCampaignTable,
-      eq(campaignTable.id, driverCampaignTable.campaignId),
-    )
-    .where(
-      and(
-        eq(campaignTable.statusType, CampaignStatus.APPROVED),
-        eq(campaignTable.paymentStatus, true),
-      ),
-    )
-    .groupBy(campaignTable.id)
-    .having(
-      and(
-        // Campaign still has open slots
-        sql`COUNT(${driverCampaignTable.id}) < ${campaignTable.noOfDrivers}`,
+        : sql`false`,
+    })
+      .from(campaignTable)
+      .leftJoin(
+        driverCampaignTable,
+        eq(campaignTable.id, driverCampaignTable.campaignId),
+      )
+      .where(
+        and(
+          eq(campaignTable.statusType, CampaignStatus.APPROVED),
+          eq(campaignTable.paymentStatus, true),
+        ),
+      )
+      .groupBy(campaignTable.id)
+      .having(
+        and(
+          // Campaign still has open slots
+          sql`COUNT(${driverCampaignTable.id}) < ${campaignTable.noOfDrivers}`,
 
-        // THIS driver has NOT applied yet
-        sql`NOT EXISTS (
+          // THIS driver has NOT applied yet
+          sql`NOT EXISTS (
           SELECT 1 FROM ${driverCampaignTable}
           WHERE ${driverCampaignTable.campaignId} = ${campaignTable.id}
           AND ${driverCampaignTable.userId} = ${userId}
         )`,
-      ),
-    );
+        ),
+      );
 
-  const [count] = await this.DbProvider.select({
-    totalCount: sql`COUNT(*)`,
-    todayCount: sql`COUNT(*) filter (where date(${campaignTable.createdAt}) = current_date)`,
-  })
-    .from(campaignTable)
-    .where(
-      and(
-        eq(campaignTable.active, true),
-        eq(campaignTable.paymentStatus, true),
-      ),
-    );
+    const [count] = await this.DbProvider.select({
+      totalCount: sql`COUNT(*)`,
+      todayCount: sql`COUNT(*) filter (where date(${campaignTable.createdAt}) = current_date)`,
+    })
+      .from(campaignTable)
+      .where(
+        and(
+          eq(campaignTable.active, true),
+          eq(campaignTable.paymentStatus, true),
+        ),
+      );
 
-  return { campaigns, ...count };
-}
+    return { campaigns, ...count };
+  }
 
   async driverCampaignDashboard(userId: string) {
     const [calc, campaignsExcludingPendingApproval] = await Promise.all([
@@ -557,8 +607,8 @@ export class CampaignRepository {
       description: campaignTable.campaignDescriptions,
       totalEarning: campaignTable.earningPerDriver,
       installmentProofStatus: installmentProofTable.statusType,
-      printHousePhoneNumber: campaignTable.printHousePhoneNo, 
-      campaignDesigns: campaignDesignsTable.designs, 
+      printHousePhoneNumber: campaignTable.printHousePhoneNo,
+      campaignDesigns: campaignDesignsTable.designs,
     })
       .from(driverCampaignTable)
       .where(eq(driverCampaignTable.userId, userId))
