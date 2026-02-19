@@ -558,6 +558,7 @@ export class CampaignRepository {
       totalEarning: campaignTable.earningPerDriver,
       installmentProofStatus: installmentProofTable.statusType,
       printHousePhoneNumber: campaignTable.printHousePhoneNo, 
+      campaignDesigns: campaignDesignsTable.designs, 
     })
       .from(driverCampaignTable)
       .where(eq(driverCampaignTable.userId, userId))
@@ -568,6 +569,10 @@ export class CampaignRepository {
       .leftJoin(
         installmentProofTable,
         eq(installmentProofTable.campaignId, driverCampaignTable.campaignId),
+      )
+      .leftJoin(
+        campaignDesignsTable,
+        eq(campaignDesignsTable.campaignId, driverCampaignTable.campaignId),
       );
     return campaigns;
   }
