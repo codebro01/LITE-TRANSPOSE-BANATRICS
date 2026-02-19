@@ -482,13 +482,14 @@ export class CampaignRepository {
       campaignId: campaignTable.id,
       state: campaignTable.state,
       startDate: campaignTable.startDate,
-      endDate: campaignTable.endDate,
+      endDaxte: campaignTable.endDate,
       duration: campaignTable.duration,
       availability: campaignTable.availability,
       requirements: campaignTable.requirements,
       description: campaignTable.campaignDescriptions,
       totalEarning: campaignTable.earningPerDriver,
       installmentProofStatus: installmentProofTable.statusType,
+      printHousePhoneNumber: campaignTable.printHousePhoneNo, 
     })
       .from(driverCampaignTable)
       .where(eq(driverCampaignTable.userId, userId))

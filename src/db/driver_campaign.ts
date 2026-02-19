@@ -4,7 +4,7 @@ import { pgTable, boolean,  timestamp,  pgEnum,  uuid } from "drizzle-orm/pg-cor
 
 export const driverCampaignStatusType = pgEnum('driver_campaign_status_type', [ 'completed', 'pending_approval', 'due_soon', 'approved', 'rejected'])
 
-export const driverCampaignTable = pgTable('driver_campaigns', {
+export const  driverCampaignTable = pgTable('driver_campaigns', {
   id: uuid('id').defaultRandom().primaryKey().notNull(),
   userId: uuid('userId')
     .references(() => userTable.id, { onDelete: 'cascade' })

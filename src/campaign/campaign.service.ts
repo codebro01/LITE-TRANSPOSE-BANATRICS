@@ -819,6 +819,8 @@ export class CampaignService {
         daysRemaining,
         daysCompleted,
         campaignProgress: Math.round(campaignProgress * 100) / 100,
+                  printHousePhoneNumber: (campaign.driverCampaignStatus !== 'pending_approval' && campaign.driverCampaignStatus !== 'rejected') ? campaign.printHousePhoneNumber : null, 
+
         notStarted: false,
         isExpired,
       };
