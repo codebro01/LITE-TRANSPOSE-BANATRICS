@@ -20,7 +20,7 @@ export class InstallmentProofsService {
 
       const previousInstallmentProof = await this.installmentProofRepository.getCampaignInstallmentProof(campaignId, userId)
 
-      if(previousInstallmentProof.statusType === 'approved') throw new BadRequestException('Installment proof has already been approved, therefore you cannot upload another installment proof')
+      if(previousInstallmentProof?.statusType === 'approved') throw new BadRequestException('Installment proof has already been approved, therefore you cannot upload another installment proof')
       if(previousInstallmentProof) {
         
         return  await this.installmentProofRepository.updateInstallmentProof(

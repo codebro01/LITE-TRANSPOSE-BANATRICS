@@ -245,7 +245,7 @@ export class CampaignController {
   @Get('get-campaigns')
   @ApiCookieAuth('access_token')
   @ApiOperation({
-    summary: 'x',
+    summary: 'Get all campaigns',
     description:
       'Retrieves all campaigns owned by the authenticated business owner, regardless of status.',
   })
