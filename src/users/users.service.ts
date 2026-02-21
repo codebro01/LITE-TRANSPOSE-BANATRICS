@@ -280,36 +280,37 @@ export class UserService {
       const emailVerificationRecord =
         await this.emailVerificationRepository.findUserByEmail({ email });
 
+        console.log("emailVerificationRecord", emailVerificationRecord);
+
       const { generateRandomSixDigitCode, hashRandomSixDigitCode } =
         await this.sixDigitCodeGenerator();
 
-      if (emailVerificationRecord)
-        
+        if (
+          (emailVerificationRecord && emailVerificationRecord.used) === false
+        ) {
+          const saveCodeRecord =
+            await this.emailVerificationRepository.updateEmailVerification(
+              {
+                emailVerificationCode: hashRandomSixDigitCode,
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+              },
+              email,
+            );
 
-      if ((emailVerificationRecord && emailVerificationRecord.used) === false) {
-        const saveCodeRecord =
-          await this.emailVerificationRepository.updateEmailVerification(
-            {
+          console.log('update', saveCodeRecord);
+        } else {
+          const saveCodeRecord =
+            await this.emailVerificationRepository.createEmailVerificationData({
+              email: email,
               emailVerificationCode: hashRandomSixDigitCode,
+              used: false,
+              phone,
+              nin,
               expiresAt: new Date(Date.now() + 30 * 60 * 1000),
-            },
-            email,
-          );
+            });
 
-        console.log('update', saveCodeRecord);
-      } else {
-        const saveCodeRecord =
-          await this.emailVerificationRepository.createEmailVerificationData({
-            email: email,
-            emailVerificationCode: hashRandomSixDigitCode,
-            used: false,
-            phone,
-            nin,
-            expiresAt: new Date(Date.now() + 30 * 60 * 1000),
-          });
-
-        console.log('create', saveCodeRecord);
-      }
+          console.log('create', saveCodeRecord);
+        }
 
       await this.emailService.queueTemplatedEmail(
         EmailTemplateType.EMAIL_VERIFICATION,
