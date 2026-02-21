@@ -663,7 +663,7 @@ export class CampaignRepository {
         and(
           eq(driverCampaignTable.userId, userId),
           eq(driverCampaignTable.active, true),
-          eq(driverCampaignTable.campaignStatus, 'approved'),
+          // eq(driverCampaignTable.campaignStatus, 'approved'),
           ne(driverCampaignTable.campaignStatus, 'completed'),
         ),
       )

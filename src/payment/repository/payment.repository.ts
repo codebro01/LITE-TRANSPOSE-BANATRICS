@@ -176,7 +176,7 @@ export class PaymentRepository {
       paymentStatus?: boolean;
       statusType: string;
       spentAt?: Date;
-    } = { statusType: status, };
+    } = { statusType: status };
     if (paymentStatus !== undefined) {
       updateData.paymentStatus = paymentStatus;
     }

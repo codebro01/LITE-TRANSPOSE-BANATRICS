@@ -197,6 +197,13 @@
       "when": 1770512147400,
       "tag": "0027_mysterious_songbird",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1771661915417,
+      "tag": "0028_adorable_the_call",
+      "breakpoints": true
     }
   ]
 }

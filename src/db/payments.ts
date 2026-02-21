@@ -3,18 +3,17 @@ import {
   text,
   timestamp,
   uuid,
-  doublePrecision
+  doublePrecision,
+  index,
 } from 'drizzle-orm/pg-core';
 import { userTable } from '@src/db/users';
-
-
 
 export enum PaymentStatusType {
   SUCCESS = 'success',
   REVERSED = 'reversed',
-  FAILED = 'failed', 
+  FAILED = 'failed',
   PENDING = 'pending',
-  CANCELLED = 'cancelled', 
+  CANCELLED = 'cancelled',
 }
 
 export const paymentTable = pgTable('payments', {
@@ -32,7 +31,11 @@ export const paymentTable = pgTable('payments', {
   paymentStatus: text('payment_status').$type<PaymentStatusType>().notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  idx_payments_reference_userId: index('idx_payments_reference_userId').on(table.userId, table.reference), 
+  idx_payments_userId: index('idx_payments_userId').on(table.userId, table.userId), 
+  idx_payments_reference: index('idx_payments_reference').on(table.reference), 
+}));
 
 export type paymentInsertType = typeof paymentTable.$inferInsert;
 export type paymentSelectType = typeof paymentTable.$inferSelect;

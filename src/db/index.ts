@@ -9,5 +9,6 @@ export * from '@src/db/weekly_proofs'
 export * from '@src/db/vehicle-details'
 export  * from '@src/db/campaign-designs'
 export * from "@src/db/invoices"    
-export * from "@src/db/installment-proof"    
+export * from "@src/db/installment-proof" 
+export * from "@src/db/relations"
 

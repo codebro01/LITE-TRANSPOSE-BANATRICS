@@ -1,8 +1,7 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { PasswordResetInsertType, passwordResetTable } from "@src/db";
-import { eq, and } from "drizzle-orm";
-import { NodePgDatabase } from "drizzle-orm/node-postgres";
-
+import { Inject, Injectable } from '@nestjs/common';
+import { PasswordResetInsertType, passwordResetTable } from '@src/db';
+import { eq, and } from 'drizzle-orm';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 @Injectable()
 export class PasswordResetRepository {
@@ -27,7 +26,6 @@ export class PasswordResetRepository {
   }
 
   async updatePasswordReset(
-    
     data: Partial<
       Pick<
         PasswordResetInsertType,
@@ -44,19 +42,19 @@ export class PasswordResetRepository {
     return update;
   }
 
-
   async invalidateExistingCodes(email: string) {
-    await this.DbProvider
-      .update(passwordResetTable)
+    await this.DbProvider.update(passwordResetTable)
       .set({ used: true })
       .where(
-        and(eq(passwordResetTable.email, email), eq(passwordResetTable.used, false)),
+        and(
+          eq(passwordResetTable.email, email),
+          eq(passwordResetTable.used, false),
+        ),
       );
   }
 
   async invalidateAllCodesForUser(userId: string) {
-    await this.DbProvider
-      .update(passwordResetTable)
+    await this.DbProvider.update(passwordResetTable)
       .set({ used: true })
       .where(eq(passwordResetTable.userId, userId));
   }
