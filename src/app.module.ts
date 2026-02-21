@@ -31,10 +31,9 @@ import { VehicleDetailsModule } from './vehicle-details/vehicle-details.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import {InstallmentProofsModule} from './installment-proofs/installment-proofs.module'
+import { InstallmentProofsModule } from './installment-proofs/installment-proofs.module';
 import { InvoiceModule } from './invoice/invoice.module';
 import { OneSignalModule } from '@src/one-signal/one-signal.module';
-
 
 @Module({
   imports: [
@@ -65,10 +64,10 @@ import { OneSignalModule } from '@src/one-signal/one-signal.module';
           host: configService.get('REDIS_HOST') || 'localhost',
           port: configService.get('REDIS_PORT') || 6379,
           password: configService.get('REDIS_PASSWORD'),
-          tls:
-            configService.get('NODE_ENV') === 'production'
-              ? { rejectUnauthorized: false }
-              : undefined,
+          // tls:
+          //   configService.get('NODE_ENV') === 'production'
+          //     ? { rejectUnauthorized: false }
+          //     : undefined,
           // retryStrategy: (times) => {
           //   if (times > 3) {
           //     console.error('Redis connection failed after 3 attempts');

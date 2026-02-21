@@ -284,10 +284,7 @@ export class UserService {
         await this.sixDigitCodeGenerator();
 
       if (emailVerificationRecord)
-        if (emailVerificationRecord.used === true)
-          throw new BadRequestException(
-            'This email has been used, please try another email',
-          );
+        
 
       if ((emailVerificationRecord && emailVerificationRecord.used) === false) {
         const saveCodeRecord =
