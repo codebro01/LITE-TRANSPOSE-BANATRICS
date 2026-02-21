@@ -10,11 +10,12 @@ import { EmailSenderService } from '@src/email/email-sender.service';
     attempts: 3, 
     backoff:{
       type: 'exponential', 
-      delay: 7000, 
+      delay: 2000, 
 
     },
     removeOnComplete: true, 
-    removeOnFail: false
+    removeOnFail: false, 
+    delay: 1100, 
   }})], 
   providers: [EmailService, EmailTemplate, EmailProcessor, EmailSenderService], 
   exports:[EmailService, EmailTemplate, EmailSenderService]
