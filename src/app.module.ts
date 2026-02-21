@@ -61,25 +61,25 @@ import { OneSignalModule } from '@src/one-signal/one-signal.module';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         redis: {
-          host: configService.get('REDIS_HOST') || 'localhost',
-          port: configService.get('REDIS_PORT') || 6379,
+          host: configService.get('REDIS_HOST'),
+          port: Number(configService.get('REDIS_PORT')) || 6379,
           password: configService.get('REDIS_PASSWORD'),
-          // tls:
-          //   configService.get('NODE_ENV') === 'production'
-          //     ? { rejectUnauthorized: false }
-          //     : undefined,
-          // retryStrategy: (times) => {
-          //   if (times > 3) {
-          //     console.error('Redis connection failed after 3 attempts');
-          //     return null;
-          //   }
-          //   return Math.min(times * 1000, 3000);
-          // },
-          // connectTimeout: 5000,
+          enableReadyCheck: false,
+          maxRetriesPerRequest: null,
+          enableOfflineQueue: true,
+          keepAlive: 10000,
+          connectTimeout: 10000,
+          disconnectTimeout: 2000,
+          retryStrategy: (times) => {
+            console.log(`Redis retry attempt: ${times}`);
+            return 2000; // always retry every 2 seconds, no backoff
+          },
+          reconnectOnError: () => true, // reconnect on any error
         },
       }),
       inject: [ConfigService],
-    }),
+    })
+    ,
     ScheduleModule.forRoot(),
     UserModule,
     AuthModule,
