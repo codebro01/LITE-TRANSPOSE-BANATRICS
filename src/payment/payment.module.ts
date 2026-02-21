@@ -9,6 +9,7 @@ import { CampaignModule } from '@src/campaign/campaign.module';
 import { CatchErrorModule } from '@src/catch-error/catch-error.module';
 import { NotificationModule } from '@src/notification/notification.module';
 import { EarningModule } from '@src/earning/earning.module';
+import { OneSignalModule } from '@src/one-signal/one-signal.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { EarningModule } from '@src/earning/earning.module';
     CatchErrorModule,
     NotificationModule,
     EarningModule,
+    OneSignalModule, 
   ],
   controllers: [PaymentController],
   providers: [PaymentService, PaymentRepository],

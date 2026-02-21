@@ -26,6 +26,8 @@ import {
 import { NotificationService } from '@src/notification/notification.service';
 import { EarningRepository } from '@src/earning/repository/earning.repository';
 import { PaymentStatusType } from '@src/db';
+import { OneSignalService } from '@src/one-signal/one-signal.service';
+
 // import { CronExpression, Cron } from '@nestjs/schedule';
 
 interface VerifyPaymentResponse {
@@ -56,6 +58,7 @@ export class PaymentService {
     private campaignRepository: CampaignRepository,
     private notificationService: NotificationService,
     private earningRepository: EarningRepository,
+    private oneSignalService: OneSignalService,
   ) {
     const key = this.configService.get<string>('PAYSTACK_SECRET_KEY');
     if (!key) {
@@ -481,7 +484,7 @@ export class PaymentService {
         campaignId,
         'pending',
         userId,
-        new Date(), 
+        new Date(),
         true,
         trx,
       );
@@ -492,13 +495,19 @@ export class PaymentService {
       );
     }
 
+// await this.oneSignalService.sendNotificationToUser(
+//   campaign.,
+//   'Campaign Approved',
+//   `Your campaign with the title ${Trx.approveCampaign.campaignName} has been approved`,
+// );
+
     return {
       currentData: {
         balance: updateBalanceAndPending.balance,
         pending: updateBalanceAndPending.pending,
       },
       updateCampaignStatus,
-    };
+    }; 
   }
 
   // // ! This functions handles the deduction of money from pending (The state at which the capaign is still active) to total Amount spent (When the campaign is completed, its going to be a cron job)
@@ -551,7 +560,7 @@ export class PaymentService {
   //             campaignId,
   //             'completed',
   //             userId,
-  //             undefined, 
+  //             undefined,
   //             undefined,
   //             trx,
   //           );

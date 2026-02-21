@@ -33,6 +33,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import {InstallmentProofsModule} from './installment-proofs/installment-proofs.module'
 import { InvoiceModule } from './invoice/invoice.module';
+import { OneSignalModule } from '@src/one-signal/one-signal.module';
 
 
 @Module({
@@ -104,6 +105,7 @@ import { InvoiceModule } from './invoice/invoice.module';
     VehicleDetailsModule,
     InstallmentProofsModule,
     InvoiceModule,
+    OneSignalModule,
   ],
   controllers: [AppController, UploadController],
   providers: [
