@@ -100,6 +100,7 @@ export class EarningService {
     const earnings = await this.earningRepository.requestPayouts(
       {
         ...data,
+        reference: generateSecureRef(), 
         recipientCode: bankDetails.recipientCode,
         amount: campaign.earningPerDriver,
       },
