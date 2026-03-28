@@ -34,7 +34,6 @@ import type { Response } from 'express';
 import { NotificationService } from '@src/notification/notification.service';
 import { InitializePaymentDto } from '@src/payment/dto/initializePaymentDto';
 
-
 @ApiTags('Payments')
 @ApiBearerAuth()
 @Controller('payments')
@@ -103,7 +102,7 @@ export class PaymentController {
       ...body,
       email,
       userId,
-      role, 
+      role,
     });
 
     res.status(HttpStatus.OK).json({
@@ -269,14 +268,9 @@ export class PaymentController {
   async handleWebhook(
     @Req() req: RawBodyRequest<Request>,
     @Res() res: Response,
-    @Headers('x-paystack-signature') signature: string,
+    @Headers('verif-hash') signature: string,
   ) {
-    const payload = JSON.stringify(req.body);
-
-    const isValid = this.paymentService.verifyWebhookSignature(
-      payload,
-      signature,
-    );
+    const isValid = this.paymentService.verifyWebhookSignature(signature);
 
     if (!isValid) {
       return res
@@ -493,14 +487,14 @@ export class PaymentController {
 
   @Get('callback-test')
   @ApiExcludeEndpoint()
-  async handleCallback(@Query() query: any) {
-    const verified = await this.paymentService.verifyPayment(query.reference);
+  async handleCallback(@Query('transaction_id') transactionId: string) {
+    const verified = await this.paymentService.verifyPayment(transactionId);
 
+    // <pre>${JSON.stringify(verified.data, null, 2)}</pre>
     return `
     <html>
       <body>
         <h1>Payment ${verified.data.status}</h1>
-        <pre>${JSON.stringify(verified.data, null, 2)}</pre>
       </body>
     </html>
   `;

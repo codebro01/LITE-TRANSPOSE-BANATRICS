@@ -70,16 +70,20 @@ import { OneSignalModule } from '@src/one-signal/one-signal.module';
           keepAlive: 10000,
           connectTimeout: 10000,
           disconnectTimeout: 2000,
-          retryStrategy: (times) => {
-            console.log(`Redis retry attempt: ${times}`);
-            return 2000; // always retry every 2 seconds, no backoff
+          retryStrategy: (times: number) => {
+            if (times > 3) {
+              console.error(`Redis gave up after ${times} attempts`);
+              return null; 
+            }
+            const delay = Math.min(times * 500, 5000); 
+            console.log(`Redis retry attempt: ${times}, next in ${delay}ms`);
+            return delay;
           },
           reconnectOnError: () => true, // reconnect on any error
         },
       }),
       inject: [ConfigService],
-    })
-    ,
+    }),
     ScheduleModule.forRoot(),
     UserModule,
     AuthModule,
