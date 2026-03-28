@@ -28,4 +28,12 @@ export class VerifyBankDetailsDto {
   @IsString({ message: 'Bank code must be a string' })
   @MaxLength(10, { message: 'Bank code cannot exceed 10 characters' })
   bankCode: string;
+
+  @ApiProperty({
+    example: 'ACCESS BANK NIGERIA',
+    description: 'Name of the bank',
+  })
+  @IsNotEmpty()
+  @IsString()
+  bankName: string;
 }

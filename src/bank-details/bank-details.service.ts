@@ -10,16 +10,16 @@ import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class BankDetailsService {
-  private readonly baseUrl: string = 'https://api.paystack.co';
+  private readonly baseUrl: string = 'https://api.flutterwave.com';
   private readonly secretKey: string;
   constructor(
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     private readonly bankDetailsRepository: BankDetailsRepository,
   ) {
-    const key = this.configService.get<string>('PAYSTACK_SECRET_KEY');
+    const key = this.configService.get<string>('FLUTTERWAVE_SECRET_KEY');
     if (!key) {
-      throw new BadRequestException('Please provide paystack secretKey');
+      throw new BadRequestException('Please provide flutterwave secret Key');
     }
     this.secretKey = key;
   }
@@ -33,20 +33,35 @@ export class BankDetailsService {
 
   // * admin section
 
-  async verifyBankDetails(data: VerifyBankDetailsDto) {
+  async verifyBankDetails(data: Omit<VerifyBankDetailsDto, 'bankName'>) {
     // console.log('url before resp',
     //   `${this.baseUrl}/bank/resolve?account_number=${data.accountNumber}&bank_code=${data.bankCode}`,
     // );
-    const response = await firstValueFrom(
-      this.httpService.get(
-        `${this.baseUrl}/bank/resolve?account_number=${data.accountNumber}&bank_code=${data.bankCode}`,
-        { headers: this.getHeaders() },
+    const response: any = await firstValueFrom(
+      this.httpService.post(
+        `${this.baseUrl}v3/accounts/resolve`,
+        {
+          account_number: data.accountNumber,
+          account_bank: data.bankCode,
+        },
+        {
+          headers: this.getHeaders(),
+        },
       ),
     );
     if (!response)
       throw new BadRequestException('could not resolve account information!!!');
 
     return response;
+  }
+
+  async getBanks() {
+    const response = await firstValueFrom(
+      this.httpService.get(`${this.baseUrl}/banks/NG`, {
+        headers: this.getHeaders(),
+      }),
+    );
+    return response.data.data; // array of { id, code, name }
   }
 
   async findOneById(userId: string) {
@@ -56,13 +71,13 @@ export class BankDetailsService {
   async createTransferRecipients(data: CreateTransferRecipientDto) {
     const response = await firstValueFrom(
       this.httpService.post(
-        `${this.baseUrl}/transferrecipient`,
+        `${this.baseUrl}/v3/beneficiaries`,
         {
-          type: 'nuban',
-          name: data.accountName,
+          beneficiary_name: data.accountName,
           account_number: data.accountNumber,
-          bank_code: data.bankCode,
+          account_bank: data.bankCode,
           currency: 'NGN',
+          bank_name: data.bankName,
         },
         {
           headers: this.getHeaders(),
@@ -74,23 +89,29 @@ export class BankDetailsService {
   }
 
   async saveUserBankInformation(data: VerifyBankDetailsDto, userId: string) {
-    const getVerifiedBankDetails = await this.verifyBankDetails({
-      accountNumber: data.accountNumber,
-      bankCode: data.bankCode,
-    });
-    if (!getVerifiedBankDetails.data.status)
+    const [getVerifiedBankDetails, banks] = await Promise.all([
+
+      this.verifyBankDetails({
+        accountNumber: data.accountNumber,
+        bankCode: data.bankCode,
+      }), 
+      this.getBanks()
+    ]) 
+    if (getVerifiedBankDetails.status !== 'success')
       throw new BadRequestException(
-        'Could not pull account information using data provided',
+        'Could not fetch account information using data provided',
       );
 
     //   console.log(getVerifiedBankDetails.data)
 
-    const { account_number, account_name, bank_id } =
-      getVerifiedBankDetails.data.data;
+    const { account_number, account_name } = getVerifiedBankDetails.data;
+      const bankName = banks.find((b: any) => b.code === data.bankCode);
+
     const createTransferRecipients = await this.createTransferRecipients({
       accountName: account_name,
       accountNumber: account_number,
       bankCode: data.bankCode,
+      bankName: bankName,
     });
 
     const {
@@ -117,7 +138,6 @@ export class BankDetailsService {
           accountName: createTransferRecipients.data.data.name,
           accountNumber: accNumber,
           bankCode: bnkCode,
-          bankId: bank_id,
           recipientCode: createTransferRecipients.data.data.recipient_code,
         },
         userId,

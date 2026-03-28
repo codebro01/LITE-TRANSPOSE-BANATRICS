@@ -19,7 +19,7 @@ export const bankDetailsTable = pgTable(
     accountNumber: varchar('account_number', { length: 10 }).notNull(),
     accountName: varchar('account_name', { length: 255 }).notNull(),
     bankName: varchar('bank_name', { length: 255 }),
-    bankId: integer('bankId').notNull(),
+    bankId: integer('bankId'),
     bankCode: varchar('bank_code', { length: 10 }).notNull(),
     recipientCode: varchar('transfer_recipient_code', {
       length: 255,

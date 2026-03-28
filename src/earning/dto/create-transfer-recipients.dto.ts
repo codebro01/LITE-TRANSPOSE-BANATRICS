@@ -25,4 +25,13 @@ export class CreateTransferRecipientDto {
   @IsNotEmpty()
   @IsString()
   bankCode: string;
+
+
+  @ApiProperty({
+    example: "ACCESS BANK NIGERIA",
+    description: 'Name of the bank',
+  })
+  @IsNotEmpty()
+  @IsString()
+  bankName: string;
 }
