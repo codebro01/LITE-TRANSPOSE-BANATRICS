@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {  Inject, Injectable } from '@nestjs/common';
 import { bankDetailsInsertType, bankDetailsTable } from '@src/db';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq } from 'drizzle-orm';
@@ -25,11 +25,7 @@ export class BankDetailsRepository {
     userId: string,
     trx?: any,
   ) {
-    const isBankDetailsExist = await this.findOneById(userId);
-    if (isBankDetailsExist)
-      throw new BadRequestException(
-        'User already submitted bank account information',
-      );
+ 
     const Trx = trx || this.DbProvider;
     const [createBankDetailsRecord] = await Trx.insert(bankDetailsTable)
       .values({

@@ -39,7 +39,7 @@ export class BankDetailsService {
     // );
     const response: any = await firstValueFrom(
       this.httpService.post(
-        `${this.baseUrl}v3/accounts/resolve`,
+        `${this.baseUrl}/v3/accounts/resolve`,
         {
           account_number: data.accountNumber,
           account_bank: data.bankCode,
@@ -57,9 +57,12 @@ export class BankDetailsService {
 
   async getBanks() {
     const response = await firstValueFrom(
-      this.httpService.get(`${this.baseUrl}/banks/NG`, {
-        headers: this.getHeaders(),
-      }),
+      this.httpService.get(
+        `${this.baseUrl}/v3/banks/NG?include_provider_type=1`,
+        {
+          headers: this.getHeaders(),
+        },
+      ),
     );
     return response.data.data; // array of { id, code, name }
   }
@@ -89,36 +92,40 @@ export class BankDetailsService {
   }
 
   async saveUserBankInformation(data: VerifyBankDetailsDto, userId: string) {
-    const [getVerifiedBankDetails, banks] = await Promise.all([
+    const existingBankInfo =
+      await this.bankDetailsRepository.findOneById(userId);
 
+    if (existingBankInfo)
+      throw new BadRequestException(
+        'User already submitted bank account information, please contact customer care if you wish to change it',
+      );
+
+    const [getVerifiedBankDetails, banks] = await Promise.all([
       this.verifyBankDetails({
         accountNumber: data.accountNumber,
         bankCode: data.bankCode,
-      }), 
-      this.getBanks()
-    ]) 
-    if (getVerifiedBankDetails.status !== 'success')
+      }),
+      this.getBanks(),
+    ]);
+
+    if (getVerifiedBankDetails.data.status !== 'success')
       throw new BadRequestException(
         'Could not fetch account information using data provided',
       );
 
     //   console.log(getVerifiedBankDetails.data)
 
-    const { account_number, account_name } = getVerifiedBankDetails.data;
-      const bankName = banks.find((b: any) => b.code === data.bankCode);
+    const { account_number, account_name } = getVerifiedBankDetails.data.data;
+    const bankName = banks.find((b: any) => b.code === data.bankCode);
 
     const createTransferRecipients = await this.createTransferRecipients({
       accountName: account_name,
       accountNumber: account_number,
       bankCode: data.bankCode,
-      bankName: bankName,
+      bankName: bankName.name,
     });
 
-    const {
-      account_number: accNumber,
-      bank_code: bnkCode,
-      bank_name,
-    } = createTransferRecipients.data.data.details;
+    console.log('createTransferRecipients', createTransferRecipients);
 
     // console.log(
     //   accNumber,
@@ -134,11 +141,11 @@ export class BankDetailsService {
       await this.bankDetailsRepository.createBankDetailsRecord(
         {
           userId,
-          bankName: bank_name,
-          accountName: createTransferRecipients.data.data.name,
-          accountNumber: accNumber,
-          bankCode: bnkCode,
-          recipientCode: createTransferRecipients.data.data.recipient_code,
+          bankName: bankName.name,
+          accountName: account_name,
+          accountNumber: account_number,
+          bankCode: data.bankCode,
+          recipientCode: createTransferRecipients.data.data.id,
         },
         userId,
       );
