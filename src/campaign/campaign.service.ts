@@ -37,6 +37,8 @@ import {
   UpdateCampaignDesignDto,
 } from '@src/campaign/dto/update-campaign-design.dto';
 import { InvoiceRepository } from '@src/invoice/repository/invoice.repository';
+import { CronExpression, Cron } from '@nestjs/schedule';
+
 @Injectable()
 export class CampaignService {
   constructor(
@@ -623,20 +625,19 @@ export class CampaignService {
       });
     }
 
-
-     await this.notificationService.createNotification(
-       {
-         title: 'Campaign created successfully',
-         message:
-           'The campaign has been created successfully, please you will have to have to wait till when things such as design is ready, and other factors to be in place afterwhich it will be published',
-         variant: VariantType.INFO,
-         category: CategoryType.CAMPAIGN,
-         priority: '',
-         status: StatusType.UNREAD,
-       },
-       userId,
-       'businessOwner',
-     );
+    await this.notificationService.createNotification(
+      {
+        title: 'Campaign created successfully',
+        message:
+          'The campaign has been created successfully, please you will have to have to wait till when things such as design is ready, and other factors to be in place afterwhich it will be published',
+        variant: VariantType.INFO,
+        category: CategoryType.CAMPAIGN,
+        priority: '',
+        status: StatusType.UNREAD,
+      },
+      userId,
+      'businessOwner',
+    );
 
     return {
       message: 'Campaign published successfully',
@@ -819,7 +820,11 @@ export class CampaignService {
         daysRemaining,
         daysCompleted,
         campaignProgress: Math.round(campaignProgress * 100) / 100,
-                  printHousePhoneNumber: (campaign.driverCampaignStatus !== 'pending_approval' && campaign.driverCampaignStatus !== 'rejected') ? campaign.printHousePhoneNumber : null, 
+        printHousePhoneNumber:
+          campaign.driverCampaignStatus !== 'pending_approval' &&
+          campaign.driverCampaignStatus !== 'rejected'
+            ? campaign.printHousePhoneNumber
+            : null,
 
         notStarted: false,
         isExpired,
@@ -865,5 +870,26 @@ export class CampaignService {
       throw new InternalServerErrorException(
         'An error occured while trying to apply for the campaign',
       );
+  }
+
+  // ! campaign cron jobs
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async updateCampaignStatusToCompleted() {
+    console.log('Running campaign status update job...');
+
+    const result =
+      await this.campaignRepository.updateCampaignStatusToCompleted();
+
+    return result;
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async updateCampaignToActive() {
+    console.log('Running campaign status update job...');
+
+    const result = await this.campaignRepository.updateCampaignToActive();
+
+    return result;
   }
 }

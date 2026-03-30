@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { and, eq, sql, ne } from 'drizzle-orm';
+import { and, eq, sql, ne, gt, lte } from 'drizzle-orm';
 import { campaignTable } from '@src/db/campaigns';
 import { MaintenanceType } from '../dto/publishCampaignDto';
 import { campaignDesignsTable, driverCampaignTable, installmentProofTable } from '@src/db';
@@ -727,5 +727,51 @@ export class CampaignRepository {
       userId,
     });
     return driverCampaign;
+  }
+
+  async updateCampaignStatusToCompleted() {
+    const now = new Date();
+
+    const result = await this.DbProvider.update(campaignTable)
+      .set({
+        statusType: 'completed',
+        active: false,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          lte(campaignTable.endDate, now), // ended at or before now
+          ne(campaignTable.statusType, 'completed'),
+        ),
+      )
+      .returning({
+        id: campaignTable.id,
+        campaignName: campaignTable.campaignName,
+      });
+
+    return result;
+  }
+  async updateCampaignToActive() {
+    const now = new Date();
+
+    const result = await this.DbProvider.update(campaignTable)
+      .set({
+        active: true,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          lte(campaignTable.startDate, now),
+          gt(campaignTable.endDate, now), // hasn't ended yet
+          eq(campaignTable.statusType, 'approved'),
+          eq(campaignTable.active, false), // not already active
+        ),
+      )
+      .returning({
+        id: campaignTable.id,
+        campaignName: campaignTable.campaignName,
+      });
+
+    return result;
   }
 }
