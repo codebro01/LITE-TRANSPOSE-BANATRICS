@@ -88,7 +88,9 @@ export class PaymentService {
             amount: data.amount,
             tx_ref: generateSecureRef(),
             currency: 'NGN',
-            redirect_url: data.callback_url,
+            redirect_url:
+              data.callback_url ||
+              'https://https://banatrics-service-5gybv.ondigitalocean.app/api/v1/payments/callback-test',
             customer: {
               email: data.email,
             },
