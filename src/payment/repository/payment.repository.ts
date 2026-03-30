@@ -242,6 +242,7 @@ export class PaymentRepository {
         amount: paymentTable.amount,
         paymentMethod: paymentTable.paymentMethod,
         status: paymentTable.paymentStatus,
+        date: paymentTable.createdAt, 
       })
         .from(paymentTable)
         .where(eq(paymentTable.userId, userId));
