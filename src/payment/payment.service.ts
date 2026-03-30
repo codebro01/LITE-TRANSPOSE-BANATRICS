@@ -90,7 +90,7 @@ export class PaymentService {
             currency: 'NGN',
             redirect_url:
               data.callback_url ||
-              'https://https://banatrics-service-5gybv.ondigitalocean.app/api/v1/payments/callback-test',
+              'https://banatrics-service-5gybv.ondigitalocean.app/api/v1/payments/callback-test',
             customer: {
               email: data.email,
             },
