@@ -874,7 +874,7 @@ export class CampaignService {
 
   // ! campaign cron jobs
 
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron(CronExpression.EVERY_6_HOURS)
   async updateCampaignStatusToCompleted() {
     console.log('Cron fired at:', new Date().toISOString());
 
@@ -884,7 +884,7 @@ export class CampaignService {
     return result;
   }
 
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron(CronExpression.EVERY_6_HOURS)
   async updateCampaignToActive() {
     console.log('Cron fired at:', new Date().toISOString());
 

@@ -34,6 +34,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { InstallmentProofsModule } from './installment-proofs/installment-proofs.module';
 import { InvoiceModule } from './invoice/invoice.module';
 import { OneSignalModule } from '@src/one-signal/one-signal.module';
+import { JobsService } from './jobs/jobs.service';
 
 @Module({
   imports: [
@@ -119,6 +120,7 @@ import { OneSignalModule } from '@src/one-signal/one-signal.module';
     AppService,
     NeonProvider,
     MulterService,
+    JobsService,
   ],
 })
 export class AppModule {}
