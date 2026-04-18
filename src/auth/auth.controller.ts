@@ -122,7 +122,7 @@ export class AuthController {
     description: 'Unauthorized - Invalid or missing token',
   })
   @HttpCode(HttpStatus.OK)
-  async logoutUser(@Res() res: Response, @Req() req: Request) {
+  async logoutUser(@Res({passthrough: true}) res: Response, @Req() req: Request) {
     const { id: userId } = req.user;
     await this.authService.logoutUser(userId);
 
