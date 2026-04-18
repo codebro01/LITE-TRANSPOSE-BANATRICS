@@ -40,7 +40,7 @@ export class InstallmentProofRepository {
       const installmentProof = await this.DbProvider.update(
         installmentProofTable,
       )
-        .set({ ...data })
+        .set({ ...data, statusType: 'pending_approval' })
         .where(
           and(
             eq(installmentProofTable.campaignId, campaignId),

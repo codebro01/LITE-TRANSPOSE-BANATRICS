@@ -108,7 +108,7 @@ export class PaymentService {
       console.log(JSON.stringify(response.data, null, 2));
 
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
       throw new HttpException(
         error.response?.data?.message || 'Failed to initialize payment',
@@ -131,7 +131,7 @@ export class PaymentService {
       );
 
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(
         error.response?.data?.message || 'Failed to verify payment',
         error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
@@ -323,7 +323,7 @@ export class PaymentService {
       }
 
       return { status: 'success' };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Webhook processing error:', error);
       return { error: error.message };
     }
@@ -340,7 +340,7 @@ export class PaymentService {
       );
 
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(
         error.response?.data?.message || 'Failed to get transaction',
         error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
@@ -369,7 +369,7 @@ export class PaymentService {
       );
 
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(
         error.response?.data?.message || 'Failed to list transactions',
         error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
@@ -556,7 +556,7 @@ export class PaymentService {
       const result = await this.paymentRepository.listTransactions(userId);
 
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('error', error.message);
       throw new Error(error);
     }
@@ -565,7 +565,7 @@ export class PaymentService {
     try {
       const result = await this.paymentRepository.paymentDashboard(userId);
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('error', error.message);
       throw new Error(error);
     }
