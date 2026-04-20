@@ -85,7 +85,7 @@ export class PaymentService {
         this.httpService.post(
           `${this.baseUrl}/v3/payments`,
           {
-            amount: data.amount,
+            amount: String(data.amount),
             tx_ref: generateSecureRef(),
             currency: 'NGN',
             redirect_url:
