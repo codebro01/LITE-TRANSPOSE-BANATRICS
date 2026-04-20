@@ -1,1 +1,0 @@
-ALTER TABLE "notifications" ADD COLUMN "role" varchar(50) DEFAULT 'businessOwner' NOT NULL;

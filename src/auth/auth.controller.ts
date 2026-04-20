@@ -5,7 +5,7 @@ import {
   Res,
   Req,
   HttpStatus,
-  HttpCode, 
+  HttpCode,
   Get,
   UseGuards,
 } from '@nestjs/common';
@@ -20,7 +20,8 @@ import {
   ApiOperation,
   ApiBody,
   ApiBearerAuth,
-} from '@nestjs/swagger';import { UserService } from '@src/users/users.service';
+} from '@nestjs/swagger';
+import { UserService } from '@src/users/users.service';
 import omit from 'lodash.omit';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
 import { LoginThrottlerGuard } from '@src/auth/guards/login-throttler.guard';
@@ -122,7 +123,10 @@ export class AuthController {
     description: 'Unauthorized - Invalid or missing token',
   })
   @HttpCode(HttpStatus.OK)
-  async logoutUser(@Res({passthrough: true}) res: Response, @Req() req: Request) {
+  async logoutUser(
+    @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
+  ) {
     const { id: userId } = req.user;
     await this.authService.logoutUser(userId);
 

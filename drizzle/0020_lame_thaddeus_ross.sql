@@ -1,1 +1,0 @@
-ALTER TYPE "public"."package_type" ADD VALUE 'grand';

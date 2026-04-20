@@ -1,1 +1,0 @@
-ALTER TABLE "drivers" ADD COLUMN "address" varchar(255);

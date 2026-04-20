@@ -1,1 +1,0 @@
-ALTER TYPE "public"."package_type" RENAME TO "campaign_package_type";

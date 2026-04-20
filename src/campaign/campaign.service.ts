@@ -182,7 +182,8 @@ export class CampaignService {
             packageType: data.packageType,
             duration: data.duration || undefined,
             revisions: data.revisions,
-            price: data.noOfDrivers ? data.noOfDrivers * 120000 : 0,
+            // price: data.noOfDrivers ? data.noOfDrivers * 120000 : 0,
+            price: data.noOfDrivers ? data.noOfDrivers * 100 : 0,
             noOfDrivers: data.noOfDrivers ? data.noOfDrivers : 0,
             campaignName: data.campaignName,
             campaignDescriptions: data.campaignDescriptions,
@@ -346,7 +347,8 @@ export class CampaignService {
         draft = await this.campaignRepository.draftCampaign(
           {
             ...data,
-            price: data.noOfDrivers ? data.noOfDrivers * 120000 : 0,
+            // price: data.noOfDrivers ? data.noOfDrivers * 120000 : 0,
+            price: data.noOfDrivers ? data.noOfDrivers * 100 : 0,
             noOfDrivers: data.noOfDrivers ? data.noOfDrivers : 0,
             startDate: data.startDate ? new Date(data.startDate) : null,
             endDate: data.endDate ? new Date(data.endDate) : null,
@@ -441,7 +443,8 @@ export class CampaignService {
         id,
         {
           ...data,
-          price: data.noOfDrivers ? data.noOfDrivers * 120000 : 0,
+          // price: data.noOfDrivers ? data.noOfDrivers * 120000 : 0,
+          price: data.noOfDrivers ? data.noOfDrivers * 100 : 0,
           noOfDrivers: data.noOfDrivers ? data.noOfDrivers : 0,
           startDate: data.startDate ? new Date(data.startDate) : null,
           endDate: data.endDate ? new Date(data.endDate) : null,
@@ -588,7 +591,8 @@ export class CampaignService {
           id,
           {
             ...data,
-            price: data.noOfDrivers ? data.noOfDrivers * 120000 : 0,
+            // price: data.noOfDrivers ? data.noOfDrivers * 120000 : 0,
+            price: data.noOfDrivers ? data.noOfDrivers * 100 : 0,
             noOfDrivers: data.noOfDrivers ? data.noOfDrivers : 0,
             startDate: data.startDate ? new Date(data.startDate) : null,
             endDate: data.endDate ? new Date(data.endDate) : null,
