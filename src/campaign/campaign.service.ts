@@ -876,20 +876,34 @@ export class CampaignService {
 
   @Cron(CronExpression.EVERY_6_HOURS)
   async updateCampaignStatusToCompleted() {
-    console.log('Cron fired at:', new Date().toISOString());
+    try {
+      console.log('Cron fired at:', new Date().toISOString());
 
-    const result =
-      await this.campaignRepository.updateCampaignStatusToCompleted();
+      const result =
+        await this.campaignRepository.updateCampaignStatusToCompleted();
 
-    return result;
+      console.log(
+        `completed ${result.length}`,
+        result.map((campaign) => campaign.id),
+      );
+    } catch (error: any) {
+      console.log(error);
+    }
   }
 
   @Cron(CronExpression.EVERY_6_HOURS)
   async updateCampaignToActive() {
-    console.log('Cron fired at:', new Date().toISOString());
+    try {
+      console.log('Cron fired at:', new Date().toISOString());
 
-    const result = await this.campaignRepository.updateCampaignToActive();
+      const result = await this.campaignRepository.updateCampaignToActive();
 
-    return result;
+      console.log(
+        `activated ${result.length}`,
+        result.map((campaign) => campaign.id),
+      );
+    } catch (error: any) {
+      console.log(error);
+    }
   }
 }
