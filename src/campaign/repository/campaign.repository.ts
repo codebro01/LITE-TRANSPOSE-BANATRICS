@@ -741,7 +741,8 @@ export class CampaignRepository {
       .where(
         and(
           lte(campaignTable.endDate, now), // ended at or before now
-          ne(campaignTable.statusType, 'completed'),
+          eq(campaignTable.statusType, 'approved'),
+          eq(campaignTable.active, true),
         ),
       )
       .returning({
