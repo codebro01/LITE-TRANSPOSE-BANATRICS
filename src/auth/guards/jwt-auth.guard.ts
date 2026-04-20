@@ -103,15 +103,15 @@ const existingUser = await this.DbProvider.select({
 
       response.cookie('access_token', newAccessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'development' ? false : true,
-        sameSite: 'strict',
+        secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 1000 * 60 * 60, // 1h
       });
       response.cookie('refresh_token', newRefreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'development' ? false : true,
+        secure: process.env.NODE_ENV === 'production',
 
-        sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 1000 * 60 * 60 * 24 * 30, // 30d
       });
 
