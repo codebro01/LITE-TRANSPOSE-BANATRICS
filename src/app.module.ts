@@ -119,7 +119,6 @@ import { OneSignalModule } from '@src/one-signal/one-signal.module';
     AppService,
     NeonProvider,
     MulterService,
-    JobsService,
   ],
 })
 export class AppModule {}
