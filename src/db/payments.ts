@@ -22,7 +22,7 @@ export const paymentTable = pgTable('payments', {
     .notNull()
     .references(() => userTable.id, { onDelete: 'cascade' }),
   invoiceId: text('invoice_id').notNull(),
-  reference: text('reference'),
+  reference: text('reference').unique(),
   dateInitiated: timestamp('date_initiated', {
     withTimezone: true,
   }).defaultNow(),
