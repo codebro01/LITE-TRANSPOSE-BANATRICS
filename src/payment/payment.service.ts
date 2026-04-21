@@ -154,21 +154,39 @@ export class PaymentService {
     return signature === secret;
   }
 
+  async verifyWithRetry(tx_ref: string, retries = 3, delay = 3000) {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const result = await this.verifyPayment(tx_ref);
+        return result;
+      } catch (error) {
+        if (i === retries - 1) throw error;
+        await new Promise((resolve) => setTimeout(resolve, delay * (i + 1)));
+      }
+    }
+  }
+
   // ! handle post verify webhooks
 
   async postVerifyWebhookSignatures(event: any) {
     try {
       const { tx_ref, payment_type, status } = event.data;
+      console.log('tx_ref', tx_ref);
       const { channel } = event.data.authorization || {};
       const { userId, amountInNaira, invoiceId, dateInitiated } =
         event.meta_data || {};
-      console.log('got in event', event);
+
+      console.log('event', event);
+      // const verify = await this.verifyWithRetry(tx_ref);
+      // console.log('verify resp', verify);
       // const recipient_code = event.data?.recipient?.recipient_code || null;
       // const {account_number, account_name, bank_name, bank_code} = event.data.recipient.details
       switch (event.event) {
         case 'charge.completed': {
           const existingPayment =
             await this.paymentRepository.findByReference(tx_ref);
+
+          console.log('existing payment', existingPayment);
 
           if (
             existingPayment &&

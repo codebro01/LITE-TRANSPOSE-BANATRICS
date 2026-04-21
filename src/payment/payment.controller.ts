@@ -279,6 +279,8 @@ export class PaymentController {
     }
 
     const event = req.body;
+
+    console.log('got into webhook controller')
     const payment =
       await this.paymentService.postVerifyWebhookSignatures(event);
     return payment;
@@ -490,11 +492,11 @@ export class PaymentController {
   async handleCallback(@Query('transaction_id') transactionId: string) {
     const verified = await this.paymentService.verifyPayment(transactionId);
 
-    // <pre>${JSON.stringify(verified.data, null, 2)}</pre>
     return `
     <html>
-      <body>
-        <h1>Payment ${verified.data.status}</h1>
+    <body>
+    <h1>Payment ${verified.data.status}</h1>
+    <pre>${JSON.stringify(verified.data, null, 2)}</pre>
       </body>
     </html>
   `;
