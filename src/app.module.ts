@@ -3,7 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { SupabaseModule } from '@src/neon/neon.module';
+import { NeonModule } from '@src/neon/neon.module';
 import { NeonProvider } from '@src/neon/neon.provider';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -73,9 +73,9 @@ import { OneSignalModule } from '@src/one-signal/one-signal.module';
           retryStrategy: (times: number) => {
             if (times > 3) {
               console.error(`Redis gave up after ${times} attempts`);
-              return null; 
+              return null;
             }
-            const delay = Math.min(times * 500, 5000); 
+            const delay = Math.min(times * 500, 5000);
             console.log(`Redis retry attempt: ${times}, next in ${delay}ms`);
             return delay;
           },
@@ -87,7 +87,7 @@ import { OneSignalModule } from '@src/one-signal/one-signal.module';
     ScheduleModule.forRoot(),
     UserModule,
     AuthModule,
-    SupabaseModule,
+    NeonModule,
     JwtModule,
     CloudinaryModule,
     MulterModule,

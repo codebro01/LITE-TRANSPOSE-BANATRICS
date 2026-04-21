@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthRepository } from './repository/auth.repository';
 import { DbModule } from '@src/db/db.module';
-import { SupabaseModule } from '@src/neon/neon.module';
+import { NeonModule } from '@src/neon/neon.module';
 import { UserModule } from '@src/users/users.module';
 import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
 
@@ -16,7 +16,7 @@ import { JwtAuthGuard } from '@src/auth/guards/jwt-auth.guard';
       signOptions: { expiresIn: '1d' }, // token expiry
     }),
     DbModule,
-    SupabaseModule,
+    NeonModule,
     forwardRef(() => UserModule),
   ],
   controllers: [AuthController],

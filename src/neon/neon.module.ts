@@ -7,4 +7,4 @@ import { NeonProvider } from '@src/neon/neon.provider';
   providers: [NeonProvider],
   exports: [NeonProvider],
 })
-export class SupabaseModule {}
+export class NeonModule {}

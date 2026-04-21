@@ -99,13 +99,21 @@ export class PaymentService {
               userId: data.userId,
               invoiceId: generateSecureInvoiceId(),
               dateInitiated: new Date().toISOString(),
-              role: data.role,
+              role: data.role[0],
             },
           },
           { headers: this.getHeaders() },
         ),
       );
       console.log(JSON.stringify(response.data, null, 2));
+
+      // console.log('meta values:', {
+      //   amountInNaira: data.amount,
+      //   userId: data.userId,
+      //   invoiceId: 'generated',
+      //   role: data.role,
+      //   email: data.email,
+      // });
 
       return response.data;
     } catch (error: any) {
