@@ -27,6 +27,7 @@ async function bootstrap() {
       'https://www.banatrics.vercel.app',
       'https://banatrics.com',
       'https://www.banatrics.com',
+      'https://api.banatrics.com',
     ],
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
