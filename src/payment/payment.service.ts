@@ -81,6 +81,18 @@ export class PaymentService {
     },
   ) {
     try {
+
+      const pendingPayment = await this.paymentRepository.savePendingPayment({
+        userId: data.userId,
+        paymentStatus: PaymentStatusType.PENDING,
+        reference: generateSecureRef(),
+        invoiceId: generateSecureInvoiceId(), 
+        amount: data.amount
+      });
+
+      if(!pendingPayment) throw new InternalServerErrorException("Could not save pending payment")
+
+
       const response = await firstValueFrom(
         this.httpService.post(
           `${this.baseUrl}/v3/payments`,
@@ -170,11 +182,23 @@ export class PaymentService {
 
   async postVerifyWebhookSignatures(event: any) {
     try {
-      const { tx_ref, payment_type, status } = event.data;
-      console.log('tx_ref', tx_ref);
+
+      const { tx_ref, payment_type, status, created_at: dateInitiated, amount } = event.data;
+         const existingPayment =
+           await this.paymentRepository.findByReference(tx_ref);
+
+         if(!existingPayment) throw new NotFoundException("Could not find payment");
+
+         const {userId, invoiceId} = existingPayment;
+
+         if (
+           existingPayment.paymentStatus === PaymentStatusType.SUCCESS
+         ) {
+           return 'already processed';
+         }
+    
       const { channel } = event.data.authorization || {};
-      const { userId, amountInNaira, invoiceId, dateInitiated } =
-        event.meta_data || {};
+      const amountInNaira = Number(amount)
 
       console.log('event', event);
       // const verify = await this.verifyWithRetry(tx_ref);
@@ -183,19 +207,8 @@ export class PaymentService {
       // const {account_number, account_name, bank_name, bank_code} = event.data.recipient.details
       switch (event.event) {
         case 'charge.completed': {
-          const existingPayment =
-            await this.paymentRepository.findByReference(tx_ref);
+       
 
-          console.log('existing payment', existingPayment);
-
-          if (
-            existingPayment &&
-            existingPayment.paymentStatus === PaymentStatusType.SUCCESS
-          ) {
-            return 'already processed';
-          }
-
-          console.log('got in here');
           if (status === 'successful') {
             await this.paymentRepository.executeInTransaction(async (trx) => {
               if (

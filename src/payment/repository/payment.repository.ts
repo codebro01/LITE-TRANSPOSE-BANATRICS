@@ -9,6 +9,7 @@ import { CreatePaymentDto } from '@src/payment/dto/createPaymentDto';
 import {
   businessOwnerTable,
   campaignTable,
+  paymentInsertType,
   PaymentStatusType,
   paymentTable,
   userTable,
@@ -235,6 +236,12 @@ export class PaymentRepository {
     return payment;
   }
 
+
+  async savePendingPayment(data: paymentInsertType) {
+       await this.DbProvider.insert(paymentTable).values(data);   
+      return true;
+  }
+
   async listTransactions(userId: string) {
     try {
       const transactions = await this.DbProvider.select({
@@ -248,7 +255,7 @@ export class PaymentRepository {
         .where(eq(paymentTable.userId, userId));
       // if(!transactions) throw new NotFoundException('Transactions could not be fetched')
       return transactions;
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(error.message, error.status);
     }
   }
