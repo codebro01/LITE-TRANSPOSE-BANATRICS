@@ -81,11 +81,11 @@ export class PaymentService {
     },
   ) {
     try {
-
+      const reference = generateSecureRef()
       const pendingPayment = await this.paymentRepository.savePendingPayment({
         userId: data.userId,
         paymentStatus: PaymentStatusType.PENDING,
-        reference: generateSecureRef(),
+        reference,
         invoiceId: generateSecureInvoiceId(), 
         amount: data.amount
       });
@@ -98,7 +98,7 @@ export class PaymentService {
           `${this.baseUrl}/v3/payments`,
           {
             amount: String(data.amount),
-            tx_ref: generateSecureRef(),
+            tx_ref: reference,
             currency: 'NGN',
             redirect_url:
               data.callback_url ||
@@ -200,6 +200,8 @@ export class PaymentService {
       const { channel } = event.data.authorization || {};
       const amountInNaira = Number(amount)
 
+      console.log('amount In naira', amountInNaira)
+
       console.log('event', event);
       // const verify = await this.verifyWithRetry(tx_ref);
       // console.log('verify resp', verify);
@@ -219,6 +221,7 @@ export class PaymentService {
                   {
                     reference: tx_ref,
                     status: PaymentStatusType.SUCCESS,
+                    paymentMethod: payment_type, 
                   },
                   userId,
                   trx,
@@ -238,12 +241,14 @@ export class PaymentService {
                   trx,
                 );
 
-                await this.paymentRepository.updateBalance(
-                  { amount: amountInNaira },
-                  userId,
-                  trx,
-                );
               }
+
+              
+              await this.paymentRepository.updateBalance(
+                { amount },
+                userId,
+                trx,
+              );
             });
 
             await this.notificationService.createNotification(
@@ -258,6 +263,8 @@ export class PaymentService {
               userId,
               'businessOwner',
             );
+
+            console.log('operation successful')
           } else if (status === 'failed') {
             await this.paymentRepository.executeInTransaction(async (trx) => {
               await this.paymentRepository.savePayment(

@@ -8,6 +8,13 @@
       "when": 1776689697030,
       "tag": "0000_curious_star_brand",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1776792935968,
+      "tag": "0001_windy_spectrum",
+      "breakpoints": true
     }
   ]
 }

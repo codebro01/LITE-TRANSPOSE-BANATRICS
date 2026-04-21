@@ -83,14 +83,15 @@ export class PaymentRepository {
     data: {
       reference: string;
       status: PaymentStatusType;
+      paymentMethod: string, 
     },
     userId: string,
     trx?: typeof this.DbProvider,
   ) {
     const DbTrx = trx || this.DbProvider;
-    const { reference, status } = data;
+    const { reference, status, paymentMethod } = data;
     const [payment] = await DbTrx.update(paymentTable)
-      .set({ paymentStatus: status })
+      .set({ paymentStatus: status, paymentMethod })
       .where(
         and(
           eq(paymentTable.reference, reference),
