@@ -42,6 +42,12 @@ export class UserRepository {
       .where(eq(userTable.id, userId));
     return user;
   }
+  async findBusinessOwnerById(userId: string) {
+    const [user] = await this.DbProvider.select({businessName: businessOwnerTable.businessName})
+      .from(businessOwnerTable)
+      .where(eq(businessOwnerTable.userId, userId));
+    return user;
+  }
 
   async addBusinessOwnerToBusinessOwnerTable(
     data: { businessName: string; userId: string },

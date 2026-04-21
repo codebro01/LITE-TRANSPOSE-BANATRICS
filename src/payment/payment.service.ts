@@ -92,6 +92,8 @@ export class PaymentService {
 
       if(!pendingPayment) throw new InternalServerErrorException("Could not save pending payment")
 
+      const user = await this.userRepository.findBusinessOwnerById(data.userId);
+
 
       const response = await firstValueFrom(
         this.httpService.post(
@@ -105,6 +107,7 @@ export class PaymentService {
               'https://banatrics-service-5gybv.ondigitalocean.app/api/v1/payments/callback-test',
             customer: {
               email: data.email,
+              name: user.businessName, 
             },
             meta: {
               amountInNaira: data.amount,
@@ -243,7 +246,7 @@ export class PaymentService {
 
               }
 
-              
+
               await this.paymentRepository.updateBalance(
                 { amount },
                 userId,
