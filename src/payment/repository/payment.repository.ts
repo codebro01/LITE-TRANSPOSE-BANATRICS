@@ -83,7 +83,7 @@ export class PaymentRepository {
     data: {
       reference: string;
       status: PaymentStatusType;
-      paymentMethod: string, 
+      paymentMethod: string;
     },
     userId: string,
     trx?: typeof this.DbProvider,
@@ -237,10 +237,9 @@ export class PaymentRepository {
     return payment;
   }
 
-
   async savePendingPayment(data: paymentInsertType) {
-       await this.DbProvider.insert(paymentTable).values(data);   
-      return true;
+    await this.DbProvider.insert(paymentTable).values(data);
+    return true;
   }
 
   async listTransactions(userId: string) {
@@ -250,7 +249,7 @@ export class PaymentRepository {
         amount: paymentTable.amount,
         paymentMethod: paymentTable.paymentMethod,
         status: paymentTable.paymentStatus,
-        date: paymentTable.createdAt, 
+        date: paymentTable.createdAt,
       })
         .from(paymentTable)
         .where(eq(paymentTable.userId, userId));
@@ -302,6 +301,7 @@ export class PaymentRepository {
             eq(campaignTable.paymentStatus, true),
             gte(campaignTable.spentAt, startOfMonth),
             lt(campaignTable.spentAt, startOfNextMonth),
+            eq(campaignTable.statusType, 'approved'),
           ),
         );
 
