@@ -505,8 +505,7 @@ export class CampaignService {
         !data.colorPallete ||
         !data.mainMessage ||
         !data.companyLogo ||
-        !data.responseOnSeeingBanner ||
-        !data.slogan
+        !data.responseOnSeeingBanner
       )
         throw new BadRequestException(
           'startDate, campaignName, callToAction, campaignDescriptions, colorPallete, mainMessage, companyLogo, responseOnSeeingBanner, and slogal are all required to publish campaign',
