@@ -822,7 +822,11 @@ export class CampaignService {
         monthlyEarning: Math.round(monthlyEarning * 100) / 100,
         daysRemaining,
         daysCompleted,
-        campaignProgress: Math.round(campaignProgress * 100) / 100,
+        campaignProgress:
+          campaign.driverCampaignStatus === 'pending_approval' ||
+          campaign.driverCampaignStatus === 'rejected'
+            ? 0
+            : Math.round(campaignProgress * 100) / 100,
         printHousePhoneNumber:
           campaign.driverCampaignStatus !== 'pending_approval' &&
           campaign.driverCampaignStatus !== 'rejected'
