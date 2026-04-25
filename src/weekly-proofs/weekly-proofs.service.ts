@@ -59,7 +59,10 @@ export class WeeklyProofsService {
         'Weekly proofs can be uploaded after installment proofs has been approved. Please make sure you have uploaded the installment proof',
       );
 
-    const weeklyProof = await this.weeklyProofsRepository.create(dataWithWeek, userId);
+    const weeklyProof = await this.weeklyProofsRepository.create(
+      dataWithWeek,
+      userId,
+    );
 
     return weeklyProof;
   }

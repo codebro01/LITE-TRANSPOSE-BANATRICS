@@ -763,6 +763,7 @@ export class CampaignRepository {
       .where(
         and(
           lte(campaignTable.startDate, now),
+          eq(campaignTable.paymentStatus, true),
           gt(campaignTable.endDate, now), // hasn't ended yet
           eq(campaignTable.statusType, 'approved'),
           eq(campaignTable.active, false), // not already active

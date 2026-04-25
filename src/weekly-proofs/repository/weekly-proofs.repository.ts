@@ -85,6 +85,7 @@ export class WeeklyProofsRepository {
     const [weeklyProof] = await this.DbProvider.update(weeklyProofTable)
       .set({
         ...data,
+        statusType: "pending_review"
       })
       .where(
         and(
