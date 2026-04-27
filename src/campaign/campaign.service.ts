@@ -38,6 +38,7 @@ import {
 } from '@src/campaign/dto/update-campaign-design.dto';
 import { InvoiceRepository } from '@src/invoice/repository/invoice.repository';
 import { CronExpression, Cron } from '@nestjs/schedule';
+import { InstallmentProofRepository } from '@src/installment-proofs/repository/installment-proofs.repository';
 
 @Injectable()
 export class CampaignService {
@@ -49,6 +50,7 @@ export class CampaignService {
     private readonly paymentService: PaymentService,
     private readonly paymentRepository: PaymentRepository,
     private readonly InvoiceRepository: InvoiceRepository,
+    private readonly installmentProofRepository: InstallmentProofRepository,
   ) {}
 
   //!===================================business owner db calls ===========================================//
@@ -769,13 +771,15 @@ export class CampaignService {
     const campaigns =
       await this.campaignRepository.getDriverCampaignsById(userId);
 
-    const calc = campaigns.map((campaign) => {
-      const totalEarning = campaign.totalEarning || 0;
-      const duration = campaign.duration || 0;
-
-      const monthlyEarning = totalEarning / (duration / 30);
-
-      if (!campaign.startDate) {
+      
+      const calc = await Promise.all(
+         campaigns.map( async (campaign) => {
+        const totalEarning = campaign.totalEarning || 0;
+        const duration = campaign.duration || 0;
+        
+        const monthlyEarning = totalEarning / (duration / 30);
+        
+        if (!campaign.startDate) {
         return {
           ...campaign,
           monthlyEarning,
@@ -789,9 +793,12 @@ export class CampaignService {
 
       const startDate = new Date(campaign.startDate);
       const today = new Date();
+      
+      const campaignId: string = campaign.campaignId || '';
 
+      const installmentProof = await this.installmentProofRepository.getApprovedInstallmentProof(campaignId, userId)
       // Campaign hasn't started yet
-      if (today < startDate) {
+      if (today < startDate || !installmentProof ) {
         const daysUntilStart = Math.ceil(
           (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
         );
@@ -817,11 +824,17 @@ export class CampaignService {
       const campaignProgress = Math.min(100, (daysCompleted / duration) * 100);
       const isExpired = daysCompleted >= duration;
 
+
+      console.log('this is the drivers campaign', campaign);
+
       return {
         ...campaign,
         monthlyEarning: Math.round(monthlyEarning * 100) / 100,
         daysRemaining,
-        daysCompleted,
+        daysCompleted: campaign.driverCampaignStatus === 'pending_approval' ||
+          campaign.driverCampaignStatus === 'rejected'
+            ? 0
+            : daysCompleted,
         campaignProgress:
           campaign.driverCampaignStatus === 'pending_approval' ||
           campaign.driverCampaignStatus === 'rejected'
@@ -836,8 +849,9 @@ export class CampaignService {
         notStarted: false,
         isExpired,
       };
-    });
+    })
 
+      )
     return calc;
   }
 

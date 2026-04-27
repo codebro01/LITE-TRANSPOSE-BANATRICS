@@ -8,8 +8,9 @@ import { NotificationModule } from '@src/notification/notification.module';
 import { PackageModule } from '@src/package/package.module';
 import { PaymentModule } from '@src/payment/payment.module';
 import { InvoiceModule } from '@src/invoice/invoice.module';
+import { InstallmentProofsModule } from '@src/installment-proofs/installment-proofs.module';
 @Module({
-  imports: [NotificationModule, PackageModule, forwardRef(() => PaymentModule), InvoiceModule],
+  imports: [NotificationModule, PackageModule, forwardRef(() => PaymentModule), InvoiceModule, InstallmentProofsModule],
   controllers: [CampaignController],
   providers: [CampaignService,CloudinaryService,  CampaignRepository, DbProvider],
   exports: [CampaignRepository, CampaignService],
