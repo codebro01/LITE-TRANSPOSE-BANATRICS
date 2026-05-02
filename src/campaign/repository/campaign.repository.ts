@@ -621,7 +621,10 @@ export class CampaignRepository {
       )
       .leftJoin(
         installmentProofTable,
-        eq(installmentProofTable.campaignId, driverCampaignTable.campaignId),
+        and(
+          eq(installmentProofTable.campaignId, driverCampaignTable.campaignId),
+          eq(installmentProofTable.userId, userId),
+        ),
       )
       .leftJoin(
         campaignDesignsTable,

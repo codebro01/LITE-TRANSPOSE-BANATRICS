@@ -75,27 +75,27 @@ export class WeeklyProofsService {
       userId,
     );
 
-     const admins = await this.userRepository.getAllAdmins();
-     const campaign = await this.campaignRepository.findCampaignByCampaignId(
-       weeklyProof.campaignId,
-     );
+    const admins = await this.userRepository.getAllAdmins();
+    const campaign = await this.campaignRepository.findCampaignByCampaignId(
+      weeklyProof.campaignId,
+    );
 
-     await Promise.all([
-       ...admins.map((admin) =>
-         this.notificationService.createNotification(
-           {
-             title: 'New Weekly Proof Submission',
-             message: `New weekly proof submission for campaign titled ${campaign.campaignName}, please check for approval`,
-             variant: VariantType.INFO,
-             category: CategoryType.CAMPAIGN,
-             priority: '',
-             status: StatusType.UNREAD,
-           },
-           admin.userId,
-           'admin',
-         ),
-       ),
-     ]);
+    await Promise.all([
+      ...admins.map((admin) =>
+        this.notificationService.createNotification(
+          {
+            title: 'New Weekly Proof Submission',
+            message: `New weekly proof submission for campaign titled ${campaign.campaignName}, please check for approval`,
+            variant: VariantType.INFO,
+            category: CategoryType.CAMPAIGN,
+            priority: '',
+            status: StatusType.UNREAD,
+          },
+          admin.userId,
+          'admin',
+        ),
+      ),
+    ]);
 
     return weeklyProof;
   }
