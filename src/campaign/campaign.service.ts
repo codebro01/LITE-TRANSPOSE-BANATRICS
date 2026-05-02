@@ -39,6 +39,7 @@ import {
 import { InvoiceRepository } from '@src/invoice/repository/invoice.repository';
 import { CronExpression, Cron } from '@nestjs/schedule';
 import { InstallmentProofRepository } from '@src/installment-proofs/repository/installment-proofs.repository';
+import { UserRepository } from '@src/users/repository/user.repository';
 
 @Injectable()
 export class CampaignService {
@@ -51,6 +52,7 @@ export class CampaignService {
     private readonly paymentRepository: PaymentRepository,
     private readonly InvoiceRepository: InvoiceRepository,
     private readonly installmentProofRepository: InstallmentProofRepository,
+    private readonly userRepository: UserRepository,
   ) {}
 
   //!===================================business owner db calls ===========================================//
@@ -231,19 +233,37 @@ export class CampaignService {
 
     // Calculate end date by adding days to start date
 
-    await this.notificationService.createNotification(
-      {
-        title: 'Campaign created successfully',
-        message:
-          'The campaign has been created successfully, please you will have to have to wait till when things such as design is ready, and other factors to be in place afterwhich it will be published',
-        variant: VariantType.INFO,
-        category: CategoryType.CAMPAIGN,
-        priority: '',
-        status: StatusType.UNREAD,
-      },
-      userId,
-      'businessOwner',
-    );
+    const admins = await this.userRepository.getAllAdmins();
+
+    await Promise.all([
+      this.notificationService.createNotification(
+        {
+          title: 'Campaign created successfully',
+          message:
+            'The campaign has been created successfully, please you will have to have to wait till when things such as design is ready, and other factors to be in place afterwhich it will be published',
+          variant: VariantType.INFO,
+          category: CategoryType.CAMPAIGN,
+          priority: '',
+          status: StatusType.UNREAD,
+        },
+        userId,
+        'businessOwner',
+      ),
+      ...admins.map((admin) =>
+        this.notificationService.createNotification(
+          {
+            title: 'New campaign created, please check for approval',
+            message: `New campaign created with the title ${data.campaignName}, please check for approval`,
+            variant: VariantType.INFO,
+            category: CategoryType.CAMPAIGN,
+            priority: '',
+            status: StatusType.UNREAD,
+          },
+          admin.userId,
+          'admin',
+        ),
+      ),
+    ]);
 
     return {
       message: 'Campaign created and published successfully',
@@ -630,19 +650,37 @@ export class CampaignService {
       });
     }
 
-    await this.notificationService.createNotification(
-      {
-        title: 'Campaign created successfully',
-        message:
-          'The campaign has been created successfully, please you will have to have to wait till when things such as design is ready, and other factors to be in place afterwhich it will be published',
-        variant: VariantType.INFO,
-        category: CategoryType.CAMPAIGN,
-        priority: '',
-        status: StatusType.UNREAD,
-      },
-      userId,
-      'businessOwner',
-    );
+ const admins = await this.userRepository.getAllAdmins();
+
+ await Promise.all([
+   this.notificationService.createNotification(
+     {
+       title: 'Campaign created successfully',
+       message:
+         'The campaign has been created successfully, please you will have to have to wait till when things such as design is ready, and other factors to be in place afterwhich it will be published',
+       variant: VariantType.INFO,
+       category: CategoryType.CAMPAIGN,
+       priority: '',
+       status: StatusType.UNREAD,
+     },
+     userId,
+     'businessOwner',
+   ),
+   ...admins.map((admin) =>
+     this.notificationService.createNotification(
+       {
+         title: 'New campaign created, please check for approval',
+         message: `New campaign created with the title ${data.campaignName}, please check for approval`,
+         variant: VariantType.INFO,
+         category: CategoryType.CAMPAIGN,
+         priority: '',
+         status: StatusType.UNREAD,
+       },
+       admin.userId,
+       'admin',
+     ),
+   ),
+ ]);
 
     return {
       message: 'Campaign published successfully',
@@ -738,6 +776,50 @@ export class CampaignService {
         data,
         campaignId,
       );
+
+    if(data.approvalStatus === CampaignDesignStatusType.APPROVED)  {
+      const admins = await this.userRepository.getAllAdmins();
+      const campaign = await this.campaignRepository.findCampaignByCampaignId(campaignId);
+
+      await Promise.all([
+        ...admins.map((admin) =>
+          this.notificationService.createNotification(
+            {
+              title: 'Campaign Design approved',
+              message: `The design for the campaign titled ${campaign.campaignName} has been approved`,
+              variant: VariantType.INFO,
+              category: CategoryType.CAMPAIGN,
+              priority: '',
+              status: StatusType.UNREAD,
+            },
+            admin.userId,
+            'admin',
+          ),
+        ),
+      ]);
+    }
+    if(data.approvalStatus === CampaignDesignStatusType.REJECT)  {
+      const admins = await this.userRepository.getAllAdmins();
+      const campaign = await this.campaignRepository.findCampaignByCampaignId(campaignId);
+
+      await Promise.all([
+        ...admins.map((admin) =>
+          this.notificationService.createNotification(
+            {
+              title: 'Campaign Design Rejected',
+              message: `The design for the campaign titled ${campaign.campaignName} has been rejected`,
+              variant: VariantType.INFO,
+              category: CategoryType.CAMPAIGN,
+              priority: '',
+              status: StatusType.UNREAD,
+            },
+            admin.userId,
+            'admin',
+          ),
+        ),
+      ]);
+    }
+
     return approveOrReject;
   }
 
@@ -771,87 +853,92 @@ export class CampaignService {
     const campaigns =
       await this.campaignRepository.getDriverCampaignsById(userId);
 
-      
-      const calc = await Promise.all(
-         campaigns.map( async (campaign) => {
+    const calc = await Promise.all(
+      campaigns.map(async (campaign) => {
         const totalEarning = campaign.totalEarning || 0;
         const duration = campaign.duration || 0;
-        
+
         const monthlyEarning = totalEarning / (duration / 30);
-        
+
         if (!campaign.startDate) {
-        return {
-          ...campaign,
-          monthlyEarning,
-          daysRemaining: duration,
-          daysCompleted: 0,
-          campaignProgress: 0,
-          isExpired: false,
-          notStarted: true,
-        };
-      }
+          return {
+            ...campaign,
+            monthlyEarning,
+            daysRemaining: duration,
+            daysCompleted: 0,
+            campaignProgress: 0,
+            isExpired: false,
+            notStarted: true,
+          };
+        }
 
-      const startDate = new Date(campaign.startDate);
-      const today = new Date();
-      
-      const campaignId: string = campaign.campaignId || '';
+        const startDate = new Date(campaign.startDate);
+        const today = new Date();
 
-      const installmentProof = await this.installmentProofRepository.getApprovedInstallmentProof(campaignId, userId)
-      // Campaign hasn't started yet
-      if (today < startDate || !installmentProof ) {
-        const daysUntilStart = Math.ceil(
-          (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+        const campaignId: string = campaign.campaignId || '';
+
+        const installmentProof =
+          await this.installmentProofRepository.getApprovedInstallmentProof(
+            campaignId,
+            userId,
+          );
+        // Campaign hasn't started yet
+        if (today < startDate || !installmentProof) {
+          const daysUntilStart = Math.ceil(
+            (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+          );
+
+          return {
+            ...campaign,
+            monthlyEarning: Math.round(monthlyEarning * 100) / 100,
+            daysRemaining: duration, // Full duration remains
+            daysCompleted: 0,
+            campaignProgress: 0,
+            daysUntilStart, // New field showing when it starts
+            notStarted: true,
+            isExpired: false,
+          };
+        }
+
+        // Campaign has started
+        const daysCompleted = Math.floor(
+          (today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
         );
+
+        const daysRemaining = Math.max(0, duration - daysCompleted);
+        const campaignProgress = Math.min(
+          100,
+          (daysCompleted / duration) * 100,
+        );
+        const isExpired = daysCompleted >= duration;
+
+        console.log('this is the drivers campaign', campaign);
 
         return {
           ...campaign,
           monthlyEarning: Math.round(monthlyEarning * 100) / 100,
-          daysRemaining: duration, // Full duration remains
-          daysCompleted: 0,
-          campaignProgress: 0,
-          daysUntilStart, // New field showing when it starts
-          notStarted: true,
-          isExpired: false,
+          daysRemaining,
+          daysCompleted:
+            campaign.driverCampaignStatus === 'pending_approval' ||
+            campaign.driverCampaignStatus === 'rejected'
+              ? 0
+              : daysCompleted,
+          campaignProgress:
+            campaign.driverCampaignStatus === 'pending_approval' ||
+            campaign.driverCampaignStatus === 'rejected'
+              ? 0
+              : Math.round(campaignProgress * 100) / 100,
+          printHousePhoneNumber:
+            campaign.driverCampaignStatus !== 'pending_approval' &&
+            campaign.driverCampaignStatus !== 'rejected'
+              ? campaign.printHousePhoneNumber
+              : null,
+
+          notStarted: false,
+          isExpired,
         };
-      }
-
-      // Campaign has started
-      const daysCompleted = Math.floor(
-        (today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
-
-      const daysRemaining = Math.max(0, duration - daysCompleted);
-      const campaignProgress = Math.min(100, (daysCompleted / duration) * 100);
-      const isExpired = daysCompleted >= duration;
-
-
-      console.log('this is the drivers campaign', campaign);
-
-      return {
-        ...campaign,
-        monthlyEarning: Math.round(monthlyEarning * 100) / 100,
-        daysRemaining,
-        daysCompleted: campaign.driverCampaignStatus === 'pending_approval' ||
-          campaign.driverCampaignStatus === 'rejected'
-            ? 0
-            : daysCompleted,
-        campaignProgress:
-          campaign.driverCampaignStatus === 'pending_approval' ||
-          campaign.driverCampaignStatus === 'rejected'
-            ? 0
-            : Math.round(campaignProgress * 100) / 100,
-        printHousePhoneNumber:
-          campaign.driverCampaignStatus !== 'pending_approval' &&
-          campaign.driverCampaignStatus !== 'rejected'
-            ? campaign.printHousePhoneNumber
-            : null,
-
-        notStarted: false,
-        isExpired,
-      };
-    })
-
-      )
+      }),
+    );
     return calc;
   }
 
@@ -879,7 +966,7 @@ export class CampaignService {
       );
 
     const existingCampaign =
-      await this.campaignRepository.getAllActiveDriverCampaigns(userId);
+      await this.campaignRepository.getAllApprovedDriverCampaigns(userId);
     console.log('existing campaign', existingCampaign);
     if (existingCampaign && existingCampaign.length > 0)
       throw new BadRequestException(
@@ -891,6 +978,27 @@ export class CampaignService {
       throw new InternalServerErrorException(
         'An error occured while trying to apply for the campaign',
       );
+
+       const admins = await this.userRepository.getAllAdmins();
+       const campaign =
+         await this.campaignRepository.findCampaignByCampaignId(data.campaignId);
+
+       await Promise.all([
+         ...admins.map((admin) =>
+           this.notificationService.createNotification(
+             {
+               title: 'New Driver campaign application',
+               message: `New driver application for campaign titled ${campaign.campaignName}, please check for approval`,
+               variant: VariantType.INFO,
+               category: CategoryType.CAMPAIGN,
+               priority: '',
+               status: StatusType.UNREAD,
+             },
+             admin.userId,
+             'admin',
+           ),
+         ),
+       ]);
   }
 
   // ! campaign cron jobs

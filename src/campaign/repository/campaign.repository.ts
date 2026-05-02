@@ -657,14 +657,42 @@ export class CampaignRepository {
       requirements: campaignTable.requirements,
       description: campaignTable.campaignDescriptions,
       totalEarning: campaignTable.earningPerDriver,
+      campaignStatus: driverCampaignTable.campaignStatus, 
     })
       .from(driverCampaignTable)
       .where(
         and(
           eq(driverCampaignTable.userId, userId),
           eq(driverCampaignTable.active, true),
-          // eq(driverCampaignTable.campaignStatus, 'approved'),
           ne(driverCampaignTable.campaignStatus, 'completed'),
+        ),
+      )
+      .leftJoin(
+        campaignTable,
+        eq(driverCampaignTable.campaignId, campaignTable.id),
+      );
+
+    return campaigns;
+  }
+  async getAllApprovedDriverCampaigns(userId: string) {
+    const campaigns = await this.DbProvider.select({
+      activeStatus: driverCampaignTable.active,
+      title: campaignTable.campaignName,
+      state: campaignTable.state,
+      driverCampaignStatus: driverCampaignTable.campaignStatus,
+      startDate: campaignTable.startDate,
+      duration: campaignTable.duration,
+      availability: campaignTable.availability,
+      requirements: campaignTable.requirements,
+      description: campaignTable.campaignDescriptions,
+      totalEarning: campaignTable.earningPerDriver,
+      campaignStatus: driverCampaignTable.campaignStatus, 
+    })
+      .from(driverCampaignTable)
+      .where(
+        and(
+          eq(driverCampaignTable.userId, userId),
+          eq(driverCampaignTable.campaignStatus, 'approved'),
         ),
       )
       .leftJoin(

@@ -2,12 +2,23 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { WeeklyProofsRepository } from '@src/weekly-proofs/repository/weekly-proofs.repository';
 import { weeklyProofInsertType } from '@src/db';
 import { InstallmentProofRepository } from '@src/installment-proofs/repository/installment-proofs.repository';
+import { CampaignRepository } from '@src/campaign/repository/campaign.repository';
+import { UserRepository } from '@src/users/repository/user.repository';
+import { NotificationService } from '@src/notification/notification.service';
+import {
+  CategoryType,
+  StatusType,
+  VariantType,
+} from '@src/notification/dto/createNotificationDto';
 
 @Injectable()
 export class WeeklyProofsService {
   constructor(
     private readonly weeklyProofsRepository: WeeklyProofsRepository,
     private readonly installmentProofRepository: InstallmentProofRepository,
+    private readonly campaignRepository: CampaignRepository,
+    private readonly userRepository: UserRepository,
+    private readonly notificationService: NotificationService,
   ) {}
   async create(data: Omit<weeklyProofInsertType, 'userId'>, userId: string) {
     const today = new Date().getDay();
@@ -64,6 +75,28 @@ export class WeeklyProofsService {
       userId,
     );
 
+     const admins = await this.userRepository.getAllAdmins();
+     const campaign = await this.campaignRepository.findCampaignByCampaignId(
+       weeklyProof.campaignId,
+     );
+
+     await Promise.all([
+       ...admins.map((admin) =>
+         this.notificationService.createNotification(
+           {
+             title: 'New Weekly Proof Submission',
+             message: `New weekly proof submission for campaign titled ${campaign.campaignName}, please check for approval`,
+             variant: VariantType.INFO,
+             category: CategoryType.CAMPAIGN,
+             priority: '',
+             status: StatusType.UNREAD,
+           },
+           admin.userId,
+           'admin',
+         ),
+       ),
+     ]);
+
     return weeklyProof;
   }
 
@@ -92,6 +125,28 @@ export class WeeklyProofsService {
       weeklyProofId,
       userId,
     );
+
+    const admins = await this.userRepository.getAllAdmins();
+    const campaign = await this.campaignRepository.findCampaignByCampaignId(
+      weeklyProof.campaignId,
+    );
+
+    await Promise.all([
+      ...admins.map((admin) =>
+        this.notificationService.createNotification(
+          {
+            title: 'New Weekly Proof Submission',
+            message: `New Weekly proof submission for campaign titled ${campaign.campaignName}, please check for approval`,
+            variant: VariantType.INFO,
+            category: CategoryType.CAMPAIGN,
+            priority: '',
+            status: StatusType.UNREAD,
+          },
+          admin.userId,
+          'admin',
+        ),
+      ),
+    ]);
     return weeklyProof;
   }
 

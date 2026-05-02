@@ -10,6 +10,7 @@ import {
   userSelectType,
   driverTable,
   driverInsertType,
+  adminTable,
 } from '@src/db/users';
 import { addBusinessOwnerRoleDto } from '@src/users/dto/add-business-owner-role.dto';
 import { AddDriverRoleDto } from '@src/users/dto/add-driver-role.dto';
@@ -41,6 +42,12 @@ export class UserRepository {
       .from(userTable)
       .where(eq(userTable.id, userId));
     return user;
+  }
+
+  async getAllAdmins() {
+    const admins = await this.DbProvider.select()
+      .from(adminTable)
+    return admins;
   }
   async findBusinessOwnerById(userId: string) {
     const [user] = await this.DbProvider.select({businessName: businessOwnerTable.businessName})
