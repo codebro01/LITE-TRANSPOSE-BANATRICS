@@ -3,7 +3,9 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { and, eq, sql, ne, gt, lte } from 'drizzle-orm';
 import { campaignTable } from '@src/db/campaigns';
 import { MaintenanceType } from '../dto/publishCampaignDto';
-import { campaignDesignsTable, driverCampaignTable, installmentProofTable } from '@src/db';
+import { campaignDesignsTable, driverCampaignTable, installmentProofTable
+  
+ } from '@src/db';
 import {
   CreateDriverCampaignDto,
   DriverCampaignStatusType,
@@ -647,6 +649,7 @@ export class CampaignRepository {
       );
     return campaign;
   }
+ 
 
   async getAllActiveDriverCampaigns(userId: string) {
     const campaigns = await this.DbProvider.select({
@@ -660,7 +663,7 @@ export class CampaignRepository {
       requirements: campaignTable.requirements,
       description: campaignTable.campaignDescriptions,
       totalEarning: campaignTable.earningPerDriver,
-      campaignStatus: driverCampaignTable.campaignStatus, 
+      campaignStatus: driverCampaignTable.campaignStatus,
     })
       .from(driverCampaignTable)
       .where(
@@ -689,7 +692,7 @@ export class CampaignRepository {
       requirements: campaignTable.requirements,
       description: campaignTable.campaignDescriptions,
       totalEarning: campaignTable.earningPerDriver,
-      campaignStatus: driverCampaignTable.campaignStatus, 
+      campaignStatus: driverCampaignTable.campaignStatus,
     })
       .from(driverCampaignTable)
       .where(

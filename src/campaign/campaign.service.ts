@@ -972,6 +972,14 @@ export class CampaignService {
       throw new BadRequestException(
         'You cannot apply for another campaign because you already have an active campaign.',
       );
+
+    const campaign = await this.campaignRepository.findCampaignByCampaignId(data.campaignId);
+    const now = new Date();
+
+    if(!campaign.startDate) throw new NotFoundException('Could not get campaign start date')
+
+    if(campaign.startDate < now) throw new BadRequestException('Cannot apply to campaign that already started');
+
     const createDriverCampaign =
       await this.campaignRepository.createDriverCampaign(data, userId);
     if (!createDriverCampaign)
@@ -980,8 +988,7 @@ export class CampaignService {
       );
 
        const admins = await this.userRepository.getAllAdmins();
-       const campaign =
-         await this.campaignRepository.findCampaignByCampaignId(data.campaignId);
+      
 
        await Promise.all([
          ...admins.map((admin) =>
