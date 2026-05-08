@@ -525,7 +525,7 @@ export class CampaignRepository {
       );
 
   const [count] = await this.DbProvider.select({
-    totalCount: sql`COUNT(*) filter (where ${campaignTable.statusType} = 'approved')`,
+    // totalCount: sql`COUNT(*) filter (where ${campaignTable.statusType} = 'approved')`,
     todayCount: sql`COUNT(*) filter (where date(${campaignTable.createdAt}) = current_date)`,
   })
     .from(campaignTable)
@@ -536,7 +536,8 @@ export class CampaignRepository {
       ),
     );
 
-    return { campaigns, ...count };
+
+    return { campaigns, ...count, totalCount: campaigns.length };
   }
 
   async driverCampaignDashboard(userId: string) {
