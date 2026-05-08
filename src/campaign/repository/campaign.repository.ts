@@ -524,17 +524,17 @@ export class CampaignRepository {
         ),
       );
 
-    const [count] = await this.DbProvider.select({
-      totalCount: sql`COUNT(*)`,
-      todayCount: sql`COUNT(*) filter (where date(${campaignTable.createdAt}) = current_date)`,
-    })
-      .from(campaignTable)
-      .where(
-        and(
-          eq(campaignTable.active, true),
-          eq(campaignTable.paymentStatus, true),
-        ),
-      );
+  const [count] = await this.DbProvider.select({
+    totalCount: sql`COUNT(*) filter (where ${campaignTable.statusType} = 'approved')`,
+    todayCount: sql`COUNT(*) filter (where date(${campaignTable.createdAt}) = current_date)`,
+  })
+    .from(campaignTable)
+    .where(
+      and(
+        eq(campaignTable.active, true),
+        eq(campaignTable.paymentStatus, true),
+      ),
+    );
 
     return { campaigns, ...count };
   }
