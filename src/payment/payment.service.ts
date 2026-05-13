@@ -200,7 +200,6 @@ export class PaymentService {
            return 'already processed';
          }
     
-      const { channel } = event.data.authorization || {};
       const amountInNaira = Number(amount)
 
       console.log('amount In naira', amountInNaira)
@@ -257,7 +256,7 @@ export class PaymentService {
             await this.notificationService.createNotification(
               {
                 title: `Your deposit of ${amountInNaira} is successfull`,
-                message: `You have successfully deposited ${amountInNaira} through ${channel} `,
+                message: `You have successfully deposited ${amountInNaira} through ${payment_type} `,
                 variant: VariantType.SUCCESS,
                 category: CategoryType.PAYMENT,
                 priority: '',
