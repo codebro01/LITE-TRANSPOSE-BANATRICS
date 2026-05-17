@@ -13,6 +13,8 @@ import {
   PasswordResetTemplateData,
   EmailVerificationTemplateData,
   EmailResponse,
+  StartCampaignTemplateData,
+  CompleteCampaignTemplateData,
 } from '@src/email/types/types';
 
 @Injectable()
@@ -119,6 +121,23 @@ export class EmailService {
           ),
         };
 
+      case EmailTemplateType.CAMPAIGN_ACTIVE:
+        return {
+          to,
+          subject: 'Verify Your Email Address',
+          html: this.emailTemplate.getCampaignStartedTemplate(
+            data as StartCampaignTemplateData,
+          ),
+        };
+      case EmailTemplateType.CAMPAIGN_COMPLETED:
+        return {
+          to,
+          subject: 'Verify Your Email Address',
+          html: this.emailTemplate.getCampaignCompletedTemplate(
+            data as CompleteCampaignTemplateData,
+          ),
+        };
+
       default:
         throw new Error(`Unknown email template: ${template}`);
     }
@@ -150,7 +169,7 @@ export class EmailService {
         success: true,
         messageId: response.data?.id,
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to send email:', error);
       return {
         success: false,
@@ -167,6 +186,8 @@ export class EmailService {
       [EmailTemplateType.CAMPAIGN_REJECTED]: 2,
       [EmailTemplateType.WELCOME]: 3,
       [EmailTemplateType.CAMPAIGN_CREATED]: 3,
+      [EmailTemplateType.CAMPAIGN_ACTIVE]: 2,
+      [EmailTemplateType.CAMPAIGN_COMPLETED]: 2,
     };
     return priorities[template] || 5;
   }

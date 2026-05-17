@@ -131,4 +131,118 @@ ${data.resetCode}            </a>
       </html>
     `;
   }
+
+  getCampaignStartedTemplate(data: {
+    campaignName: string;
+    startDate: Date;
+    endDate: Date;
+  }): string {
+    const formattedStart = data.startDate.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+    const formattedEnd = data.endDate.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+
+    return `
+    <!DOCTYPE html>
+    <html>
+      <body>
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+          <div style="background: #1a1a2e; color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="margin: 0; font-size: 26px;">🚀 Your Campaign is Live!</h1>
+          </div>
+
+          <div style="padding: 28px; background: #f9f9f9; border: 1px solid #e0e0e0;">
+            <h2 style="color: #1a1a2e;">Congratulations!</h2>
+            <p style="color: #444; line-height: 1.6;">
+              Your campaign <strong>"${data.campaignName}"</strong> has officially kicked off.
+              Drivers are hitting the road with your brand right now.
+            </p>
+
+            <div style="background: #ffffff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 16px; margin: 20px 0;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; color: #777; font-size: 13px;">Start Date</td>
+                  <td style="padding: 8px 0; color: #1a1a2e; font-weight: bold; text-align: right;">${formattedStart}</td>
+                </tr>
+                <tr style="border-top: 1px solid #f0f0f0;">
+                  <td style="padding: 8px 0; color: #777; font-size: 13px;">End Date</td>
+                  <td style="padding: 8px 0; color: #1a1a2e; font-weight: bold; text-align: right;">${formattedEnd}</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+
+          <div style="padding: 16px; text-align: center; color: #999; font-size: 12px; background: #f0f0f0; border-radius: 0 0 8px 8px;">
+            <p style="margin: 0;">You're receiving this because you launched a campaign on Banatrics.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+  }
+
+  getCampaignCompletedTemplate(data: {
+    campaignName: string;
+    startDate: Date;
+    endDate: Date;
+  }): string {
+    const formattedStart = data.startDate.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+    const formattedEnd = data.endDate.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+
+    return `
+    <!DOCTYPE html>
+    <html>
+      <body>
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+          <div style="background: #1a1a2e; color: white; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="margin: 0; font-size: 26px;">🎉 Campaign Completed!</h1>
+          </div>
+
+          <div style="padding: 28px; background: #f9f9f9; border: 1px solid #e0e0e0;">
+            <h2 style="color: #1a1a2e;">That's a wrap!</h2>
+            <p style="color: #444; line-height: 1.6;">
+              Your campaign <strong>"${data.campaignName}"</strong> has successfully run its course.
+              Thank you for advertising with Banatrics — we hope it delivered great results for your brand.
+            </p>
+
+            <div style="background: #ffffff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 16px; margin: 20px 0;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; color: #777; font-size: 13px;">Start Date</td>
+                  <td style="padding: 8px 0; color: #1a1a2e; font-weight: bold; text-align: right;">${formattedStart}</td>
+                </tr>
+                <tr style="border-top: 1px solid #f0f0f0;">
+                  <td style="padding: 8px 0; color: #777; font-size: 13px;">End Date</td>
+                  <td style="padding: 8px 0; color: #1a1a2e; font-weight: bold; text-align: right;">${formattedEnd}</td>
+                </tr>
+              </table>
+            </div>
+
+            <p style="color: #444; line-height: 1.6;">
+              Ready to keep the momentum going? Launch your next campaign and keep your brand on the move.
+            </p>
+          </div>
+
+          <div style="padding: 16px; text-align: center; color: #999; font-size: 12px; background: #f0f0f0; border-radius: 0 0 8px 8px;">
+            <p style="margin: 0;">You're receiving this because you ran a campaign on Banatrics.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+  }
 }

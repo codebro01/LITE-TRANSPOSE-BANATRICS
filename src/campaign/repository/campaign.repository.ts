@@ -783,6 +783,9 @@ export class CampaignRepository {
       .returning({
         id: campaignTable.id,
         campaignName: campaignTable.campaignName,
+        startDate: campaignTable.startDate,
+        endDate: campaignTable.endDate,
+        userId: campaignTable.userId,
       });
 
     return result;
@@ -807,8 +810,19 @@ export class CampaignRepository {
       .returning({
         id: campaignTable.id,
         campaignName: campaignTable.campaignName,
+        startDate: campaignTable.startDate, 
+        endDate: campaignTable.endDate, 
+        userId: campaignTable.userId
       });
 
     return result;
+  }
+
+  async updateSentCampaignStartEmail(campaignId: string) {
+      await this.DbProvider.update(campaignTable).set({
+        sentCampaignStartEmail: true, 
+      }).where(eq(campaignTable.id, campaignId));
+
+      return true;
   }
 }

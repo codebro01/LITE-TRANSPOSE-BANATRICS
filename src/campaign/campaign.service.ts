@@ -40,6 +40,8 @@ import { InvoiceRepository } from '@src/invoice/repository/invoice.repository';
 import { CronExpression, Cron } from '@nestjs/schedule';
 import { InstallmentProofRepository } from '@src/installment-proofs/repository/installment-proofs.repository';
 import { UserRepository } from '@src/users/repository/user.repository';
+import { EmailTemplateType } from '@src/email/types/types';
+import { EmailService } from '@src/email/email.service';
 
 @Injectable()
 export class CampaignService {
@@ -53,6 +55,7 @@ export class CampaignService {
     private readonly InvoiceRepository: InvoiceRepository,
     private readonly installmentProofRepository: InstallmentProofRepository,
     private readonly userRepository: UserRepository,
+    private readonly emailService: EmailService,
   ) {}
 
   //!===================================business owner db calls ===========================================//
@@ -650,37 +653,37 @@ export class CampaignService {
       });
     }
 
- const admins = await this.userRepository.getAllAdmins();
+    const admins = await this.userRepository.getAllAdmins();
 
- await Promise.all([
-   this.notificationService.createNotification(
-     {
-       title: 'Campaign created successfully',
-       message:
-         'The campaign has been created successfully, please you will have to have to wait till when things such as design is ready, and other factors to be in place afterwhich it will be published',
-       variant: VariantType.INFO,
-       category: CategoryType.CAMPAIGN,
-       priority: '',
-       status: StatusType.UNREAD,
-     },
-     userId,
-     'businessOwner',
-   ),
-   ...admins.map((admin) =>
-     this.notificationService.createNotification(
-       {
-         title: 'New campaign created, please check for approval',
-         message: `New campaign created with the title ${data.campaignName}, please check for approval`,
-         variant: VariantType.INFO,
-         category: CategoryType.CAMPAIGN,
-         priority: '',
-         status: StatusType.UNREAD,
-       },
-       admin.userId,
-       'admin',
-     ),
-   ),
- ]);
+    await Promise.all([
+      this.notificationService.createNotification(
+        {
+          title: 'Campaign created successfully',
+          message:
+            'The campaign has been created successfully, please you will have to have to wait till when things such as design is ready, and other factors to be in place afterwhich it will be published',
+          variant: VariantType.INFO,
+          category: CategoryType.CAMPAIGN,
+          priority: '',
+          status: StatusType.UNREAD,
+        },
+        userId,
+        'businessOwner',
+      ),
+      ...admins.map((admin) =>
+        this.notificationService.createNotification(
+          {
+            title: 'New campaign created, please check for approval',
+            message: `New campaign created with the title ${data.campaignName}, please check for approval`,
+            variant: VariantType.INFO,
+            category: CategoryType.CAMPAIGN,
+            priority: '',
+            status: StatusType.UNREAD,
+          },
+          admin.userId,
+          'admin',
+        ),
+      ),
+    ]);
 
     return {
       message: 'Campaign published successfully',
@@ -777,9 +780,10 @@ export class CampaignService {
         campaignId,
       );
 
-    if(data.approvalStatus === CampaignDesignStatusType.APPROVED)  {
+    if (data.approvalStatus === CampaignDesignStatusType.APPROVED) {
       const admins = await this.userRepository.getAllAdmins();
-      const campaign = await this.campaignRepository.findCampaignByCampaignId(campaignId);
+      const campaign =
+        await this.campaignRepository.findCampaignByCampaignId(campaignId);
 
       await Promise.all([
         ...admins.map((admin) =>
@@ -798,9 +802,10 @@ export class CampaignService {
         ),
       ]);
     }
-    if(data.approvalStatus === CampaignDesignStatusType.REJECT)  {
+    if (data.approvalStatus === CampaignDesignStatusType.REJECT) {
       const admins = await this.userRepository.getAllAdmins();
-      const campaign = await this.campaignRepository.findCampaignByCampaignId(campaignId);
+      const campaign =
+        await this.campaignRepository.findCampaignByCampaignId(campaignId);
 
       await Promise.all([
         ...admins.map((admin) =>
@@ -973,12 +978,18 @@ export class CampaignService {
         'You cannot apply for another campaign because you already have an active campaign.',
       );
 
-    const campaign = await this.campaignRepository.findCampaignByCampaignId(data.campaignId);
+    const campaign = await this.campaignRepository.findCampaignByCampaignId(
+      data.campaignId,
+    );
     const now = new Date();
 
-    if(!campaign.startDate) throw new NotFoundException('Could not get campaign start date')
+    if (!campaign.startDate)
+      throw new NotFoundException('Could not get campaign start date');
 
-    if(campaign.startDate < now) throw new BadRequestException('Cannot apply to campaign that already started');
+    if (campaign.startDate < now)
+      throw new BadRequestException(
+        'Cannot apply to campaign that already started',
+      );
 
     const createDriverCampaign =
       await this.campaignRepository.createDriverCampaign(data, userId);
@@ -987,25 +998,24 @@ export class CampaignService {
         'An error occured while trying to apply for the campaign',
       );
 
-       const admins = await this.userRepository.getAllAdmins();
-      
+    const admins = await this.userRepository.getAllAdmins();
 
-       await Promise.all([
-         ...admins.map((admin) =>
-           this.notificationService.createNotification(
-             {
-               title: 'New Driver campaign application',
-               message: `New driver application for campaign titled ${campaign.campaignName}, please check for approval`,
-               variant: VariantType.INFO,
-               category: CategoryType.CAMPAIGN,
-               priority: '',
-               status: StatusType.UNREAD,
-             },
-             admin.userId,
-             'admin',
-           ),
-         ),
-       ]);
+    await Promise.all([
+      ...admins.map((admin) =>
+        this.notificationService.createNotification(
+          {
+            title: 'New Driver campaign application',
+            message: `New driver application for campaign titled ${campaign.campaignName}, please check for approval`,
+            variant: VariantType.INFO,
+            category: CategoryType.CAMPAIGN,
+            priority: '',
+            status: StatusType.UNREAD,
+          },
+          admin.userId,
+          'admin',
+        ),
+      ),
+    ]);
   }
 
   // ! campaign cron jobs
@@ -1015,12 +1025,43 @@ export class CampaignService {
     try {
       console.log('Cron fired at:', new Date().toISOString());
 
-      const result =
+      const results =
         await this.campaignRepository.updateCampaignStatusToCompleted();
 
+
+    
+      if (results?.length) {
+        await Promise.all(
+          results.map(async (result) => {
+            const user = await this.userRepository.findUserById(result.userId);
+
+            if (!user?.[0]?.email) {
+              console.warn(
+                `No user found for campaign ${result.id}, skipping email.`,
+              );
+              return;
+            }
+
+            this.emailService.queueTemplatedEmail(
+              EmailTemplateType.CAMPAIGN_ACTIVE,
+              user[0].email,
+              {
+                campaignName: result.campaignName,
+                startDate: result.startDate,
+                endDate: result.endDate,
+              },
+            );
+
+            await this.campaignRepository.updateSentCampaignStartEmail(
+              result.id,
+            );
+          }),
+        );
+      }
+
       console.log(
-        `completed ${result.length}`,
-        result.map((campaign) => campaign.id),
+        `completed ${results.length}`,
+        results.map((campaign) => campaign.id),
       );
     } catch (error: any) {
       console.log(error);
@@ -1032,11 +1073,40 @@ export class CampaignService {
     try {
       console.log('Cron fired at:', new Date().toISOString());
 
-      const result = await this.campaignRepository.updateCampaignToActive();
+      const results = await this.campaignRepository.updateCampaignToActive();
+
+      if (results?.length) {
+        await Promise.all(
+          results.map(async (result) => {
+            const user = await this.userRepository.findUserById(result.userId);
+
+            if (!user?.[0]?.email) {
+              console.warn(
+                `No user found for campaign ${result.id}, skipping email.`,
+              );
+              return;
+            }
+
+            this.emailService.queueTemplatedEmail(
+              EmailTemplateType.CAMPAIGN_ACTIVE,
+              user[0].email,
+              {
+                campaignName: result.campaignName,
+                startDate: result.startDate,
+                endDate: result.endDate,
+              },
+            );
+
+            await this.campaignRepository.updateSentCampaignStartEmail(
+              result.id,
+            );
+          }),
+        );
+      }
 
       console.log(
-        `activated ${result.length}`,
-        result.map((campaign) => campaign.id),
+        `Activated ${results.length}`,
+        results.map((c) => c.id),
       );
     } catch (error: any) {
       console.log(error);

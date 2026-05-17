@@ -22,6 +22,8 @@ export enum EmailTemplateType {
   CAMPAIGN_REJECTED = 'campaign-rejected',
   PASSWORD_RESET = 'password-reset',
   EMAIL_VERIFICATION = 'email-verification',
+  CAMPAIGN_ACTIVE = 'campaign-active', 
+  CAMPAIGN_COMPLETED = 'campaign-completed'
 }
 
 export interface EmailResponse {
@@ -61,9 +63,22 @@ export interface EmailVerificationTemplateData {
   name: string;
 }
 
+export interface StartCampaignTemplateData {
+  campaignName: string;
+  startDate: Date;
+  endDate: Date;
+}
+export interface CompleteCampaignTemplateData {
+  campaignName: string;
+  startDate: Date;
+  endDate: Date;
+}
+
 export type EmailTemplateData =
   | WelcomeTemplateData
   | CampaignCreatedTemplateData
   | CampaignApprovedTemplateData
   | PasswordResetTemplateData
-  | EmailVerificationTemplateData;
+  | EmailVerificationTemplateData
+  | StartCampaignTemplateData
+  | CompleteCampaignTemplateData;

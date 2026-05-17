@@ -82,6 +82,7 @@ export const campaignTable = pgTable(
       .default([]),
 
     slogan: varchar('slogan', { length: 500 }),
+    sentCampaignStartEmail: boolean().default(false), 
     printHousePhoneNo: varchar('print_house_phone_no', { length: 20 }),
     spentAt: timestamp('spent_at', { mode: 'date', withTimezone: true }),
     createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })

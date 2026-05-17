@@ -778,7 +778,7 @@ export class UserService {
       }
 
       return { email: payload.email };
-    } catch (error) {
+    } catch (error: any) {
       throw new UnauthorizedException('Invalid or expired reset token:', error);
     }
   }
