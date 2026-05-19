@@ -233,6 +233,7 @@ export class CampaignRepository {
         earningPerDriver: false,
       },
       with: {
+        installmentProof: true, 
         weeklyProofs: true,
         campaignDesigns: true,
       },

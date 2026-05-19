@@ -15,6 +15,13 @@
       "when": 1776792935968,
       "tag": "0001_windy_spectrum",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779020152749,
+      "tag": "0002_salty_red_wolf",
+      "breakpoints": true
     }
   ]
 }

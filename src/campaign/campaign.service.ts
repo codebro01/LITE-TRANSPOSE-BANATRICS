@@ -1043,7 +1043,7 @@ export class CampaignService {
             }
 
             this.emailService.queueTemplatedEmail(
-              EmailTemplateType.CAMPAIGN_ACTIVE,
+              EmailTemplateType.CAMPAIGN_COMPLETED,
               user[0].email,
               {
                 campaignName: result.campaignName,
