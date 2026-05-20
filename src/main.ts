@@ -28,6 +28,7 @@ async function bootstrap() {
       'https://banatrics.com',
       'https://www.banatrics.com',
       'https://api.banatrics.com',
+      'https://backend.banatrics.com',
     ],
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',

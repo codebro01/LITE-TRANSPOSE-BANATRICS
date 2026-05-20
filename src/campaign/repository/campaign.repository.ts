@@ -3,9 +3,11 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { and, eq, sql, ne, gt, lte } from 'drizzle-orm';
 import { campaignTable } from '@src/db/campaigns';
 import { MaintenanceType } from '../dto/publishCampaignDto';
-import { campaignDesignsTable, driverCampaignTable, installmentProofTable
-  
- } from '@src/db';
+import {
+  campaignDesignsTable,
+  driverCampaignTable,
+  installmentProofTable,
+} from '@src/db';
 import {
   CreateDriverCampaignDto,
   DriverCampaignStatusType,
@@ -233,7 +235,7 @@ export class CampaignRepository {
         earningPerDriver: false,
       },
       with: {
-        installmentProof: true, 
+        installmentProof: true,
         weeklyProofs: true,
         campaignDesigns: true,
       },
@@ -525,18 +527,17 @@ export class CampaignRepository {
         ),
       );
 
-  const [count] = await this.DbProvider.select({
-    // totalCount: sql`COUNT(*) filter (where ${campaignTable.statusType} = 'approved')`,
-    todayCount: sql`COUNT(*) filter (where date(${campaignTable.createdAt}) = current_date)`,
-  })
-    .from(campaignTable)
-    .where(
-      and(
-        eq(campaignTable.active, true),
-        eq(campaignTable.paymentStatus, true),
-      ),
-    );
-
+    const [count] = await this.DbProvider.select({
+      // totalCount: sql`COUNT(*) filter (where ${campaignTable.statusType} = 'approved')`,
+      todayCount: sql`COUNT(*) filter (where date(${campaignTable.createdAt}) = current_date)`,
+    })
+      .from(campaignTable)
+      .where(
+        and(
+          eq(campaignTable.active, true),
+          eq(campaignTable.paymentStatus, true),
+        ),
+      );
 
     return { campaigns, ...count, totalCount: campaigns.length };
   }
@@ -651,7 +652,6 @@ export class CampaignRepository {
       );
     return campaign;
   }
- 
 
   async getAllActiveDriverCampaigns(userId: string) {
     const campaigns = await this.DbProvider.select({
@@ -811,19 +811,21 @@ export class CampaignRepository {
       .returning({
         id: campaignTable.id,
         campaignName: campaignTable.campaignName,
-        startDate: campaignTable.startDate, 
-        endDate: campaignTable.endDate, 
-        userId: campaignTable.userId
+        startDate: campaignTable.startDate,
+        endDate: campaignTable.endDate,
+        userId: campaignTable.userId,
       });
 
     return result;
   }
 
   async updateSentCampaignStartEmail(campaignId: string) {
-      await this.DbProvider.update(campaignTable).set({
-        sentCampaignStartEmail: true, 
-      }).where(eq(campaignTable.id, campaignId));
+    await this.DbProvider.update(campaignTable)
+      .set({
+        sentCampaignStartEmail: true,
+      })
+      .where(eq(campaignTable.id, campaignId));
 
-      return true;
+    return true;
   }
 }
