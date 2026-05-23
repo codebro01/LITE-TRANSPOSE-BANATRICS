@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { WeeklyProofsRepository } from '@src/weekly-proofs/repository/weekly-proofs.repository';
-import { campaignStatusType, weeklyProofInsertType } from '@src/db';
+import {  weeklyProofInsertType } from '@src/db';
 import { InstallmentProofRepository } from '@src/installment-proofs/repository/installment-proofs.repository';
 import { CampaignRepository } from '@src/campaign/repository/campaign.repository';
 import { UserRepository } from '@src/users/repository/user.repository';
