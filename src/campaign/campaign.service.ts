@@ -1020,7 +1020,7 @@ export class CampaignService {
 
   // ! campaign cron jobs
 
-  @Cron(CronExpression.EVERY_30_MINUTES)
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async updateCampaignStatusToCompleted() {
     try {
       console.log('Cron fired at:', new Date().toISOString());
@@ -1028,43 +1028,82 @@ export class CampaignService {
       const results =
         await this.campaignRepository.updateCampaignStatusToCompleted();
 
+      if (!results?.length) {
+        console.log('No campaigns to complete.');
+        return;
+      }
 
-    
-      if (results?.length) {
-        await Promise.all(
-          results.map(async (result) => {
-            const user = await this.userRepository.findUserById(result.userId);
+      const completedCampaignIds = results.map((r) => r.id);
+      const campaignMap = new Map(results.map((r) => [r.id, r]));
 
-            if (!user?.[0]?.email) {
-              console.warn(
-                `No user found for campaign ${result.id}, skipping email.`,
-              );
-              return;
-            }
+      const completedDriverCampaigns =
+        (await this.campaignRepository.completeDriverCampaignsByCampaignIds(
+          completedCampaignIds,
+        )) ?? [];
+      const ownerUserIds = results.map((r) => r.userId);
+      const driverUserIds = completedDriverCampaigns.map((d) => d.userId);
 
-            this.emailService.queueTemplatedEmail(
-              EmailTemplateType.CAMPAIGN_COMPLETED,
-              user[0].email,
-              {
-                campaignName: result.campaignName,
-                startDate: result.startDate,
-                endDate: result.endDate,
-              },
-            );
+      const [ownerUsers, driverUsers] = await Promise.all([
+        this.userRepository.findUsersByIds(ownerUserIds),
+        this.userRepository.findUsersByIds(driverUserIds),
+      ]);
 
-            await this.campaignRepository.updateSentCampaignStartEmail(
-              result.id,
-            );
-          }),
+      const ownerUserMap = new Map(ownerUsers.map((u) => [u.id, u]));
+      const driverUserMap = new Map(driverUsers.map((u) => [u.id, u]));
+
+      // Business owner emails
+      for (const result of results) {
+        const user = ownerUserMap.get(result.userId);
+
+        if (!user?.email) {
+          console.warn(
+            `No user found for campaign ${result.id}, skipping email.`,
+          );
+          continue;
+        }
+
+        this.emailService.queueTemplatedEmail(
+          EmailTemplateType.CAMPAIGN_COMPLETED,
+          user.email,
+          {
+            campaignName: result.campaignName,
+            startDate: result.startDate,
+            endDate: result.endDate,
+          },
+        );
+
+        await this.campaignRepository.updateSentCampaignStartEmail(result.id);
+      }
+
+      // Driver emails
+      for (const driverCampaign of completedDriverCampaigns) {
+        const campaign = campaignMap.get(driverCampaign.campaignId);
+        const user = driverUserMap.get(driverCampaign.userId);
+
+        if (!campaign || !user?.email) {
+          console.warn(
+            `Skipping driver campaign ${driverCampaign.id} — missing campaign or user.`,
+          );
+          continue;
+        }
+
+        this.emailService.queueTemplatedEmail(
+          EmailTemplateType.DRIVER_CAMPAIGN_COMPLETED,
+          user.email,
+          {
+            campaignName: campaign.campaignName,
+            startDate: campaign.startDate,
+            endDate: campaign.endDate,
+          },
         );
       }
 
       console.log(
-        `completed ${results.length}`,
-        results.map((campaign) => campaign.id),
+        `Completed ${results.length} campaigns`,
+        results.map((c) => c.id),
       );
     } catch (error: any) {
-      console.log(error);
+      console.error('updateCampaignStatusToCompleted cron error:', error);
     }
   }
 

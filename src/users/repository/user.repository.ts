@@ -15,7 +15,7 @@ import {
 import { addBusinessOwnerRoleDto } from '@src/users/dto/add-business-owner-role.dto';
 import { AddDriverRoleDto } from '@src/users/dto/add-driver-role.dto';
 import { CreateDriverDto } from '@src/users/dto/create-driver.dto';
-import { eq, or } from 'drizzle-orm';
+import { eq, or, inArray } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 
@@ -44,13 +44,23 @@ export class UserRepository {
     return user;
   }
 
+  async findUsersByIds(userIds: string[]) {
+    if (!userIds.length) return [];
+
+    return await this.DbProvider
+      .select({ id: userTable.id, email: userTable.email })
+      .from(userTable)
+      .where(inArray(userTable.id, userIds));
+  }
+
   async getAllAdmins() {
-    const admins = await this.DbProvider.select()
-      .from(adminTable)
+    const admins = await this.DbProvider.select().from(adminTable);
     return admins;
   }
   async findBusinessOwnerById(userId: string) {
-    const [user] = await this.DbProvider.select({businessName: businessOwnerTable.businessName})
+    const [user] = await this.DbProvider.select({
+      businessName: businessOwnerTable.businessName,
+    })
       .from(businessOwnerTable)
       .where(eq(businessOwnerTable.userId, userId));
     return user;
@@ -157,10 +167,7 @@ export class UserRepository {
 
     return businessOwner;
   }
-  async updateDriverById(
-    data: Partial<driverInsertType>,
-    userId: string,
-  ) {
+  async updateDriverById(data: Partial<driverInsertType>, userId: string) {
     const [driver] = await this.DbProvider.update(driverTable)
       .set(data)
       .where(eq(driverTable.userId, userId))
@@ -233,7 +240,7 @@ export class UserRepository {
         userId,
         trx,
       );
-      await trx.insert(driverTable).values({...data, userId});
+      await trx.insert(driverTable).values({ ...data, userId });
     });
 
     return { success: true };
@@ -245,36 +252,45 @@ export class UserRepository {
         userId,
         trx,
       );
-      await this.addBusinessOwnerToBusinessOwnerTable({businessName: data.businessName, userId}, trx);
+      await this.addBusinessOwnerToBusinessOwnerTable(
+        { businessName: data.businessName, userId },
+        trx,
+      );
     });
 
     return { success: true };
   }
 
   async findDriverById(userId: string) {
-    return await this.DbProvider.select().from(driverTable).where(eq(driverTable.userId, userId))
+    return await this.DbProvider.select()
+      .from(driverTable)
+      .where(eq(driverTable.userId, userId));
   }
 
   async getDriverProfile(userId: string) {
     return await this.DbProvider.select({
-      id: userTable.id, 
-      email: userTable.email, 
-      phone: userTable.phone, 
-      state: driverTable.state, 
-      createdAt: userTable.createdAt, 
-      firstname: driverTable.firstname, 
-      lastname: driverTable.lastname, 
-      dp: driverTable.dp, 
-
-    }).from(driverTable).where(eq(driverTable.userId, userId)).leftJoin(userTable, eq(userTable.id, userId));
+      id: userTable.id,
+      email: userTable.email,
+      phone: userTable.phone,
+      state: driverTable.state,
+      createdAt: userTable.createdAt,
+      firstname: driverTable.firstname,
+      lastname: driverTable.lastname,
+      dp: driverTable.dp,
+    })
+      .from(driverTable)
+      .where(eq(driverTable.userId, userId))
+      .leftJoin(userTable, eq(userTable.id, userId));
   }
   async getBusinessOwnerProfile(userId: string) {
     return await this.DbProvider.select({
-      id: userTable.id, 
-      email: userTable.email, 
-      phone: userTable.phone, 
-      businessName: businessOwnerTable.businessName, 
-
-    }).from(businessOwnerTable).where(eq(businessOwnerTable.userId, userId)).leftJoin(userTable, eq(userTable.id, userId));
+      id: userTable.id,
+      email: userTable.email,
+      phone: userTable.phone,
+      businessName: businessOwnerTable.businessName,
+    })
+      .from(businessOwnerTable)
+      .where(eq(businessOwnerTable.userId, userId))
+      .leftJoin(userTable, eq(userTable.id, userId));
   }
 }

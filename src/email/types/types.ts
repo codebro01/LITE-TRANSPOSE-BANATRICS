@@ -23,7 +23,8 @@ export enum EmailTemplateType {
   PASSWORD_RESET = 'password-reset',
   EMAIL_VERIFICATION = 'email-verification',
   CAMPAIGN_ACTIVE = 'campaign-active', 
-  CAMPAIGN_COMPLETED = 'campaign-completed'
+  CAMPAIGN_COMPLETED = 'campaign-completed',
+  DRIVER_CAMPAIGN_COMPLETED = 'driver-campaign-completed',
 }
 
 export interface EmailResponse {
@@ -73,6 +74,11 @@ export interface CompleteCampaignTemplateData {
   startDate: Date;
   endDate: Date;
 }
+export interface CompleteDriverCampaignTemplateData {
+  campaignName: string;
+  startDate: Date;
+  endDate: Date;
+}
 
 export type EmailTemplateData =
   | WelcomeTemplateData
@@ -81,4 +87,5 @@ export type EmailTemplateData =
   | PasswordResetTemplateData
   | EmailVerificationTemplateData
   | StartCampaignTemplateData
-  | CompleteCampaignTemplateData;
+  | CompleteCampaignTemplateData
+  | CompleteDriverCampaignTemplateData;

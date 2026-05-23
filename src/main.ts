@@ -27,7 +27,7 @@ async function bootstrap() {
       'https://www.banatrics.vercel.app',
       'https://banatrics.com',
       'https://www.banatrics.com',
-      'https://api.banatrics.com',
+      // 'https://api.banatrics.com',
       'https://backend.banatrics.com',
     ],
     credentials: true,

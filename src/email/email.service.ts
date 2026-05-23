@@ -15,6 +15,7 @@ import {
   EmailResponse,
   StartCampaignTemplateData,
   CompleteCampaignTemplateData,
+  CompleteDriverCampaignTemplateData,
 } from '@src/email/types/types';
 
 @Injectable()
@@ -137,6 +138,14 @@ export class EmailService {
             data as CompleteCampaignTemplateData,
           ),
         };
+      case EmailTemplateType.DRIVER_CAMPAIGN_COMPLETED:
+        return {
+          to,
+          subject: 'Verify Your Email Address',
+          html: this.emailTemplate.getDriverCampaignCompletedTemplate(
+            data as CompleteDriverCampaignTemplateData,
+          ),
+        };
 
       default:
         throw new Error(`Unknown email template: ${template}`);
@@ -188,6 +197,7 @@ export class EmailService {
       [EmailTemplateType.CAMPAIGN_CREATED]: 3,
       [EmailTemplateType.CAMPAIGN_ACTIVE]: 2,
       [EmailTemplateType.CAMPAIGN_COMPLETED]: 2,
+      [EmailTemplateType.DRIVER_CAMPAIGN_COMPLETED]: 2,
     };
     return priorities[template] || 5;
   }

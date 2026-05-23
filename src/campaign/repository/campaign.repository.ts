@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { and, eq, sql, ne, gt, lte } from 'drizzle-orm';
+import { and, eq, sql, ne, gt, lte, inArray } from 'drizzle-orm';
 import { campaignTable } from '@src/db/campaigns';
 import { MaintenanceType } from '../dto/publishCampaignDto';
 import {
@@ -817,6 +817,25 @@ export class CampaignRepository {
       });
 
     return result;
+  }
+
+  async completeDriverCampaignsByCampaignIds(campaignIds: string[]) {
+    if (!campaignIds.length) return;
+
+    return await this.DbProvider
+      .update(driverCampaignTable)
+      .set({
+        campaignStatus: 'completed',
+        active: false,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          inArray(driverCampaignTable.campaignId, campaignIds),
+          eq(driverCampaignTable.campaignStatus, 'approved'), 
+        ),
+      )
+      .returning();
   }
 
   async updateSentCampaignStartEmail(campaignId: string) {
