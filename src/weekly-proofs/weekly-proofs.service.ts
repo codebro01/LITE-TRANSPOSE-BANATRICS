@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { WeeklyProofsRepository } from '@src/weekly-proofs/repository/weekly-proofs.repository';
-import { weeklyProofInsertType } from '@src/db';
+import { campaignStatusType, weeklyProofInsertType } from '@src/db';
 import { InstallmentProofRepository } from '@src/installment-proofs/repository/installment-proofs.repository';
 import { CampaignRepository } from '@src/campaign/repository/campaign.repository';
 import { UserRepository } from '@src/users/repository/user.repository';
@@ -69,6 +69,15 @@ export class WeeklyProofsService {
       throw new BadRequestException(
         'Weekly proofs can be uploaded after installment proofs has been approved. Please make sure you have uploaded the installment proof',
       );
+      const campaign = await this.campaignRepository.findCampaignByCampaignId(
+        data.campaignId,
+      );
+
+      if(!campaign || campaign.active !== true) {
+        throw new BadRequestException(
+          'Weekly proofs can only be uploaded for active campaigns. Please make sure the campaign you are uploading for is active',
+        );
+      }
 
     const weeklyProof = await this.weeklyProofsRepository.create(
       dataWithWeek,
@@ -76,9 +85,6 @@ export class WeeklyProofsService {
     );
 
     const admins = await this.userRepository.getAllAdmins();
-    const campaign = await this.campaignRepository.findCampaignByCampaignId(
-      weeklyProof.campaignId,
-    );
 
     await Promise.all([
       ...admins.map((admin) =>
