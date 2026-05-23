@@ -15,7 +15,7 @@ import {
 import { addBusinessOwnerRoleDto } from '@src/users/dto/add-business-owner-role.dto';
 import { AddDriverRoleDto } from '@src/users/dto/add-driver-role.dto';
 import { CreateDriverDto } from '@src/users/dto/create-driver.dto';
-import { eq, or, inArray } from 'drizzle-orm';
+import { eq, or, inArray, sql } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 
@@ -47,8 +47,10 @@ export class UserRepository {
   async findUsersByIds(userIds: string[]) {
     if (!userIds.length) return [];
 
-    return await this.DbProvider
-      .select({ id: userTable.id, email: userTable.email })
+    return await this.DbProvider.select({
+      id: userTable.id,
+      email: userTable.email,
+    })
       .from(userTable)
       .where(inArray(userTable.id, userIds));
   }
@@ -152,6 +154,36 @@ export class UserRepository {
       });
 
     return user;
+  }
+
+  async updateBalance(amount: number, userId: string, trx?: any) {
+    const Trx = trx || this.DbProvider;
+    const [user] = await Trx.update(driverTable)
+      .set({ balance: sql`${driverTable.balance} + ${amount}` })
+      .where(eq(driverTable.userId, userId))
+      .returning();
+
+    return user;
+  }
+
+  async batchUpdateDriverBalances(
+    updates: { userId: string; amount: number }[],
+  ) {
+    if (!updates.length) return;
+
+    await this.DbProvider.transaction(async (trx) => {
+      await Promise.all(
+        updates.map(({ userId, amount }) =>
+          trx
+            .update(driverTable)
+            .set({
+              balance: sql`${driverTable.balance} + ${amount}`,
+              updatedAt: new Date(),
+            })
+            .where(eq(driverTable.userId, userId)),
+        ),
+      );
+    });
   }
 
   async updateBusinessOwnerById(

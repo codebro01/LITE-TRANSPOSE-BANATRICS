@@ -1,7 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { campaignTable, weeklyProofInsertType, weeklyProofTable } from '@src/db';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { and, eq, sql} from 'drizzle-orm';
+import { and, eq, sql, count, inArray} from 'drizzle-orm';
+import { WeeklyProofStatus } from '../dto/create-weekly-proof.dto';
 
 @Injectable()
 export class WeeklyProofsRepository {
@@ -85,7 +86,7 @@ export class WeeklyProofsRepository {
     const [weeklyProof] = await this.DbProvider.update(weeklyProofTable)
       .set({
         ...data,
-        statusType: "pending_review"
+        statusType: 'pending_review',
       })
       .where(
         and(
@@ -100,5 +101,64 @@ export class WeeklyProofsRepository {
 
   remove(userId: string) {
     return `This action removes a #${userId} weeklyProof`;
+  }
+
+  async getAllApprovedWeeklyProofsForCampaign(
+    campaignId: string,
+    userId: string,
+  ) {
+    const [weeklyProofs] = await this.DbProvider.select({
+      total: count(),
+    })
+      .from(weeklyProofTable)
+      .where(
+        and(
+          eq(weeklyProofTable.campaignId, campaignId),
+          eq(weeklyProofTable.userId, userId),
+          eq(weeklyProofTable.statusType, WeeklyProofStatus.APPROVED),
+        ),
+      );
+
+    return weeklyProofs;
+  }
+
+  async getProofCountsByDriverCampaigns(
+    driverCampaigns: { id: string; campaignId: string; userId: string }[],
+  ): Promise<Map<string, number>> {
+    if (!driverCampaigns.length) return new Map();
+
+    const results = await this.DbProvider.select({
+      campaignId: weeklyProofTable.campaignId,
+      userId: weeklyProofTable.userId,
+      total: count(),
+    })
+      .from(weeklyProofTable)
+      .where(
+        and(
+          inArray(
+            weeklyProofTable.campaignId,
+            driverCampaigns.map((d) => d.campaignId),
+          ),
+          inArray(
+            weeklyProofTable.userId,
+            driverCampaigns.map((d) => d.userId),
+          ),
+          eq(weeklyProofTable.statusType, WeeklyProofStatus.APPROVED),
+        ),
+      )
+      .groupBy(weeklyProofTable.campaignId, weeklyProofTable.userId);
+
+    const countMap = new Map<string, number>();
+
+    for (const result of results) {
+      const match = driverCampaigns.find(
+        (d) => d.campaignId === result.campaignId && d.userId === result.userId,
+      );
+      if (match) {
+        countMap.set(match.id, result.total);
+      }
+    }
+
+    return countMap;
   }
 }

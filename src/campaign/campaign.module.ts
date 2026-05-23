@@ -11,6 +11,7 @@ import { InvoiceModule } from '@src/invoice/invoice.module';
 import { InstallmentProofsModule } from '@src/installment-proofs/installment-proofs.module';
 import { UserModule } from '@src/users/users.module';
 import { EmailModule } from '@src/email/email.module';
+import { WeeklyProofsModule } from '@src/weekly-proofs/weekly-proofs.module';
 @Module({
   imports: [
     NotificationModule,
@@ -20,6 +21,7 @@ import { EmailModule } from '@src/email/email.module';
     InstallmentProofsModule,
     UserModule,
     EmailModule,
+    WeeklyProofsModule
   ],
   controllers: [CampaignController],
   providers: [

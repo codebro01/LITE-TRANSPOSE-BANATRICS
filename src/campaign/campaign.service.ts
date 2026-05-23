@@ -42,6 +42,7 @@ import { InstallmentProofRepository } from '@src/installment-proofs/repository/i
 import { UserRepository } from '@src/users/repository/user.repository';
 import { EmailTemplateType } from '@src/email/types/types';
 import { EmailService } from '@src/email/email.service';
+import { WeeklyProofsRepository } from '@src/weekly-proofs/repository/weekly-proofs.repository';
 
 @Injectable()
 export class CampaignService {
@@ -56,6 +57,7 @@ export class CampaignService {
     private readonly installmentProofRepository: InstallmentProofRepository,
     private readonly userRepository: UserRepository,
     private readonly emailService: EmailService,
+    private readonly weeklyProofsRepository: WeeklyProofsRepository,
   ) {}
 
   //!===================================business owner db calls ===========================================//
@@ -1018,6 +1020,26 @@ export class CampaignService {
     ]);
   }
 
+  calculateWithdrawableAmount(
+    duration: number,
+    price: number,
+    totalWeeklyProofs: number,
+  ) {
+    const durationInWeeks = duration / 7;
+    const missedWeeks = durationInWeeks - totalWeeklyProofs;
+
+    // 4 or more misses = no payout
+    if (missedWeeks >= 4) {
+      return { withdrawableAmount: 0, durationInWeeks, missedWeeks };
+    }
+
+    // Each missed week deducts 25% of the total price
+    const penaltyPercentage = missedWeeks * 0.25;
+    const withdrawableAmount = price * (1 - penaltyPercentage);
+
+    return { withdrawableAmount, durationInWeeks, missedWeeks };
+  }
+
   // ! campaign cron jobs
 
   @Cron(CronExpression.EVERY_5_MINUTES)
@@ -1076,26 +1098,60 @@ export class CampaignService {
       }
 
       // Driver emails
-      for (const driverCampaign of completedDriverCampaigns) {
-        const campaign = campaignMap.get(driverCampaign.campaignId);
-        const user = driverUserMap.get(driverCampaign.userId);
-
-        if (!campaign || !user?.email) {
-          console.warn(
-            `Skipping driver campaign ${driverCampaign.id} — missing campaign or user.`,
+      // Driver payouts + emails
+      if (completedDriverCampaigns.length) {
+        const proofCountMap =
+          await this.weeklyProofsRepository.getProofCountsByDriverCampaigns(
+            completedDriverCampaigns.map((d) => ({
+              id: d.id,
+              campaignId: d.campaignId,
+              userId: d.userId,
+            })),
           );
-          continue;
+
+        const balanceUpdates: { userId: string; amount: number }[] = [];
+
+        for (const driverCampaign of completedDriverCampaigns) {
+          const campaign = campaignMap.get(driverCampaign.campaignId);
+          const user = driverUserMap.get(driverCampaign.userId);
+
+          // Guard FIRST before doing anything
+          if (!campaign || !user?.email) {
+            console.warn(
+              `Skipping driver campaign ${driverCampaign.id} — missing campaign or user.`,
+            );
+            continue;
+          }
+
+          const totalWeeklyProofs = proofCountMap.get(driverCampaign.id) ?? 0;
+
+          const { withdrawableAmount } = this.calculateWithdrawableAmount(
+            campaign.duration ?? 0,
+            campaign.earningPerDriver ?? 0,
+            totalWeeklyProofs,
+          );
+
+          // Only queue a balance update if they actually earned something
+          if (withdrawableAmount > 0) {
+            balanceUpdates.push({
+              userId: driverCampaign.userId,
+              amount: withdrawableAmount,
+            });
+          }
+
+          this.emailService.queueTemplatedEmail(
+            EmailTemplateType.DRIVER_CAMPAIGN_COMPLETED,
+            user.email,
+            {
+              campaignName: campaign.campaignName,
+              startDate: campaign.startDate,
+              endDate: campaign.endDate,
+            },
+          );
         }
 
-        this.emailService.queueTemplatedEmail(
-          EmailTemplateType.DRIVER_CAMPAIGN_COMPLETED,
-          user.email,
-          {
-            campaignName: campaign.campaignName,
-            startDate: campaign.startDate,
-            endDate: campaign.endDate,
-          },
-        );
+        // 1 transaction for all balance updates
+        await this.userRepository.batchUpdateDriverBalances(balanceUpdates);
       }
 
       console.log(

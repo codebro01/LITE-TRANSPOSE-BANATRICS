@@ -82,7 +82,7 @@ export const campaignTable = pgTable(
       .default([]),
 
     slogan: varchar('slogan', { length: 500 }),
-    sentCampaignStartEmail: boolean().default(false), 
+    sentCampaignStartEmail: boolean().default(false),
     printHousePhoneNo: varchar('print_house_phone_no', { length: 20 }),
     spentAt: timestamp('spent_at', { mode: 'date', withTimezone: true }),
     createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
@@ -94,17 +94,18 @@ export const campaignTable = pgTable(
   },
   (table) => ({
     campaignsUserIdIdx: index('campaign_user_id_idx').on(table.userId),
-    campaignsIdUserIdIdx: index('campaign_id_user_id_idx').on(table.userId, table.id),
+    campaignsIdUserIdIdx: index('campaign_id_user_id_idx').on(
+      table.userId,
+      table.id,
+    ),
     campaignsUserIdStatusIdx: index('campaign_drafts_by_id_idx').on(
       table.userId,
       table.statusType,
     ),
     campaignsStatusIdx: index('campaigns_status_idx').on(table.statusType),
-    campaignPaymentStatusActiveIdx: index('campaigns_payment_status_active_idx').on(
-      table.id,
-      table.statusType,
-      table.active,
-    ),
+    campaignPaymentStatusActiveIdx: index(
+      'campaigns_payment_status_active_idx',
+    ).on(table.id, table.statusType, table.active),
     campaignStatusActiveIdx: index('campaigns_status_active_idx').on(
       table.statusType,
       table.active,
@@ -113,21 +114,17 @@ export const campaignTable = pgTable(
       table.statusType,
       table.paymentStatus,
     ),
-    idx_campaign_status_payment_userId: index('idx_campaign_status_payment_userId').on(
-      table.userId,
-      table.statusType,
-      table.paymentStatus,
-    ),
-    idx_campaign_userId_paymentStatus_spentAt: index('idx_campaign_userId_paymentStatus_spentAt').on(
-      table.userId,
-      table.paymentStatus,
-      table.spentAt,
-    ),
-    idx_campaign_active_payment : index('idx_campaign_active_payment ').on(
+    idx_campaign_status_payment_userId: index(
+      'idx_campaign_status_payment_userId',
+    ).on(table.userId, table.statusType, table.paymentStatus),
+    idx_campaign_userId_paymentStatus_spentAt: index(
+      'idx_campaign_userId_paymentStatus_spentAt',
+    ).on(table.userId, table.paymentStatus, table.spentAt),
+    idx_campaign_active_payment: index('idx_campaign_active_payment ').on(
       table.active,
       table.paymentStatus,
     ),
-    idx_campaign_id_userId : index('idx_campaign_id_userId ').on(
+    idx_campaign_id_userId: index('idx_campaign_id_userId ').on(
       table.id,
       table.userId,
     ),

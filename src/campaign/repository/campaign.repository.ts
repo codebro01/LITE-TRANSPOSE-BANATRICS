@@ -787,6 +787,8 @@ export class CampaignRepository {
         startDate: campaignTable.startDate,
         endDate: campaignTable.endDate,
         userId: campaignTable.userId,
+        duration: campaignTable.duration, 
+        earningPerDriver: campaignTable.earningPerDriver, 
       });
 
     return result;
