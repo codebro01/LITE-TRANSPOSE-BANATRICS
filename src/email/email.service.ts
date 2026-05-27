@@ -125,7 +125,7 @@ export class EmailService {
       case EmailTemplateType.CAMPAIGN_ACTIVE:
         return {
           to,
-          subject: 'Verify Your Email Address',
+          subject: 'Your Campaign is Now Active! ',
           html: this.emailTemplate.getCampaignStartedTemplate(
             data as StartCampaignTemplateData,
           ),
@@ -133,7 +133,7 @@ export class EmailService {
       case EmailTemplateType.CAMPAIGN_COMPLETED:
         return {
           to,
-          subject: 'Verify Your Email Address',
+          subject: 'Your Campaign is Completed!',
           html: this.emailTemplate.getCampaignCompletedTemplate(
             data as CompleteCampaignTemplateData,
           ),
@@ -141,7 +141,7 @@ export class EmailService {
       case EmailTemplateType.DRIVER_CAMPAIGN_COMPLETED:
         return {
           to,
-          subject: 'Verify Your Email Address',
+          subject: 'Your Driver Campaign is Completed!',
           html: this.emailTemplate.getDriverCampaignCompletedTemplate(
             data as CompleteDriverCampaignTemplateData,
           ),
