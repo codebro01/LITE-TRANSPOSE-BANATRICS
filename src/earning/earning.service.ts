@@ -67,11 +67,11 @@ export class EarningService {
       throw new BadRequestException(
         'You already have a pending payout, please kindly wait while we clear pending payout!!!',
       );
-        const campaign = await this.campaignRepository.findDriverCampaignById(
+    const campaign = await this.campaignRepository.findDriverCampaignById(
       data.campaignId,
       userId,
-    );    
-    
+    );
+
     console.log(campaign);
     if (!campaign)
       throw new NotFoundException(
@@ -85,12 +85,18 @@ export class EarningService {
     if (!campaign.earningPerDriver)
       throw new InternalServerErrorException('Could not get campaign price');
 
-    const checkIfCampaignCompleted = await this.campaignRepository.findCampaignByCampaignId(data.campaignId);
-    if(checkIfCampaignCompleted?.statusType !== "completed" || campaign.status !== "completed") throw new BadRequestException('Payout can only be requested when campaign is completed.')
+    const checkIfCampaignCompleted =
+      await this.campaignRepository.findCampaignByCampaignId(data.campaignId);
+    if (
+      checkIfCampaignCompleted?.statusType !== 'completed' ||
+      campaign.status !== 'completed'
+    )
+      throw new BadRequestException(
+        'Payout can only be requested when campaign is completed.',
+      );
 
     const balance = await this.earningRepository.availableBalance(userId);
-  
-    
+
     if (campaign.earningPerDriver > balance)
       throw new BadRequestException('Insufficient fund');
 
@@ -103,7 +109,7 @@ export class EarningService {
     const earnings = await this.earningRepository.requestPayouts(
       {
         ...data,
-        reference: generateSecureRef(), 
+        reference: generateSecureRef(),
         recipientCode: bankDetails.recipientCode,
         amount: campaign.earningPerDriver,
       },

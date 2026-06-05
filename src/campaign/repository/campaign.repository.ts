@@ -14,6 +14,7 @@ import {
 } from '@src/campaign/dto/create-driver-campaign.dto';
 import { PackageType } from '../dto/publishCampaignDto';
 import { UpdateCampaignDesignDto } from '@src/campaign/dto/update-campaign-design.dto';
+import { earningsTable } from '@src/db/earnings';
 
 export enum CampaignStatus {
   PENDING = 'pending',
@@ -601,42 +602,50 @@ export class CampaignRepository {
     return total[0]?.total ?? 0;
   }
 
-  async getDriverCampaignsById(userId: string) {
-    const campaigns = await this.DbProvider.select({
-      driverCampaignStatus: driverCampaignTable.campaignStatus,
-      title: campaignTable.campaignName,
-      campaignId: campaignTable.id,
-      state: campaignTable.state,
-      startDate: campaignTable.startDate,
-      endDaxte: campaignTable.endDate,
-      duration: campaignTable.duration,
-      availability: campaignTable.availability,
-      requirements: campaignTable.requirements,
-      description: campaignTable.campaignDescriptions,
-      totalEarning: campaignTable.earningPerDriver,
-      installmentProofStatus: installmentProofTable.statusType,
-      printHousePhoneNumber: campaignTable.printHousePhoneNo,
-      campaignDesigns: campaignDesignsTable.designs,
-    })
-      .from(driverCampaignTable)
-      .where(eq(driverCampaignTable.userId, userId))
-      .leftJoin(
-        campaignTable,
-        eq(driverCampaignTable.campaignId, campaignTable.id),
-      )
-      .leftJoin(
-        installmentProofTable,
-        and(
-          eq(installmentProofTable.campaignId, driverCampaignTable.campaignId),
-          eq(installmentProofTable.userId, userId),
-        ),
-      )
-      .leftJoin(
-        campaignDesignsTable,
-        eq(campaignDesignsTable.campaignId, driverCampaignTable.campaignId),
-      );
-    return campaigns;
-  }
+ async getDriverCampaignsById(userId: string) {
+  const campaigns = await this.DbProvider.select({
+    driverCampaignStatus: driverCampaignTable.campaignStatus,
+    title: campaignTable.campaignName,
+    campaignId: campaignTable.id,
+    state: campaignTable.state,
+    startDate: campaignTable.startDate,
+    endDate: campaignTable.endDate,
+    duration: campaignTable.duration,
+    availability: campaignTable.availability,
+    requirements: campaignTable.requirements,
+    description: campaignTable.campaignDescriptions,
+    totalEarning: campaignTable.earningPerDriver,
+    installmentProofStatus: installmentProofTable.statusType,
+    printHousePhoneNumber: campaignTable.printHousePhoneNo,
+    campaignDesigns: campaignDesignsTable.designs,
+    earningPaymentStatus: earningsTable.paymentStatus,  
+  })
+    .from(driverCampaignTable)
+    .where(eq(driverCampaignTable.userId, userId))
+    .leftJoin(
+      campaignTable,
+      eq(driverCampaignTable.campaignId, campaignTable.id),
+    )
+    .leftJoin(
+      installmentProofTable,
+      and(
+        eq(installmentProofTable.campaignId, driverCampaignTable.campaignId),
+        eq(installmentProofTable.userId, userId),
+      ),
+    )
+    .leftJoin(
+      campaignDesignsTable,
+      eq(campaignDesignsTable.campaignId, driverCampaignTable.campaignId),
+    )
+    .leftJoin(                                           
+      earningsTable,
+      and(
+        eq(earningsTable.campaignId, driverCampaignTable.campaignId),
+        eq(earningsTable.userId, userId),
+      ),
+    );
+  return campaigns;
+}
 
   async filterDriverCampaigns(
     filter: DriverCampaignStatusType,
