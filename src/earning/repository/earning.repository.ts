@@ -1,8 +1,7 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { earningsTable, earningTableInsertType } from '@src/db/earnings';
+import { earningsTable, earningTableInsertType, PaymentStatusType } from '@src/db/earnings';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { and, eq, sql, gte, sum, count } from 'drizzle-orm';
-import { startOfMonth } from 'date-fns';
 import { campaignTable, driverTable } from '@src/db';
 import { ApprovalStatusType } from '@src/earning/dto/create-earning.dto';
 import { UpdateApprovalStatusDto } from '@src/earning/dto/update-approved-status.dto';
@@ -163,7 +162,11 @@ export class EarningRepository {
 
   async amountMadeThisMonth(userId: string) {
     const now = new Date();
-    const firstDayOfMonth = startOfMonth(now); // e.g., 2025-12-01T00:00:00
+    const firstDayOfMonth = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
+    );
+
+    console.log(firstDayOfMonth);
 
     const [result] = await this.DbProvider.select({
       total: sql<number>`COALESCE(SUM(${earningsTable.amount}), 0)`,
@@ -172,11 +175,13 @@ export class EarningRepository {
       .where(
         and(
           eq(earningsTable.userId, userId),
-          gte(earningsTable.updatedAt, firstDayOfMonth), // only this month
-          eq(earningsTable.approved, ApprovalStatusType.APPROVED), // optional filter
+          gte(earningsTable.updatedAt, firstDayOfMonth),
+          eq(earningsTable.approved, ApprovalStatusType.APPROVED),
+          eq(earningsTable.paymentStatus, PaymentStatusType.SUCCESS),
         ),
       );
 
+    console.log('earnings result:', result);
     return result.total;
   }
 
